@@ -277,7 +277,7 @@ const emit = defineEmits(["menu-change"]);
 }
 
 /* 반응형 - 모바일 */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .sidebar {
     width: 100%;
     min-height: auto;
