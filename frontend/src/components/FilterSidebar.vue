@@ -190,6 +190,12 @@ const handleFilterChange = () => {
 <style scoped>
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap");
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .sidebar {
   background: #ffffff;
   border-radius: 8px;
