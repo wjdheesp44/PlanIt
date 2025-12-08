@@ -9,14 +9,39 @@ const router = createRouter({
       component: () => import("@/views/Home.vue"),
     },
     {
+      path: "/login",
+      name: "Login",
+      component: () => import("@/views/auth/Login.vue"),
+    },
+    {
+      path: "/signup",
+      name: "Signup",
+      component: () => import("@/views/auth/Signup.vue"),
+    },
+    {
+      path: "/forgot-password",
+      name: "Forgetpassword",
+      component: () => import("@/views/auth/Forgetpassword.vue"),
+    },
+    {
       path: "/spots",
       name: "SpotExploration",
       component: () => import("@/views/spot/SpotExploration.vue"),
     },
     {
+      path: "/spots/:id",
+      name: "SpotDetail",
+      component: () => import("@/views/spot/SpotDetail.vue"),
+    },
+    {
       path: "/plans",
       name: "TravelPlanner",
       component: () => import("@/views/plan/TravelPlanner.vue"),
+    },
+    {
+      path: "/plans/:id",
+      name: "TravelPlan",
+      component: () => import("@/views/plan/TravelPlan.vue"),
     },
     {
       path: "/mypage",

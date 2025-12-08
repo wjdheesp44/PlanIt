@@ -42,9 +42,11 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
 import FilterSidebar from "@/components/FilterSidebar.vue";
 import SpotCard from "@/components/SpotCard.vue";
 
+const router = useRouter();
 const activeTab = ref("events");
 const filters = ref({});
 
@@ -125,13 +127,7 @@ const handleFilterChange = (newFilters) => {
 };
 
 const handleSpotClick = (spot) => {
-  console.log("Spot clicked:", spot);
-  // 스팟 상세 페이지로 이동 등
-};
-
-const handleFavorite = (spot) => {
-  console.log("Favorite clicked:", spot);
-  // 좋아요 토글 로직
+  router.push(`/spots/${spot.id}`);
 };
 </script>
 

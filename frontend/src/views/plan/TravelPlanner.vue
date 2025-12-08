@@ -7,7 +7,7 @@
           <h1 class="page-title">나의 여행 일정</h1>
           <p class="plan-count">총 {{ plans.length }}개의 일정</p>
         </div>
-        <button class="create-button">
+        <button class="create-button" @click="createNewPlan">
           <svg
             width="20"
             height="20"
@@ -39,9 +39,11 @@
     <div class="plans-container">
       <div
         v-for="(plan, index) in plans"
-        :key="index"
+        :key="plan.id"
         class="plan-card"
         :class="{ 'has-delete': plan.showDelete }"
+        @click="goToPlanDetail(plan.id)"
+        style="cursor: pointer"
       >
         <!-- 썸네일 이미지 -->
         <div class="plan-thumbnail">
@@ -52,7 +54,7 @@
         <div class="plan-info">
           <div class="plan-header-row">
             <h2 class="plan-title">{{ plan.title }}</h2>
-            <button class="menu-button" @click="toggleMenu(index)">
+            <button class="menu-button" @click.stop="toggleMenu(index)">
               <svg
                 width="20"
                 height="20"
@@ -86,7 +88,7 @@
 
             <!-- 삭제 버튼 (메뉴 클릭시 표시) -->
             <div v-if="plan.showDelete" class="delete-dropdown">
-              <button class="delete-button" @click="deletePlan(index)">
+              <button class="delete-button" @click.stop="deletePlan(index)">
                 <svg
                   width="16"
                   height="16"
@@ -225,9 +227,13 @@
 
 <script setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const plans = ref([
   {
+    id: 1,
     thumbnail: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400",
     title: "제주도 여행",
     spotCount: 12,
@@ -237,40 +243,64 @@ const plans = ref([
     showDelete: false,
   },
   {
+    id: 2,
     thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400",
-    title: "제주도 여행",
-    spotCount: 12,
-    sharedUsers: ["김", "이", "박"],
-    sharedCount: 3,
-    lastModified: "2025.12.02",
+    title: "부산 여행",
+    spotCount: 8,
+    sharedUsers: ["최", "정"],
+    sharedCount: 2,
+    lastModified: "2025.12.01",
     showDelete: false,
   },
   {
+    id: 3,
     thumbnail: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400",
-    title: "제주도 여행",
-    spotCount: 12,
-    sharedUsers: ["김", "이", "박"],
-    sharedCount: 3,
-    lastModified: "2025.12.02",
+    title: "서울 여행",
+    spotCount: 15,
+    sharedUsers: ["강", "윤", "조", "임"],
+    sharedCount: 4,
+    lastModified: "2025.11.30",
     showDelete: false,
   },
   {
+    id: 4,
     thumbnail: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400",
-    title: "제주도 여행",
-    spotCount: 12,
-    sharedUsers: ["김", "이", "박"],
-    sharedCount: 3,
-    lastModified: "2025.12.02",
+    title: "강릉 여행",
+    spotCount: 6,
+    sharedUsers: ["한"],
+    sharedCount: 1,
+    lastModified: "2025.11.28",
     showDelete: false,
   },
 ]);
 
+// 새 일정 만들기
+const createNewPlan = () => {
+  console.log("새 일정 만들기");
+  // 실제로는 모달을 띄우거나 새 페이지로 이동
+};
+
+// 메뉴 토글
 const toggleMenu = (index) => {
+  // 다른 메뉴 닫기
+  plans.value.forEach((plan, idx) => {
+    if (idx !== index) {
+      plan.showDelete = false;
+    }
+  });
   plans.value[index].showDelete = !plans.value[index].showDelete;
 };
 
+// 일정 삭제
 const deletePlan = (index) => {
-  plans.value.splice(index, 1);
+  if (confirm("정말 삭제하시겠습니까?")) {
+    plans.value.splice(index, 1);
+  }
+};
+
+// 일정 상세 페이지로 이동
+const goToPlanDetail = (planId) => {
+  router.push(`/plans/${planId}`);
 };
 </script>
 
@@ -360,10 +390,12 @@ const deletePlan = (index) => {
   overflow: hidden;
   transition: all 0.2s ease;
   position: relative;
+  cursor: pointer;
 }
 
 .plan-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .plan-card.has-delete {
@@ -383,6 +415,11 @@ const deletePlan = (index) => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.plan-card:hover .plan-thumbnail img {
+  transform: scale(1.05);
 }
 
 /* 일정 정보 */
@@ -453,6 +490,7 @@ const deletePlan = (index) => {
   cursor: pointer;
   width: 100%;
   transition: background 0.2s ease;
+  white-space: nowrap;
 }
 
 .delete-button:hover {

@@ -50,9 +50,12 @@
 </template>
 
 <script setup>
+import { useRouter } from "vue-router";
 import SearchBar from "@/components/SearchBar.vue";
 import SpotCard from "@/components/SpotCard.vue";
 import NewsCard from "@/components/NewsCard.vue";
+
+const router = useRouter();
 
 // ------------------------------
 // festivals
@@ -181,8 +184,7 @@ const news = [
 // event handlers
 // ------------------------------
 const handleSpotClick = (spot) => {
-  console.log("Spot clicked:", spot);
-  // 스팟 상세 페이지로 이동하거나 모달 표시 등
+  router.push(`/spots/${spot.id}`);
 };
 
 const handleFavorite = (spot) => {

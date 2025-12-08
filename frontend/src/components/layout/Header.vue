@@ -13,10 +13,12 @@
 
       <div class="user-menu">
         <button class="user-icon">
-          <svg width="28" height="28" viewBox="0 0 34 34" fill="currentColor">
-            <circle cx="17" cy="12" r="5" />
-            <path d="M5 30c0-6.627 5.373-12 12-12s12 5.373 12 12" />
-          </svg>
+          <RouterLink to="/login" class="login">
+            <svg width="28" height="28" viewBox="0 0 34 34" fill="currentColor">
+              <circle cx="17" cy="12" r="5" />
+              <path d="M5 30c0-6.627 5.373-12 12-12s12 5.373 12 12" />
+            </svg>
+          </RouterLink>
         </button>
       </div>
     </div>
