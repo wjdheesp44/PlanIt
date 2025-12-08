@@ -1,23 +1,152 @@
 <template>
-  <header>
-    <RouterLink to="#"><img src="@/assets/img/logo.png" alt="홈 버튼" /></RouterLink>
-    <nav>
-      <ul>
-        <li><RouterLink to="/">홈</RouterLink></li>
-      </ul>
-    </nav>
+  <header class="header">
+    <div class="header-container">
+      <RouterLink to="/" class="logo">
+        <img src="@/assets/img/logo.png" alt="PlanIt" />
+      </RouterLink>
+
+      <nav class="nav">
+        <RouterLink to="/spots" class="nav-link">스팟 탐색</RouterLink>
+        <RouterLink to="/plans" class="nav-link">여행 플래너</RouterLink>
+        <RouterLink to="/mypage" class="nav-link">마이페이지</RouterLink>
+      </nav>
+
+      <div class="user-menu">
+        <button class="user-icon">
+          <svg width="28" height="28" viewBox="0 0 34 34" fill="currentColor">
+            <circle cx="17" cy="12" r="5" />
+            <path d="M5 30c0-6.627 5.373-12 12-12s12 5.373 12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
   </header>
 </template>
 
-<script setup></script>
+<script setup>
+import { RouterLink } from "vue-router";
+</script>
 
 <style scoped>
-header {
-  border: 1px solid black;
+/* Header */
+.header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+}
 
-  ul {
-    display: flex;
-    justify-content: space-around;
+.header-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.logo {
+  display: block;
+}
+
+.logo img {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
+.nav {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.nav-link {
+  padding: 0.5rem 0.875rem;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #1e1e1e;
+  font-size: 14px;
+  font-weight: 400;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  background: #f5f5f5;
+}
+
+.nav-link.router-link-active {
+  background: #f0f0f0;
+  font-weight: 500;
+}
+
+.user-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1e1e1e;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  width: 28px;
+  height: 28px;
+}
+
+.user-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.user-icon:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .header-container {
+    flex-wrap: wrap;
+  }
+
+  .nav {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem;
+  }
+
+  .logo img {
+    height: 32px;
+  }
+
+  .nav-link {
+    font-size: 13px;
+    padding: 0.375rem 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    gap: 1rem;
+  }
+
+  .nav {
+    gap: 0.25rem;
+  }
+
+  .nav-link {
+    font-size: 12px;
+    padding: 0.25rem 0.5rem;
   }
 }
 </style>
