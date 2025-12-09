@@ -1,5 +1,9 @@
 <template>
-  <div class="report-page">
+  <!-- 리포트가 없을 때: EmptyReport 표시 -->
+  <EmptyReport v-if="!hasReport" @start-analysis="startAnalysis" />
+
+  <!-- 리포트가 있을 때: 기존 리포트 표시 -->
+  <div v-else class="report-page">
     <!-- 페이지 헤더 -->
     <div class="page-header">
       <h1 class="page-title">분석 리포트</h1>
@@ -108,6 +112,10 @@
 
 <script setup>
 import { ref } from "vue";
+import EmptyReport from "@/components/mypage/EmptyReport.vue";
+
+// 리포트 존재 여부 (false = 처음 사용자, true = 리포트 있음)
+const hasReport = ref(false);
 
 const statistics = ref([
   {
@@ -167,6 +175,16 @@ const activities = ref([
 const regenerateAnalysis = () => {
   console.log("AI 분석 재생성");
   // API 호출 또는 분석 재생성 로직
+  // 완료 후 hasReport.value = true
+};
+
+const startAnalysis = () => {
+  console.log("AI 분석 시작");
+  // API 호출 또는 분석 시작 로직
+  // 완료 후 hasReport.value = true
+
+  // 임시: 바로 리포트 보여주기 (실제로는 API 완료 후)
+  hasReport.value = true;
 };
 </script>
 

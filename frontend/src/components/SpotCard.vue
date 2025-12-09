@@ -5,7 +5,7 @@
       <span class="badge" :class="badgeClass">{{ spot.badge }}</span>
       <button class="favorite-btn" @click.stop="handleFavorite">
         <svg
-          v-if="isFavorite"
+          v-if="spot.isFavorite"
           width="27"
           height="23"
           viewBox="0 0 27 23"
@@ -96,7 +96,7 @@
 </template>
 
 <script setup>
-import { ref, computed, defineProps, defineEmits } from "vue";
+import { computed, defineProps, defineEmits } from "vue";
 
 const props = defineProps({
   spot: {
@@ -105,7 +105,6 @@ const props = defineProps({
   },
 });
 
-const isFavorite = ref(false);
 const emit = defineEmits(["click", "favorite"]);
 
 const badgeClass = computed(() => {
@@ -122,8 +121,7 @@ const handleClick = () => {
 };
 
 const handleFavorite = () => {
-  isFavorite.value = !isFavorite.value; // 토글
-  emit("favorite", props.spot); // 부모에도 알리기
+  emit("favorite", props.spot);
 };
 </script>
 
@@ -195,14 +193,14 @@ const handleFavorite = () => {
   position: absolute;
   top: 18px;
   right: 16px;
-  background: transparent; /* 배경 없애기 */
+  background: transparent;
   border: none;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #ef4444; /* 하트 색 */
+  transition: transform 0.2s ease;
 }
 
 .favorite-btn svg {
@@ -212,7 +210,6 @@ const handleFavorite = () => {
 
 .favorite-btn:hover {
   transform: scale(1.1);
-  box-shadow: 0 2px 12px rgba(239, 68, 68, 0.25);
 }
 
 .card-content {

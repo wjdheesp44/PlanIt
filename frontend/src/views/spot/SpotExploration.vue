@@ -43,7 +43,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
-import FilterSidebar from "@/components/FilterSidebar.vue";
+import FilterSidebar from "@/components/spot/FilterSidebar.vue";
 import SpotCard from "@/components/SpotCard.vue";
 
 const router = useRouter();
@@ -128,6 +128,13 @@ const handleFilterChange = (newFilters) => {
 
 const handleSpotClick = (spot) => {
   router.push(`/spots/${spot.id}`);
+};
+
+const handleFavorite = (spot) => {
+  let targetSpot = spots.value.find((s) => s.id === spot.id);
+  targetSpot.isFavorite = !targetSpot.isFavorite;
+  console.log("Favorite toggled:", targetSpot);
+  // 좋아요 상태 토글 API 호출 등
 };
 </script>
 

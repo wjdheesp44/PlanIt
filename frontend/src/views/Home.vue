@@ -50,6 +50,7 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import SearchBar from "@/components/SearchBar.vue";
 import SpotCard from "@/components/SpotCard.vue";
@@ -60,7 +61,7 @@ const router = useRouter();
 // ------------------------------
 // festivals
 // ------------------------------
-const festivals = [
+const festivals = ref([
   {
     id: 1,
     name: "벚꽃축제",
@@ -101,12 +102,12 @@ const festivals = [
     location: "서울특별시 여의도 한강공원 203",
     tags: "#벚꽃 #축제",
   },
-];
+]);
 
 // ------------------------------
 // popups
 // ------------------------------
-const popups = [
+const popups = ref([
   {
     id: 5,
     name: "강남 팝업스토어",
@@ -147,7 +148,7 @@ const popups = [
     location: "서울특별시 강남구 테헤란로 203",
     tags: "#강남 #팝업",
   },
-];
+]);
 
 // ------------------------------
 // news
@@ -188,7 +189,19 @@ const handleSpotClick = (spot) => {
 };
 
 const handleFavorite = (spot) => {
-  console.log("Favorite toggled:", spot);
+  let targetSpot = festivals.value.find((s) => s.id === spot.id);
+
+  // 없으면 popups에서 찾기
+  if (!targetSpot) {
+    targetSpot = popups.value.find((s) => s.id === spot.id);
+  }
+
+  // 찾았으면 토글
+  if (targetSpot) {
+    targetSpot.isFavorite = !targetSpot.isFavorite;
+    console.log("Favorite toggled:", targetSpot);
+    // API 호출
+  }
   // 좋아요 상태 토글 API 호출 등
 };
 </script>

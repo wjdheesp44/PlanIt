@@ -84,68 +84,13 @@
           </button>
 
           <div class="spots-grid" ref="carouselRef">
-            <div
+            <SpotCard
               v-for="relatedSpot in relatedSpots"
               :key="relatedSpot.id"
-              class="spot-card"
-              @click="goToSpot(relatedSpot.id)"
-            >
-              <div class="card-image">
-                <img :src="relatedSpot.image" :alt="relatedSpot.title" />
-                <span class="card-badge" :class="relatedSpot.category">
-                  {{ getCategoryLabel(relatedSpot.category) }}
-                </span>
-                <button
-                  class="card-favorite"
-                  :class="{ active: relatedSpot.isFavorite }"
-                  @click.stop="toggleRelatedFavorite(relatedSpot.id)"
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M1.667 7.917C1.667 6.989 1.948 6.084 2.474 5.32C2.999 4.556 3.744 3.969 4.61 3.637C5.476 3.305 6.422 3.244 7.324 3.461C8.225 3.678 9.04 4.164 9.659 4.853C9.703 4.9 9.756 4.937 9.815 4.963C9.873 4.988 9.936 5.001 10 5.001C10.064 5.001 10.128 4.988 10.186 4.963C10.245 4.937 10.298 4.9 10.341 4.853C10.959 4.159 11.774 3.669 12.677 3.45C13.58 3.23 14.528 3.29 15.396 3.623C16.264 3.955 17.01 4.545 17.535 5.312C18.059 6.079 18.338 6.987 18.334 7.917C18.334 9.825 17.084 11.25 15.834 12.5L11.257 16.928C11.102 17.106 10.91 17.249 10.695 17.348C10.481 17.446 10.247 17.498 10.011 17.5C9.774 17.501 9.54 17.452 9.324 17.356C9.108 17.261 8.915 17.12 8.757 16.943L4.167 12.5C2.917 11.25 1.667 9.833 1.667 7.917Z"
-                      :fill="relatedSpot.isFavorite ? '#FB2C36' : 'none'"
-                      :stroke="relatedSpot.isFavorite ? '#FB2C36' : 'white'"
-                      stroke-width="1.667"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div class="card-content">
-                <div class="card-header">
-                  <h3 class="card-title">{{ relatedSpot.title }}</h3>
-                  <div class="card-rating">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M7.678 1.53C7.707 1.471 7.752 1.421 7.808 1.387C7.864 1.352 7.929 1.333 7.995 1.333C8.061 1.333 8.125 1.352 8.181 1.387C8.237 1.421 8.282 1.471 8.311 1.53L9.851 4.647C9.952 4.852 10.102 5.03 10.287 5.164C10.472 5.299 10.687 5.387 10.914 5.42L14.358 5.924C14.423 5.933 14.484 5.961 14.535 6.003C14.585 6.046 14.623 6.101 14.643 6.164C14.664 6.227 14.666 6.294 14.65 6.358C14.635 6.422 14.601 6.481 14.554 6.527L12.063 8.951C11.899 9.111 11.776 9.309 11.705 9.527C11.634 9.745 11.617 9.977 11.656 10.203L12.244 13.63C12.255 13.695 12.248 13.762 12.223 13.824C12.198 13.885 12.157 13.938 12.104 13.977C12.05 14.016 11.987 14.039 11.921 14.044C11.855 14.048 11.789 14.034 11.73 14.003L8.651 12.384C8.448 12.278 8.223 12.222 7.994 12.222C7.765 12.222 7.54 12.278 7.337 12.384L4.258 14.003C4.2 14.034 4.134 14.048 4.068 14.043C4.002 14.038 3.939 14.015 3.885 13.976C3.832 13.937 3.79 13.884 3.765 13.823C3.74 13.762 3.733 13.695 3.744 13.63L4.332 10.204C4.371 9.978 4.354 9.746 4.283 9.528C4.212 9.31 4.089 9.112 3.925 8.952L1.434 6.528C1.387 6.482 1.353 6.424 1.337 6.36C1.321 6.296 1.323 6.228 1.344 6.166C1.364 6.103 1.402 6.047 1.452 6.004C1.503 5.962 1.565 5.934 1.63 5.925L5.073 5.422C5.3 5.389 5.515 5.301 5.701 5.166C5.886 5.032 6.036 4.854 6.138 4.649L7.678 1.53Z"
-                        fill="#FDC700"
-                        stroke="#FDC700"
-                        stroke-width="1.333"
-                      />
-                    </svg>
-                    <span>{{ relatedSpot.rating }}</span>
-                  </div>
-                </div>
-                <p class="card-hours">{{ relatedSpot.hours }}</p>
-                <p class="card-address">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M13.325 6.662C13.325 9.989 9.635 13.453 8.395 14.523C8.28 14.61 8.139 14.657 7.995 14.657C7.85 14.657 7.71 14.61 7.594 14.523C6.355 13.453 2.665 9.989 2.665 6.662C2.665 5.249 3.227 3.893 4.226 2.894C5.226 1.894 6.581 1.333 7.995 1.333C9.408 1.333 10.764 1.894 11.764 2.894C12.763 3.893 13.325 5.249 13.325 6.662Z"
-                      stroke="#99A1AF"
-                      stroke-width="1.332"
-                    />
-                    <path
-                      d="M7.995 8.661C9.099 8.661 9.993 7.766 9.993 6.662C9.993 5.558 9.099 4.664 7.995 4.664C6.891 4.664 5.996 5.558 5.996 6.662C5.996 7.766 6.891 8.661 7.995 8.661Z"
-                      stroke="#99A1AF"
-                      stroke-width="1.332"
-                    />
-                  </svg>
-                  {{ relatedSpot.address }}
-                </p>
-                <p class="card-tags">{{ relatedSpot.tags }}</p>
-              </div>
-            </div>
+              :spot="relatedSpot"
+              @click="goToSpot"
+              @favorite="handleRelatedFavorite"
+            />
           </div>
 
           <button class="carousel-btn next" @click="scrollCarousel('next')">
@@ -173,68 +118,12 @@
         </div>
 
         <div class="reviews-list">
-          <div v-for="review in reviews" :key="review.id" class="review-card">
-            <div class="review-header">
-              <div class="review-user-info">
-                <div class="review-rating">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M9.604 1.913C9.641 1.839 9.697 1.777 9.767 1.733C9.837 1.69 9.918 1.667 10 1.667C10.082 1.667 10.163 1.69 10.233 1.733C10.303 1.777 10.359 1.839 10.396 1.913L12.321 5.812C12.448 6.069 12.635 6.291 12.866 6.459C13.098 6.627 13.367 6.737 13.65 6.779L17.955 7.409C18.036 7.42 18.113 7.455 18.176 7.508C18.239 7.561 18.286 7.631 18.312 7.709C18.337 7.787 18.34 7.871 18.32 7.951C18.301 8.031 18.259 8.104 18.2 8.162L15.087 11.194C14.881 11.394 14.728 11.641 14.639 11.913C14.55 12.186 14.529 12.476 14.577 12.759L15.312 17.042C15.327 17.123 15.318 17.207 15.287 17.284C15.256 17.361 15.204 17.427 15.137 17.476C15.07 17.525 14.991 17.554 14.908 17.559C14.826 17.565 14.743 17.548 14.67 17.509L10.822 15.485C10.568 15.352 10.286 15.283 10 15.283C9.713 15.283 9.431 15.352 9.177 15.485L5.33 17.509C5.257 17.547 5.174 17.565 5.092 17.559C5.009 17.553 4.93 17.524 4.863 17.475C4.797 17.427 4.745 17.36 4.714 17.284C4.683 17.207 4.674 17.123 4.688 17.042L5.422 12.759C5.471 12.477 5.45 12.186 5.361 11.914C5.272 11.641 5.119 11.394 4.913 11.194L1.8 8.163C1.74 8.105 1.698 8.032 1.678 7.952C1.658 7.872 1.661 7.787 1.687 7.709C1.712 7.63 1.759 7.56 1.823 7.507C1.886 7.454 1.963 7.419 2.045 7.408L6.349 6.779C6.633 6.737 6.902 6.628 7.134 6.459C7.365 6.291 7.553 6.069 7.68 5.812L9.604 1.913Z"
-                      fill="#9810FA"
-                      stroke="#9810FA"
-                      stroke-width="1.667"
-                    />
-                  </svg>
-                  <span>{{ review.rating }}</span>
-                </div>
-                <div class="user-avatar-small">👤</div>
-                <span class="user-name">{{ review.userName }}</span>
-                <span class="user-tag">{{ review.userTag }}</span>
-                <span class="user-age">{{ review.userAge }}</span>
-                <span class="review-date">{{ review.date }}</span>
-              </div>
-            </div>
-
-            <h3 class="review-title">{{ review.title }}</h3>
-            <p class="review-content">{{ review.content }}</p>
-
-            <div class="review-tags">
-              <span v-for="(tag, index) in review.tags" :key="index" class="review-tag">
-                {{ tag.icon }} {{ tag.text }}
-              </span>
-            </div>
-
-            <div v-if="review.images && review.images.length > 0" class="review-images">
-              <div v-for="(image, index) in review.images" :key="index" class="review-image">
-                <img :src="image" :alt="`Review image ${index + 1}`" />
-                <div class="play-overlay">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M5 5C5 4.648 5.093 4.302 5.269 3.998C5.445 3.693 5.699 3.441 6.004 3.265C6.309 3.09 6.655 2.998 7.007 3C7.359 3.001 7.704 3.095 8.008 3.272L20.005 10.27C20.308 10.446 20.559 10.698 20.734 11.001C20.909 11.304 21.001 11.648 21.001 11.998C21.002 12.348 20.91 12.692 20.736 12.996C20.561 13.299 20.311 13.552 20.008 13.728L8.008 20.728C7.704 20.906 7.359 21 7.007 21.001C6.655 21.002 6.309 20.91 6.004 20.735C5.699 20.56 5.445 20.307 5.269 20.002C5.093 19.698 5 19.352 5 19V5Z"
-                      fill="#1E2939"
-                      stroke="#1E2939"
-                      stroke-width="2"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div class="review-actions">
-              <button class="helpful-btn">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M4.667 6.667V14.667M10 3.92L9.333 6.667H13.22C13.427 6.667 13.631 6.715 13.816 6.808C14.001 6.9 14.162 7.035 14.286 7.2C14.411 7.366 14.495 7.558 14.532 7.762C14.569 7.965 14.558 8.175 14.5 8.374L12.946 13.707C12.866 13.984 12.697 14.227 12.466 14.4C12.236 14.573 11.955 14.667 11.666 14.667H2.666C2.313 14.667 1.974 14.526 1.724 14.276C1.473 14.026 1.333 13.687 1.333 13.333V8C1.333 7.647 1.473 7.307 1.724 7.057C1.974 6.807 2.313 6.667 2.666 6.667H4.506C4.754 6.667 4.998 6.597 5.208 6.467C5.419 6.336 5.589 6.149 5.7 5.927L8 1.333C8.314 1.337 8.624 1.412 8.905 1.553C9.186 1.693 9.432 1.895 9.625 2.144C9.817 2.392 9.951 2.681 10.016 2.989C10.08 3.297 10.075 3.615 10 3.92Z"
-                    stroke="#4A5565"
-                    stroke-width="1.333"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                도움이 돼요 {{ review.helpfulCount }}
-              </button>
-            </div>
-          </div>
+          <ReviewCard
+            v-for="review in reviews"
+            :key="review.id"
+            :review="review"
+            @helpful="handleHelpful"
+          />
         </div>
       </section>
     </main>
@@ -244,6 +133,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import SpotCard from "@/components/SpotCard.vue";
+import ReviewCard from "@/components/spot/ReviewCard.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -263,40 +154,51 @@ const spot = ref({
   isFavorite: false,
 });
 
-// 관련 스팟
+// 관련 스팟 (SpotCard 컴포넌트 형식에 맞게 변환)
 const relatedSpots = ref([
   {
     id: "1",
-    title: "감천문화마을",
-    category: "tourist",
+    name: "감천문화마을",
+    badge: "관광지",
     rating: 4.5,
-    hours: "AM 9:00 - PM 6:00",
-    address: "부산광역시 사하구 감내2로 203",
+    time: "AM 9:00 - PM 6:00",
+    location: "부산광역시 사하구 감내2로 203",
     tags: "#감천 #마을",
     image: "https://placehold.co/280x192",
     isFavorite: true,
   },
   {
     id: "2",
-    title: "강남 팝업스토어",
-    category: "popup",
+    name: "강남 팝업스토어",
+    badge: "팝업스토어",
     rating: 4.5,
-    hours: "AM 9:00 - PM 6:00",
-    address: "서울특별시 강남구 테헤란로 203",
+    time: "AM 9:00 - PM 6:00",
+    location: "서울특별시 강남구 테헤란로 203",
     tags: "#강남 #팝업",
     image: "https://placehold.co/280x192",
     isFavorite: true,
   },
   {
     id: "3",
-    title: "벚꽃축제",
-    category: "festival",
+    name: "벚꽃축제",
+    badge: "축제",
     rating: 4.5,
-    hours: "AM 9:00 - PM 6:00",
-    address: "서울특별시 여의도 한강공원 203",
+    time: "AM 9:00 - PM 6:00",
+    location: "서울특별시 여의도 한강공원 203",
     tags: "#벚꽃 #축제",
     image: "https://placehold.co/280x192",
     isFavorite: true,
+  },
+  {
+    id: "4",
+    name: "해운대 해수욕장",
+    badge: "관광지",
+    rating: 4.8,
+    time: "AM 9:00 - PM 10:00",
+    location: "부산광역시 해운대구 우동",
+    tags: "#해운대 #바다",
+    image: "https://placehold.co/280x192",
+    isFavorite: false,
   },
 ]);
 
@@ -324,25 +226,16 @@ const reviews = ref([
   },
 ]);
 
-// 카테고리 라벨
-const getCategoryLabel = (category) => {
-  const labels = {
-    tourist: "관광지",
-    popup: "팝업스토어",
-    festival: "축제",
-  };
-  return labels[category] || category;
-};
-
 // 좋아요 토글
 const toggleFavorite = () => {
   spot.value.isFavorite = !spot.value.isFavorite;
 };
 
-const toggleRelatedFavorite = (spotId) => {
-  const relatedSpot = relatedSpots.value.find((s) => s.id === spotId);
-  if (relatedSpot) {
-    relatedSpot.isFavorite = !relatedSpot.isFavorite;
+// 관련 스팟 좋아요 처리
+const handleRelatedFavorite = (relatedSpot) => {
+  const spot = relatedSpots.value.find((s) => s.id === relatedSpot.id);
+  if (spot) {
+    spot.isFavorite = !spot.isFavorite;
   }
 };
 
@@ -359,9 +252,17 @@ const scrollCarousel = (direction) => {
 };
 
 // 스팟 이동
-const goToSpot = (spotId) => {
-  router.push(`/spots/${spotId}`);
+const goToSpot = (relatedSpot) => {
+  router.push(`/spots/${relatedSpot.id}`);
   window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+// 도움이 돼요 처리
+const handleHelpful = (reviewId) => {
+  const review = reviews.value.find((r) => r.id === reviewId);
+  if (review) {
+    review.helpfulCount += 1;
+  }
 };
 
 // 컴포넌트 마운트 시 데이터 로드
@@ -372,6 +273,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@import url("https://fonts.googleapis.com/css2?family=Arimo:wght@400;500;600;700&display=swap");
+
 * {
   margin: 0;
   padding: 0;
@@ -381,68 +284,7 @@ onMounted(() => {
 .spot-detail {
   min-height: 100vh;
   background: white;
-  font-family: "Arimo", sans-serif;
-}
-
-/* 헤더 */
-.header {
-  width: 100%;
-  padding: 2rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: white;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-container {
-  max-width: 1920px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.logo {
-  width: 201px;
-  height: 52px;
-  object-fit: contain;
-}
-
-.nav-menu {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.nav-link {
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  text-decoration: none;
-  color: #1f2937;
-  font-size: 1rem;
-  transition: background 0.2s;
-}
-
-.nav-link:hover {
-  background: #f3f4f6;
-}
-
-.nav-link.router-link-exact-active {
-  background: #dbeafe;
-  color: #1e3a8a;
-}
-
-.user-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #f3f4f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
+  font-family: "Arimo", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* 메인 컨텐츠 */
@@ -622,7 +464,6 @@ onMounted(() => {
 
 .carousel-btn.next {
   right: -1.25rem;
-  opacity: 0.5;
 }
 
 .spots-grid {
@@ -638,120 +479,8 @@ onMounted(() => {
   display: none;
 }
 
-/* 스팟 카드 */
-.spot-card {
+.spots-grid > * {
   flex: 0 0 280px;
-  border-radius: 1rem;
-  border: 1px solid #e5e7eb;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.spot-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.card-image {
-  position: relative;
-  width: 100%;
-  height: 192px;
-  overflow: hidden;
-}
-
-.card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
-}
-
-.spot-card:hover .card-image img {
-  transform: scale(1.05);
-}
-
-.card-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  background: white;
-}
-
-.card-badge.tourist {
-  color: #2563eb;
-}
-
-.card-badge.popup {
-  color: #7c3aed;
-}
-
-.card-badge.festival {
-  color: #ec4899;
-}
-
-.card-favorite {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s;
-}
-
-.card-favorite:hover {
-  transform: scale(1.1);
-}
-
-.card-content {
-  padding: 1rem;
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.card-title {
-  font-size: 1rem;
-  color: #1f2937;
-  font-weight: normal;
-}
-
-.card-rating {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  color: #4b5563;
-}
-
-.card-hours,
-.card-address,
-.card-tags {
-  font-size: 0.875rem;
-  color: #4b5563;
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.card-tags {
-  color: #2563eb;
-  margin-bottom: 0;
 }
 
 /* 후기 섹션 */
@@ -781,152 +510,8 @@ onMounted(() => {
   gap: 1.5rem;
 }
 
-/* 후기 카드 */
-.review-card {
-  padding: 1.5rem;
-  border-radius: 0.625rem;
-  border: 1px solid #e5e7eb;
-  background: white;
-}
-
-.review-header {
-  margin-bottom: 1rem;
-}
-
-.review-user-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.review-rating {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.user-avatar-small {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background: #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-}
-
-.user-name,
-.user-tag,
-.user-age,
-.review-date {
-  font-size: 1rem;
-  color: #4b5563;
-}
-
-.review-title {
-  font-size: 0.875rem;
-  color: #374151;
-  margin-bottom: 0.75rem;
-  line-height: 1.5;
-}
-
-.review-content {
-  font-size: 1rem;
-  color: #374151;
-  line-height: 1.5;
-  margin-bottom: 1rem;
-}
-
-.review-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.review-tag {
-  padding: 0.5rem 0.75rem;
-  border-radius: 9999px;
-  border: 1px solid #e5e7eb;
-  font-size: 0.875rem;
-  color: #374151;
-  background: white;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.review-images {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.review-image {
-  position: relative;
-  width: 128px;
-  height: 128px;
-  border-radius: 0.625rem;
-  overflow: hidden;
-}
-
-.review-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.play-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.play-overlay svg {
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  padding: 0.75rem;
-}
-
-.review-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.helpful-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  border: none;
-  background: none;
-  color: #4b5563;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background 0.2s;
-  border-radius: 0.5rem;
-}
-
-.helpful-btn:hover {
-  background: #f3f4f6;
-}
-
 /* 반응형 */
 @media (max-width: 1024px) {
-  .header-container {
-    padding: 0 1rem;
-  }
-
   .main-content {
     padding: 1.5rem 1rem;
   }
@@ -935,7 +520,7 @@ onMounted(() => {
     gap: 0.75rem;
   }
 
-  .spot-card {
+  .spots-grid > * {
     flex: 0 0 250px;
   }
 
@@ -949,24 +534,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .header {
-    padding: 1rem;
-  }
-
-  .logo {
-    width: 150px;
-    height: auto;
-  }
-
-  .nav-menu {
-    gap: 0.25rem;
-  }
-
-  .nav-link {
-    font-size: 0.875rem;
-    padding: 0.5rem;
-  }
-
   .main-content {
     padding: 1rem;
   }
@@ -979,45 +546,12 @@ onMounted(() => {
     font-size: 1.25rem;
   }
 
-  .spot-card {
+  .spots-grid > * {
     flex: 0 0 220px;
-  }
-
-  .card-image {
-    height: 160px;
-  }
-
-  .review-card {
-    padding: 1rem;
-  }
-
-  .review-user-info {
-    font-size: 0.875rem;
-  }
-
-  .review-images {
-    gap: 0.5rem;
-  }
-
-  .review-image {
-    width: 96px;
-    height: 96px;
   }
 }
 
 @media (max-width: 480px) {
-  .header {
-    padding: 0.75rem;
-  }
-
-  .logo {
-    width: 120px;
-  }
-
-  .nav-menu {
-    display: none; /* 모바일에서는 햄버거 메뉴로 대체 권장 */
-  }
-
   .spot-title {
     font-size: 1.125rem;
   }
@@ -1030,21 +564,8 @@ onMounted(() => {
     gap: 0.5rem;
   }
 
-  .spot-card {
+  .spots-grid > * {
     flex: 0 0 200px;
-  }
-
-  .card-content {
-    padding: 0.75rem;
-  }
-
-  .review-content {
-    font-size: 0.875rem;
-  }
-
-  .review-image {
-    width: 80px;
-    height: 80px;
   }
 
   .carousel-btn {

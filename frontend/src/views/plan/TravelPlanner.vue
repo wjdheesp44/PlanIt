@@ -223,13 +223,19 @@
       </div>
     </div>
   </div>
+
+  <!-- 새 일정 만들기 모달 -->
+  <CreatePlanModal :is-open="isModalOpen" @close="closeModal" @create="handleCreatePlan" />
 </template>
 
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import CreatePlanModal from "@/components/plan/CreatePlanModal.vue";
 
 const router = useRouter();
+
+const isModalOpen = ref(false);
 
 const plans = ref([
   {
@@ -276,8 +282,32 @@ const plans = ref([
 
 // 새 일정 만들기
 const createNewPlan = () => {
-  console.log("새 일정 만들기");
-  // 실제로는 모달을 띄우거나 새 페이지로 이동
+  isModalOpen.value = true;
+};
+
+// 모달 닫기
+const closeModal = () => {
+  isModalOpen.value = false;
+};
+
+// 새 일정 생성
+const handleCreatePlan = (newPlanData) => {
+  const newPlan = {
+    id: plans.value.length + 1,
+    thumbnail: newPlanData.thumbnail,
+    title: newPlanData.folderName,
+    spotCount: 0,
+    sharedUsers: [],
+    sharedCount: 0,
+    lastModified: new Date().toISOString().split("T")[0].replace(/-/g, "."),
+    showDelete: false,
+  };
+
+  plans.value.unshift(newPlan);
+  closeModal();
+
+  // 선택적: 생성된 일정으로 바로 이동
+  // router.push(`/plans/${newPlan.id}`);
 };
 
 // 메뉴 토글

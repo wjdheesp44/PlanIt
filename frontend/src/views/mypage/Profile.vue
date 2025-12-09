@@ -228,7 +228,7 @@
 
 <script setup>
 import { ref } from "vue";
-import MyPageSidebar from "@/components/MyPageSidebar.vue";
+import MyPageSidebar from "@/components/mypage/MyPageSidebar.vue";
 
 const userInfo = ref({
   name: "김플랜",

@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import MyPageSidebar from "@/components/MyPageSidebar.vue";
+import MyPageSidebar from "@/components/mypage/MyPageSidebar.vue";
 </script>
 
 <style scoped>

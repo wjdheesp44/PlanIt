@@ -1,9 +1,21 @@
 <template>
-  <div class="login-page">
-    <div class="login-container">
-      <img src="@/assets/img/logo.png" alt="PlanIt" />
-      <!-- 로그인 폼 -->
-      <div class="login-form">
+  <div class="forgot-password-email-page">
+    <div class="forgot-password-email-container">
+      <!-- 로고 -->
+      <div class="logo">
+        <img src="@/assets/img/logo.png" alt="PlanIt" />
+      </div>
+
+      <!-- 비밀번호 찾기 폼 -->
+      <div class="forgot-password-email-form">
+        <div class="form-header">
+          <h1 class="form-title">비밀번호 찾기</h1>
+          <p class="form-description">
+            가입하신 이메일 주소를 입력해주세요.<br />
+            비밀번호 재설정 링크를 보내드립니다.
+          </p>
+        </div>
+
         <!-- 이메일 입력 -->
         <div class="input-group">
           <label class="input-label">이메일</label>
@@ -12,29 +24,17 @@
             class="input-field"
             placeholder="이메일을 입력해주세요"
             v-model="email"
-            @keyup.enter="handleLogin"
+            @keyup.enter="handleSubmit"
           />
         </div>
 
-        <!-- 비밀번호 입력 -->
-        <div class="input-group">
-          <label class="input-label">비밀번호</label>
-          <input
-            type="password"
-            class="input-field"
-            placeholder="비밀번호를 입력해주세요"
-            v-model="password"
-            @keyup.enter="handleLogin"
-          />
-        </div>
-
-        <!-- 로그인 버튼 -->
-        <button class="login-button" @click="handleLogin">로그인</button>
+        <!-- 전송 버튼 -->
+        <button class="submit-button" @click="handleSubmit">비밀번호 재설정 링크 전송</button>
 
         <!-- 링크 -->
         <div class="links">
-          <a href="/signup" class="/signup">회원가입</a>
-          <a href="/forgot-password-email" class="/forgot-password">비밀번호 찾기</a>
+          <a href="/login" class="link">로그인으로 돌아가기</a>
+          <a href="/signup" class="link">회원가입</a>
         </div>
       </div>
     </div>
@@ -48,20 +48,29 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const email = ref("");
-const password = ref("");
 
-const handleLogin = () => {
-  // 간단한 유효성 검사
-  if (!email.value || !password.value) {
-    alert("이메일과 비밀번호를 입력해주세요.");
+const handleSubmit = () => {
+  // 유효성 검사
+  if (!email.value) {
+    alert("이메일을 입력해주세요.");
+    return;
+  }
+
+  // 이메일 형식 검사
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.value)) {
+    alert("올바른 이메일 형식을 입력해주세요.");
     return;
   }
 
   // 실제로는 API 호출
-  console.log("Login:", { email: email.value, password: password.value });
+  console.log("Password reset link requested for:", email.value);
 
-  // 로그인 성공 후 메인 페이지로 이동
-  router.push("/");
+  // 성공 메시지
+  alert("비밀번호 재설정 링크를 이메일로 전송했습니다.\n이메일을 확인해주세요.");
+
+  // 로그인 페이지로 이동
+  router.push("/forgot-password");
 };
 </script>
 
@@ -74,7 +83,7 @@ const handleLogin = () => {
   box-sizing: border-box;
 }
 
-.login-page {
+.forgot-password-email-page {
   min-height: 100vh;
   background: #ffffff;
   display: flex;
@@ -84,7 +93,7 @@ const handleLogin = () => {
   padding: 2rem;
 }
 
-.login-container {
+.forgot-password-email-container {
   width: 100%;
   max-width: 609px;
   display: flex;
@@ -97,14 +106,16 @@ const handleLogin = () => {
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 24px;
-  font-weight: 700;
-  color: #1e3a8a;
+  justify-content: center;
 }
 
-/* 로그인 폼 */
-.login-form {
+.logo img {
+  height: 48px;
+  width: auto;
+}
+
+/* 비밀번호 찾기 폼 */
+.forgot-password-email-form {
   width: 100%;
   padding: 1.5rem;
   background: #ffffff;
@@ -113,6 +124,29 @@ const handleLogin = () => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/* 폼 헤더 */
+.form-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.form-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e1e1e;
+  margin: 0;
+}
+
+.form-description {
+  font-size: 14px;
+  font-weight: 400;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
 }
 
 /* 입력 그룹 */
@@ -150,8 +184,8 @@ const handleLogin = () => {
   border-color: #2563eb;
 }
 
-/* 로그인 버튼 */
-.login-button {
+/* 전송 버튼 */
+.submit-button {
   width: 100%;
   padding: 0.75rem;
   background: #2563eb;
@@ -164,11 +198,11 @@ const handleLogin = () => {
   transition: background 0.2s;
 }
 
-.login-button:hover {
+.submit-button:hover {
   background: #1e40af;
 }
 
-.login-button:active {
+.submit-button:active {
   background: #1e3a8a;
 }
 
@@ -194,21 +228,29 @@ const handleLogin = () => {
 
 /* 반응형 */
 @media (max-width: 768px) {
-  .login-page {
+  .forgot-password-email-page {
     padding: 1rem;
   }
 
-  .login-container {
+  .forgot-password-email-container {
     gap: 2rem;
   }
 
-  .logo {
+  .logo img {
+    height: 40px;
+  }
+
+  .forgot-password-email-form {
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+
+  .form-title {
     font-size: 20px;
   }
 
-  .login-form {
-    padding: 1.25rem;
-    gap: 1.25rem;
+  .form-description {
+    font-size: 13px;
   }
 
   .input-label {
@@ -220,7 +262,7 @@ const handleLogin = () => {
     padding: 0.625rem 0.875rem;
   }
 
-  .login-button {
+  .submit-button {
     font-size: 15px;
   }
 
@@ -230,17 +272,25 @@ const handleLogin = () => {
 }
 
 @media (max-width: 480px) {
-  .login-container {
+  .forgot-password-email-container {
     gap: 1.5rem;
   }
 
-  .logo {
+  .logo img {
+    height: 36px;
+  }
+
+  .forgot-password-email-form {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .form-title {
     font-size: 18px;
   }
 
-  .login-form {
-    padding: 1rem;
-    gap: 1rem;
+  .form-description {
+    font-size: 12px;
   }
 
   .input-label {
@@ -252,13 +302,18 @@ const handleLogin = () => {
     padding: 0.5rem 0.75rem;
   }
 
-  .login-button {
+  .submit-button {
     font-size: 14px;
     padding: 0.625rem;
   }
 
   .link {
     font-size: 13px;
+  }
+
+  .links {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }
 </style>
