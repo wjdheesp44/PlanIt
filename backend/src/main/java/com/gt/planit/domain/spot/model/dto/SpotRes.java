@@ -12,7 +12,7 @@ public class SpotRes {
     private String name;
     private String badge;     // 관광지 / 축제 / 팝업
     private Double rating;
-    private String time;      // "AM 9:00 - PM 6:00"
+    private String time;
     private String location;
     private String tags;      // "#감천 #마을"
     private String image;

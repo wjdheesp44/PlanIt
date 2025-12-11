@@ -13,11 +13,14 @@
             WHEN 'POPUP'     THEN '팝업'
         END                                                 AS badge,
         s.avg_rating                                        AS rating,
-        CONCAT(
-            DATE_FORMAT(s.start_time, '%p %l:%i'),
-            ' - ',
-            DATE_FORMAT(s.end_time, '%p %l:%i')
-        )                                                   AS time,
+        CASE
+            WHEN s.start_time IS NULL OR s.end_time IS NULL THEN '상시운영'
+            ELSE CONCAT(
+                DATE_FORMAT(s.start_time, '%Y년 %c월 %e일'),
+                ' ~ ',
+                DATE_FORMAT(s.end_time, '%Y년 %c월 %e일')
+            )
+        END                                                  AS time,
         COALESCE(s.doro_addr, s.jibun_addr)                 AS location,
         TRIM(
             COALESCE(
@@ -121,8 +124,8 @@
             <when test="cond.sort == 'RATING_DESC'">
                 ORDER BY s.avg_rating DESC, s.id DESC
             </when>
-            <when test="cond.sort == 'START_DATE_ASC'">
-                ORDER BY s.start_time ASC, s.id DESC
+            <when test="cond.sort == 'LATEST'">
+                ORDER BY s.end_time DESC, s.id DESC
             </when>
             <otherwise>
                 ORDER BY s.created_at DESC

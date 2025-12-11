@@ -12,28 +12,60 @@
           <button
             class="tab"
             :class="{ active: activeTab === 'events' }"
-            @click="activeTab = 'events'"
+            @click="changeTab('events')"
           >
             행사&팝업 스토어
           </button>
           <button
             class="tab"
             :class="{ active: activeTab === 'places' }"
-            @click="activeTab = 'places'"
+            @click="changeTab('places')"
           >
             여행지
           </button>
         </div>
 
+        <!-- Loading State -->
+        <div v-if="loading" class="loading-state">
+          <div class="spinner"></div>
+          <p>스팟을 불러오는 중...</p>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="error-state">
+          <p>{{ error }}</p>
+          <button @click="loadSpots" class="retry-btn">다시 시도</button>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="spots.length === 0" class="empty-state">
+          <p>검색 결과가 없습니다.</p>
+        </div>
+
         <!-- Grid of Spot Cards -->
-        <div class="cards-container">
+        <div v-else class="cards-container">
           <SpotCard
-            v-for="spot in filteredSpots"
+            v-for="spot in spots"
             :key="spot.id"
             :spot="spot"
             @click="handleSpotClick"
             @favorite="handleFavorite"
           />
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="!loading && spots.length > 0" class="pagination">
+          <button
+            class="page-btn"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
+            이전
+          </button>
+          <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+          <button class="page-btn" :disabled="isLastPage" @click="changePage(currentPage + 1)">
+            다음
+          </button>
         </div>
       </main>
     </div>
@@ -41,101 +73,187 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import FilterSidebar from "@/components/spot/FilterSidebar.vue";
 import SpotCard from "@/components/SpotCard.vue";
+import spotApi from "@/api/spot/SpotApi";
 
 const router = useRouter();
 const activeTab = ref("events");
 const filters = ref({});
+const spots = ref([]);
+const loading = ref(false);
+const error = ref(null);
 
-const spots = ref([
-  {
-    id: 1,
-    name: "감천문화마을",
-    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-    badge: "관광지",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "부산광역시 사하구 감내2로 203",
-    tags: "#감천 #마을",
-  },
-  {
-    id: 2,
-    name: "강남 팝업스토어",
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400",
-    badge: "팝업스토어",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 강남구 테헤란로 203",
-    tags: "#강남 #팝업",
-  },
-  {
-    id: 3,
-    name: "벚꽃축제",
-    image: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=400",
-    badge: "축제",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 여의도 한강공원 203",
-    tags: "#벚꽃 #축제",
-  },
-  {
-    id: 4,
-    name: "해운대 해수욕장",
-    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400",
-    badge: "관광지",
-    rating: 4.8,
-    time: "24시간",
-    location: "부산광역시 해운대구 중동",
-    tags: "#해운대 #바다",
-  },
-  {
-    id: 5,
-    name: "홍대 팝업스토어",
-    image: "https://images.unsplash.com/photo-1555421689-d68471e189f2?w=400",
-    badge: "팝업스토어",
-    rating: 4.3,
-    time: "PM 12:00 - PM 10:00",
-    location: "서울특별시 마포구 홍익로",
-    tags: "#홍대 #감성",
-  },
-  {
-    id: 6,
-    name: "불꽃축제",
-    image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400",
-    badge: "축제",
-    rating: 4.7,
-    time: "PM 7:00 - PM 10:00",
-    location: "서울특별시 영등포구 여의도동",
-    tags: "#불꽃 #축제",
-  },
-]);
+// Pagination
+const currentPage = ref(1);
+const pageSize = ref(18);
+const totalCount = ref(0);
+const totalPages = ref(0);
+const isLastPage = ref(false);
 
-const totalCount = computed(() => filteredSpots.value.length);
-
-const filteredSpots = computed(() => {
-  // 여기에 필터링 로직 추가 가능
-  return spots.value;
-});
-
-const handleFilterChange = (newFilters) => {
-  filters.value = newFilters;
-  console.log("Filters changed:", newFilters);
-  // 필터링 로직 구현
+// 탭 변경
+const changeTab = (tab) => {
+  activeTab.value = tab;
+  currentPage.value = 1; // 페이지 1로 초기화
+  loadSpots();
 };
 
+// 페이지 변경
+const changePage = (page) => {
+  currentPage.value = page;
+  loadSpots();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+// 필터를 API 파라미터로 변환
+const buildApiParams = () => {
+  const params = {
+    page: currentPage.value,
+    size: pageSize.value,
+  };
+
+  // 탭에 따른 타입 설정
+  if (activeTab.value === "events") {
+    params.type = ["FESTIVAL", "POPUP"];
+  } else {
+    params.type = ["ATTRACTION"];
+  }
+
+  // 날짜
+  if (filters.value.dateFrom) {
+    params.startDate = filters.value.dateFrom;
+  }
+  if (filters.value.dateTo) {
+    params.endDate = filters.value.dateTo;
+  }
+
+  // 날씨
+  const weatherConditions = [];
+  if (filters.value.weather?.clear) weatherConditions.push("맑음");
+  if (filters.value.weather?.goodAir) weatherConditions.push("좋음");
+  if (weatherConditions.length > 0) {
+    params.weather = weatherConditions;
+  }
+
+  // 별점
+  const selectedRatings = [];
+  if (filters.value.stars) {
+    for (let i = 1; i <= 5; i++) {
+      if (filters.value.stars[i]) {
+        selectedRatings.push(i);
+      }
+    }
+  }
+  if (selectedRatings.length > 0) {
+    params.rating = selectedRatings;
+  }
+
+  // 좋아요수
+  if (filters.value.likes && filters.value.likes > 0) {
+    params.likesCount = filters.value.likes;
+  }
+
+  // 검색어
+  if (filters.value.searchTerm) {
+    params.search = filters.value.searchTerm;
+  }
+
+  // 태그
+  if (filters.value.tags && filters.value.tags.length > 0) {
+    // # 제거
+    params.tag = filters.value.tags.map((tag) => tag.replace("#", ""));
+  }
+
+  // 지역
+  if (filters.value.selectedRegions && filters.value.selectedRegions.length > 0) {
+    const regionIds = [];
+    filters.value.selectedRegions.forEach((region) => {
+      if (region.sidoId === "all" && region.allSidoIds) {
+        // 전체 시도
+        regionIds.push(...region.allSidoIds);
+      } else if (region.gugunId === "all" && region.allGugunIds) {
+        // 특정 시도의 전체 구군
+        regionIds.push(...region.allGugunIds);
+      } else if (region.gugunId) {
+        // 특정 구군
+        regionIds.push(region.gugunId);
+      }
+    });
+    if (regionIds.length > 0) {
+      params.region = [...new Set(regionIds)]; // 중복 제거
+    }
+  }
+
+  // 정렬
+  const sortMap = {
+    popular: "POPULAR",
+    latest: "LATEST",
+    rating: "RATING_DESC",
+    likes: "LIKES_DESC",
+  };
+  if (filters.value.sort) {
+    params.sort = sortMap[filters.value.sort] || "LATEST";
+  }
+
+  return params;
+};
+
+// 스팟 로드
+const loadSpots = async () => {
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const params = buildApiParams();
+    const response = await spotApi.getSpots(params);
+
+    spots.value = response.data;
+    totalCount.value = response.totalElements;
+    totalPages.value = response.totalPages;
+    isLastPage.value = response.last;
+    currentPage.value = response.page; // API 응답의 page 값 사용 (1-based)
+  } catch (err) {
+    error.value = "스팟을 불러오는데 실패했습니다.";
+    console.error("Load spots error:", err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 필터 변경 핸들러
+const handleFilterChange = (newFilters) => {
+  filters.value = newFilters;
+  currentPage.value = 1; // 페이지 1로 초기화
+  loadSpots();
+};
+
+// 스팟 클릭
 const handleSpotClick = (spot) => {
   router.push(`/spots/${spot.id}`);
 };
 
-const handleFavorite = (spot) => {
-  let targetSpot = spots.value.find((s) => s.id === spot.id);
-  targetSpot.isFavorite = !targetSpot.isFavorite;
-  console.log("Favorite toggled:", targetSpot);
-  // 좋아요 상태 토글 API 호출 등
+// 좋아요 토글
+const handleFavorite = async (spot) => {
+  try {
+    await spotApi.toggleFavorite(spot.id);
+
+    // 로컬 상태 업데이트
+    const targetSpot = spots.value.find((s) => s.id === spot.id);
+    if (targetSpot) {
+      targetSpot.isFavorite = !targetSpot.isFavorite;
+    }
+  } catch (err) {
+    console.error("Toggle favorite error:", err);
+    alert("좋아요 처리에 실패했습니다.");
+  }
 };
+
+// 초기 로드
+onMounted(() => {
+  loadSpots();
+});
 </script>
 
 <style scoped>
@@ -203,6 +321,68 @@ const handleFavorite = (spot) => {
   border-radius: 2px 2px 0 0;
 }
 
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #ef4444;
+}
+
+.retry-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.retry-btn:hover {
+  background: #1d4ed8;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #6b7280;
+}
+
 /* Cards Grid */
 .cards-container {
   display: grid;
@@ -220,6 +400,44 @@ const handleFavorite = (spot) => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding: 1rem 0;
+}
+
+.page-btn {
+  padding: 0.5rem 1.25rem;
+  background: #ffffff;
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #a3a3a3;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #52525b;
+  min-width: 80px;
+  text-align: center;
 }
 
 /* Responsive Design */

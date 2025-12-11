@@ -7,6 +7,7 @@ import com.gt.planit.security.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -57,6 +58,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login").permitAll()
                 .requestMatchers("/auth/refresh").permitAll()
+                .requestMatchers(HttpMethod.GET,"/v1/spots").permitAll()
+                .requestMatchers(HttpMethod.GET,"/v1/regions").permitAll()
                 .anyRequest().authenticated()
         );
 
