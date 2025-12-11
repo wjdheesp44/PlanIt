@@ -2,63 +2,95 @@
   <div class="login-page">
     <div class="login-container">
       <img src="@/assets/img/logo.png" alt="PlanIt" />
-      <!-- 로그인 폼 -->
-      <div class="login-form">
-        <!-- 이메일 입력 -->
-        <div class="input-group">
-          <label class="input-label">이메일</label>
-          <input
-            type="email"
-            class="input-field"
-            placeholder="이메일을 입력해주세요"
-            v-model="email"
-            @keyup.enter="handleLogin"
-          />
-        </div>
+      <!-- form으로 감싸기 -->
+        <form class="login-form" @submit.prevent="handleLogin">
+          <!-- 이메일 입력 -->
+          <div class="input-group">
+            <label class="input-label">이메일</label>
+            <input
+              type="email"
+              class="input-field"
+              placeholder="이메일을 입력해주세요"
+              v-model="email"
+            />
+          </div>
 
-        <!-- 비밀번호 입력 -->
-        <div class="input-group">
-          <label class="input-label">비밀번호</label>
-          <input
-            type="password"
-            class="input-field"
-            placeholder="비밀번호를 입력해주세요"
-            v-model="password"
-            @keyup.enter="handleLogin"
-          />
-        </div>
+          <!-- 비밀번호 입력 -->
+          <div class="input-group">
+            <label class="input-label">비밀번호</label>
+            <input
+              type="password"
+              class="input-field"
+              placeholder="비밀번호를 입력해주세요"
+              v-model="password"
+            />
+          </div>
 
-        <!-- 로그인 버튼 -->
-        <button class="login-button" @click="handleLogin">로그인</button>
+          <!-- submit 버튼 -->
+          <button type="submit" class="login-button">
+            로그인
+          </button>
 
-        <!-- 링크 -->
-        <div class="links">
-          <a href="/signup" class="/signup">회원가입</a>
-          <a href="/forgot-password-email" class="/forgot-password">비밀번호 찾기</a>
-        </div>
+          <!-- 링크 -->
+          <div class="links">
+            <a href="/signup" class="/signup">회원가입</a>
+            <a href="/forgot-password-email" class="/forgot-password">비밀번호 찾기</a>
+          </div>
+        </form>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import authApi from "@/api/authApi";
 
 const router = useRouter();
 
 const email = ref("");
 const password = ref("");
+const isLoading = ref(false);
 
-const handleLogin = () => {
+const handleLogin = async () => {
   // 간단한 유효성 검사
   if (!email.value || !password.value) {
     alert("이메일과 비밀번호를 입력해주세요.");
     return;
   }
 
-  // 실제로는 API 호출
-  console.log("Login:", { email: email.value, password: password.value });
+  try {
+      isLoading.value = true;
+
+      // authApi 사용
+      const res = await authApi.post("/api/login", {
+        username: email.value,
+        password: password.value,
+      });
+
+      // 백엔드에서 내려준 JWT 저장
+      const { accessToken, user } = res.data;
+
+      if (!accessToken) {
+        throw new Error("토큰이 없습니다.");
+      }
+
+      localStorage.setItem("accessToken", accessToken);
+
+      // 로그인 성공 후 이동
+      router.replace("/"); // 뒤로가기 방지
+    } catch (err) {
+      console.error(err);
+
+      const message =
+        err.response?.status === 401
+          ? "이메일 또는 비밀번호가 올바르지 않습니다."
+          : "로그인 중 오류가 발생했습니다.";
+
+      alert(message);
+    } finally {
+      isLoading.value = false;
+    }
 
   // 로그인 성공 후 메인 페이지로 이동
   router.push("/");
