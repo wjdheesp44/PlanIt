@@ -29,7 +29,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
     // Spring Security
-//    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     // MyBatis (Boot 3.x 에서는 3.0.3 사용)
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
