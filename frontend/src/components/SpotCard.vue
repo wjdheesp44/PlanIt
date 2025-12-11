@@ -1,7 +1,7 @@
 <template>
   <div class="spot-card" @click="handleClick">
     <div class="card-image">
-      <img :src="spot.image" :alt="spot.name" />
+      <img :src="spot.image || placeholderImage" :alt="spot.name" @error="handleImageError" />
       <span class="badge" :class="badgeClass">{{ spot.badge }}</span>
       <button class="favorite-btn" @click.stop="handleFavorite">
         <svg
@@ -60,7 +60,8 @@
               stroke-linejoin="round"
             />
           </svg>
-          <span class="rating-value">{{ spot.rating }}</span>
+          <span class="rating-value" v-if="spot.rating > 0">{{ spot.rating }}</span>
+          <span class="rating-value" v-else>별점없음</span>
         </div>
       </div>
       <div class="card-time">
@@ -97,7 +98,7 @@
 
 <script setup>
 import { computed, defineProps, defineEmits } from "vue";
-
+import placeholderImage from "@/assets/img/no-image.svg";
 const props = defineProps({
   spot: {
     type: Object,
@@ -106,6 +107,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["click", "favorite"]);
+
+// Placeholder image for missing images
+// const placeholderImage = "@/assets/img/no-image.svg";
 
 const badgeClass = computed(() => {
   const badgeMap = {
@@ -122,6 +126,10 @@ const handleClick = () => {
 
 const handleFavorite = () => {
   emit("favorite", props.spot);
+};
+
+const handleImageError = (event) => {
+  event.target.src = placeholderImage;
 };
 </script>
 
