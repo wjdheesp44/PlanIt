@@ -54,17 +54,17 @@ public class SpotController {
             @RequestParam(name = "sort", required = false, defaultValue = "LATEST")
             String sort,
 
-            @RequestParam(name = "page", required = false, defaultValue = "0")
+            @RequestParam(name = "page", required = false, defaultValue = "1")
             int page,
 
-            @RequestParam(name = "size", required = false, defaultValue = "20")
+            @RequestParam(name = "size", required = false, defaultValue = "18")
             int size
     ) {
         SpotSearchCondition condition = SpotSearchCondition.builder()
                 .types(type)
                 .startDate(startDate)
                 .endDate(endDate)
-                .weathers(weathers)       // ✅ 변경
+                .weathers(weathers)
                 .ratings(ratings)
                 .likesCountMin(likesCountMin)
                 .searchKeyword(searchKeyword)
@@ -76,12 +76,4 @@ public class SpotController {
         PageRes<SpotRes> result = spotService.searchSpots(condition, page, size);
         return ResponseEntity.ok(result);
     }
-
-
-//    @GetMapping("/v1/spots/test")
-//    public ResponseEntity<PageRes<SpotRes>> getAllSpots() {
-//
-//        return ResponseEntity.ok();
-//    }
-
 }
