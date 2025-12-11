@@ -9,9 +9,19 @@
     <div class="filter-section">
       <h4 class="filter-label">여행 기간</h4>
       <div class="date-inputs">
-        <input type="text" placeholder="YYYY.MM.DD" class="date-input" v-model="filters.dateFrom" />
+        <input
+          type="date"
+          class="date-input"
+          v-model="filters.dateFrom"
+          @change="handleFilterChange"
+        />
         <span class="date-separator">~</span>
-        <input type="text" placeholder="YYYY.MM.DD" class="date-input" v-model="filters.dateTo" />
+        <input
+          type="date"
+          class="date-input"
+          v-model="filters.dateTo"
+          @change="handleFilterChange"
+        />
       </div>
     </div>
 
@@ -27,6 +37,43 @@
           <input type="checkbox" v-model="filters.weather.goodAir" @change="handleFilterChange" />
           <span>미세먼지 좋음</span>
         </label>
+      </div>
+    </div>
+
+    <!-- 지역 -->
+    <div class="filter-section">
+      <h4 class="filter-label">지역</h4>
+      <div class="region-select">
+        <!-- 시도 선택 -->
+        <select v-model="selectedSido" @change="handleSidoChange" class="region-dropdown">
+          <option value="">시/도 선택</option>
+          <option value="all">전체</option>
+          <option v-for="region in regions" :key="region.id" :value="region.id">
+            {{ region.sidoName }}
+          </option>
+        </select>
+
+        <!-- 구군 선택 (시도 선택 시 표시) -->
+        <select
+          v-if="selectedSido && selectedSido !== 'all' && currentGuguns.length > 0"
+          v-model="selectedGugun"
+          @change="handleGugunChange"
+          class="region-dropdown"
+        >
+          <option value="">구/군 선택</option>
+          <option value="all">전체</option>
+          <option v-for="gugun in currentGuguns" :key="gugun.id" :value="gugun.id">
+            {{ gugun.gugunName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- 선택된 지역 태그 -->
+      <div class="selected-regions" v-if="filters.selectedRegions.length > 0">
+        <span class="region-tag" v-for="(region, index) in filters.selectedRegions" :key="index">
+          {{ region.sidoName }} {{ region.gugunName }}
+          <button class="tag-close" @click="removeRegion(index)">×</button>
+        </span>
       </div>
     </div>
 
@@ -129,16 +176,28 @@
       <div class="search-box">
         <input
           type="text"
-          placeholder="검색어를 입력해주세요"
+          placeholder="#태그 또는 검색어를 입력해주세요"
           class="search-input"
           v-model="searchInput"
           @keyup.enter="addTag"
         />
       </div>
+
+      <!-- 태그 (#으로 시작) -->
       <div class="tags" v-if="filters.tags.length > 0">
-        <span class="tag" v-for="(tag, index) in filters.tags" :key="index">
+        <div class="tag-label">태그</div>
+        <span class="tag tag-type" v-for="(tag, index) in filters.tags" :key="`tag-${index}`">
           {{ tag }}
           <button class="tag-close" @click="removeTag(index)">×</button>
+        </span>
+      </div>
+
+      <!-- 검색어 (일반 텍스트, 하나만) -->
+      <div class="tags" v-if="filters.searchTerm">
+        <div class="tag-label">검색어</div>
+        <span class="tag search-type">
+          {{ filters.searchTerm }}
+          <button class="tag-close" @click="clearSearchTerm">×</button>
         </span>
       </div>
     </div>
@@ -146,7 +205,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, defineProps, defineEmits } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 
 const props = defineProps({
   totalCount: {
@@ -158,6 +217,9 @@ const props = defineProps({
 const emit = defineEmits(["filter-change"]);
 
 const searchInput = ref("");
+const regions = ref([]);
+const selectedSido = ref("");
+const selectedGugun = ref("");
 
 const filters = reactive({
   dateFrom: "",
@@ -166,6 +228,7 @@ const filters = reactive({
     clear: true,
     goodAir: true,
   },
+  selectedRegions: [], // 선택된 지역들
   stars: {
     1: true,
     2: true,
@@ -175,8 +238,120 @@ const filters = reactive({
   },
   likes: 0,
   sort: "popular",
-  tags: ["#서울", "#카페투어", "#감성"],
+  tags: [], // 태그 (#으로 시작)
+  searchTerm: "", // 일반 검색어 (하나만)
 });
+
+// 현재 선택된 시도의 구군 목록
+const currentGuguns = computed(() => {
+  if (!selectedSido.value) return [];
+  const region = regions.value.find((r) => r.id === selectedSido.value);
+  return region ? region.guguns : [];
+});
+
+// API에서 지역 데이터 가져오기
+const fetchRegions = async () => {
+  try {
+    const response = await fetch("http://localhost:8080/api/v1/regions");
+    const data = await response.json();
+    regions.value = data;
+  } catch (error) {
+    console.error("Failed to fetch regions:", error);
+  }
+};
+
+// 시도 선택 시
+const handleSidoChange = () => {
+  selectedGugun.value = ""; // 구군 선택 초기화
+
+  // 시도에서 "전체" 선택 시 바로 추가
+  if (selectedSido.value === "all") {
+    const allSidoIds = regions.value.map((r) => r.id);
+
+    const newRegion = {
+      sidoId: "all",
+      sidoName: "전체",
+      gugunId: null,
+      gugunName: "",
+      allSidoIds: allSidoIds, // 모든 시도 ID 포함
+    };
+
+    // 중복 체크
+    const exists = filters.selectedRegions.some((r) => r.sidoId === "all");
+
+    if (!exists) {
+      filters.selectedRegions.push(newRegion);
+      handleFilterChange();
+    }
+
+    // 선택 초기화
+    selectedSido.value = "";
+  }
+};
+
+// 구군 선택 시
+const handleGugunChange = () => {
+  if (!selectedSido.value || !selectedGugun.value) return;
+
+  const sidoRegion = regions.value.find((r) => r.id === selectedSido.value);
+
+  if (!sidoRegion) return;
+
+  // 구군에서 "전체" 선택 시
+  if (selectedGugun.value === "all") {
+    const allGugunIds = sidoRegion.guguns.map((g) => g.id);
+
+    const newRegion = {
+      sidoId: sidoRegion.id,
+      sidoName: sidoRegion.sidoName,
+      gugunId: "all",
+      gugunName: "전체",
+      allGugunIds: allGugunIds, // 해당 시도의 모든 구군 ID 포함
+    };
+
+    // 중복 체크
+    const exists = filters.selectedRegions.some(
+      (r) => r.sidoId === newRegion.sidoId && r.gugunId === "all"
+    );
+
+    if (!exists) {
+      filters.selectedRegions.push(newRegion);
+      handleFilterChange();
+    }
+  } else {
+    // 특정 구군 선택
+    const gugunRegion = sidoRegion.guguns.find((g) => g.id === selectedGugun.value);
+
+    if (gugunRegion) {
+      const newRegion = {
+        sidoId: sidoRegion.id,
+        sidoName: sidoRegion.sidoName,
+        gugunId: gugunRegion.id,
+        gugunName: gugunRegion.gugunName,
+      };
+
+      // 중복 체크
+      const exists = filters.selectedRegions.some(
+        (r) => r.sidoId === newRegion.sidoId && r.gugunId === newRegion.gugunId
+      );
+
+      if (!exists) {
+        filters.selectedRegions.push(newRegion);
+        handleFilterChange();
+      }
+    }
+  }
+
+  // 선택 초기화
+  selectedSido.value = "";
+  selectedGugun.value = "";
+};
+
+// 지역 제거
+const removeRegion = (index) => {
+  filters.selectedRegions.splice(index, 1);
+  handleFilterChange();
+};
 
 const toggleStar = (star) => {
   filters.stars[star] = !filters.stars[star];
@@ -185,11 +360,18 @@ const toggleStar = (star) => {
 
 const addTag = () => {
   if (searchInput.value.trim()) {
-    const tag = searchInput.value.trim().startsWith("#")
-      ? searchInput.value.trim()
-      : `#${searchInput.value.trim()}`;
-    if (!filters.tags.includes(tag)) {
-      filters.tags.push(tag);
+    const input = searchInput.value.trim();
+
+    // #으로 시작하면 태그로 추가
+    if (input.startsWith("#")) {
+      if (!filters.tags.includes(input)) {
+        filters.tags.push(input);
+        searchInput.value = "";
+        handleFilterChange();
+      }
+    } else {
+      // 아니면 검색어로 설정 (덮어쓰기)
+      filters.searchTerm = input;
       searchInput.value = "";
       handleFilterChange();
     }
@@ -201,9 +383,19 @@ const removeTag = (index) => {
   handleFilterChange();
 };
 
+const clearSearchTerm = () => {
+  filters.searchTerm = "";
+  handleFilterChange();
+};
+
 const handleFilterChange = () => {
   emit("filter-change", filters);
 };
+
+// 컴포넌트 마운트 시 지역 데이터 로드
+onMounted(() => {
+  fetchRegions();
+});
 </script>
 
 <style scoped>
@@ -221,7 +413,6 @@ const handleFilterChange = () => {
   align-items: center;
 }
 
-/* 여기 추가 */
 .star-icons svg {
   width: 20px !important;
   height: 20px !important;
@@ -273,23 +464,72 @@ const handleFilterChange = () => {
 }
 
 .date-input {
-  padding: 0.375rem 0.5rem;
+  padding: 0.5rem;
   border: 0.8px solid #d4d4d4;
   border-radius: 4px;
   font-size: 13px;
-  color: #737373;
+  color: #1e1e1e;
   width: 100%;
   font-family: inherit;
+  cursor: pointer;
 }
 
-.date-input::placeholder {
-  color: #a3a3a3;
+.date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #2c2c2c;
 }
 
 .date-separator {
   text-align: center;
   color: #737373;
   font-size: 12px;
+}
+
+/* 지역 선택 */
+.region-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.region-dropdown {
+  width: 100%;
+  padding: 0.5rem;
+  border: 0.8px solid #d4d4d4;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #1e1e1e;
+  font-family: inherit;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.region-dropdown:focus {
+  outline: none;
+  border-color: #2c2c2c;
+}
+
+.selected-regions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.region-tag {
+  background: #f0f9ff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #0369a1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid #bae6fd;
 }
 
 .checkbox-group,
@@ -377,6 +617,20 @@ const handleFilterChange = () => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.375rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.tags:first-of-type {
+  margin-top: 0.75rem;
+}
+
+.tag-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+  width: 100%;
+  margin-bottom: 0.25rem;
 }
 
 .tag {
@@ -389,6 +643,18 @@ const handleFilterChange = () => {
   align-items: center;
   gap: 0.375rem;
   border: 1px solid #e0e0e0;
+}
+
+.tag-type {
+  background: #f0f9ff;
+  color: #0369a1;
+  border-color: #bae6fd;
+}
+
+.search-type {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
 }
 
 .tag-close {

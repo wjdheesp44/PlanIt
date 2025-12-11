@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gt.planit.domain.spot.model.mapper.SpotMapper">
+
+    <sql id="spotSelectColumns">
+        s.id                                                AS id,
+        s.title                                             AS name,
+        CASE s.content_type
+            WHEN 'ATTRACTION' THEN '관광지'
+            WHEN 'FESTIVAL'  THEN '축제'
+            WHEN 'POPUP'     THEN '팝업'
+        END                                                 AS badge,
+        s.avg_rating                                        AS rating,
+        CONCAT(
+            DATE_FORMAT(s.start_time, '%p %l:%i'),
+            ' - ',
+            DATE_FORMAT(s.end_time, '%p %l:%i')
+        )                                                   AS time,
+        COALESCE(s.doro_addr, s.jibun_addr)                 AS location,
+        TRIM(
+            COALESCE(
+                GROUP_CONCAT(DISTINCT CONCAT('#', rh.hashtag) SEPARATOR ' '),
+                ''
+            )
+        )                                                   AS tags,
+        s.image1                                            AS image,
+        -- 로그인 안 붙인 상태이므로 항상 false
+        0                                                   AS favorite
+    </sql>
+
+    <!-- 공통 FROM / JOIN -->
+    <sql id="spotFromWithJoins">
+        FROM spots s
+        LEFT JOIN reviews r
+        ON r.spot_id = s.id
+        AND r.is_deleted = 'F'
+        LEFT JOIN review_hashtags rh
+        ON rh.review_id = r.id
+        AND rh.is_deleted = 'F'
+        LEFT JOIN (
+        SELECT spot_id, COUNT(*) AS likes_count
+        FROM spot_likes
+        WHERE is_deleted = 'F'
+        GROUP BY spot_id
+        ) sl
+        ON sl.spot_id = s.id
+    </sql>
+
+    <!-- 공통 WHERE 조건 -->
+    <sql id="spotWhere">
+        WHERE s.is_deleted = 'F'
+
+        <!-- type → content_type ENUM (ATTRACTION/FESTIVAL/POPUP)로 매핑해서 넣는다고 가정 -->
+        <if test="cond.types != null and cond.types.size() > 0">
+            AND s.content_type IN
+            <foreach collection="cond.types" item="t" open="(" separator="," close=")">
+                #{t}
+            </foreach>
+        </if>
+
+        <!-- 기간 -->
+        <if test="cond.startDate != null">
+            AND (s.start_time &gt;= #{cond.startDate} OR s.start_time IS NULL)
+        </if>
+        <if test="cond.endDate != null">
+            AND (s.end_time &lt;= DATE_ADD(#{cond.endDate}, INTERVAL 1 DAY) OR s.end_time IS NULL)
+        </if>
+
+        <!-- weather는 컬럼이 없어서 DB 필터 없이 서비스 레벨 후처리 -->
+
+        <!-- 평점 다중 선택 -->
+        <if test="cond.ratings != null and cond.ratings.size() &gt; 0">
+            AND (
+            <foreach collection="cond.ratings" item="r" separator=" OR ">
+                (s.avg_rating &gt;= #{r} AND s.avg_rating &lt; #{r} + 1)
+            </foreach>
+            )
+        </if>
+
+        <!-- 최소 좋아요 수 -->
+        <if test="cond.likesCountMin != null">
+            AND COALESCE(sl.likes_count, 0) &gt;= #{cond.likesCountMin}
+        </if>
+
+        <!-- 검색어 -->
+        <if test="cond.searchKeyword != null and cond.searchKeyword != ''">
+            AND (
+            s.title      LIKE CONCAT('%', #{cond.searchKeyword}, '%')
+            OR s.overview LIKE CONCAT('%', #{cond.searchKeyword}, '%')
+            OR s.doro_addr LIKE CONCAT('%', #{cond.searchKeyword}, '%')
+            OR s.jibun_addr LIKE CONCAT('%', #{cond.searchKeyword}, '%')
+            )
+        </if>
+
+        <!-- 태그 다중 선택 (리뷰 해시태그 기준 OR) -->
+        <if test="cond.tags != null and cond.tags.size() &gt; 0">
+            AND (
+            <foreach collection="cond.tags" item="t" separator=" OR ">
+                rh.hashtag LIKE CONCAT('%', #{t}, '%')
+            </foreach>
+            )
+        </if>
+
+        <!-- regionIds: sido_id 기준 -->
+        <if test="cond.regionIds != null and cond.regionIds.size() &gt; 0">
+            AND s.sido_id IN
+            <foreach collection="cond.regionIds" item="rid" open="(" separator="," close=")">
+                #{rid}
+            </foreach>
+        </if>
+    </sql>
+
+    <!-- 공통 ORDER BY -->
+    <sql id="spotOrderBy">
+        <choose>
+            <when test="cond.sort == 'LIKES_DESC'">
+                ORDER BY COALESCE(sl.likes_count, 0) DESC, s.id DESC
+            </when>
+            <when test="cond.sort == 'RATING_DESC'">
+                ORDER BY s.avg_rating DESC, s.id DESC
+            </when>
+            <when test="cond.sort == 'START_DATE_ASC'">
+                ORDER BY s.start_time ASC, s.id DESC
+            </when>
+            <otherwise>
+                ORDER BY s.created_at DESC
+            </otherwise>
+        </choose>
+    </sql>
+
+    <!-- 리스트 조회 -->
+    <select id="searchSpots"
+            resultType="com.gt.planit.domain.spot.model.dto.SpotRes">
+        SELECT
+        <include refid="spotSelectColumns"/>
+        <include refid="spotFromWithJoins"/>
+        <include refid="spotWhere"/>
+        GROUP BY
+        s.id, s.title, s.content_type, s.avg_rating,
+        s.start_time, s.end_time, s.doro_addr, s.image1
+        <include refid="spotOrderBy"/>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 전체 개수 -->
+    <select id="countSpots" resultType="long">
+        SELECT COUNT(DISTINCT s.id)
+        <include refid="spotFromWithJoins"/>
+        <include refid="spotWhere"/>
+    </select>
+</mapper>
