@@ -106,9 +106,9 @@
             )
         </if>
 
-        <!-- regionIds: sido_id 기준 -->
+        <!-- regionIds: gugun_id 기준 -->
         <if test="cond.regionIds != null and cond.regionIds.size() &gt; 0">
-            AND s.sido_id IN
+            AND s.si_gun_gu_id IN
             <foreach collection="cond.regionIds" item="rid" open="(" separator="," close=")">
                 #{rid}
             </foreach>
