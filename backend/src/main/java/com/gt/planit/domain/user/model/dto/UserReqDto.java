@@ -7,6 +7,7 @@ public class UserReqDto {
     private Long id;
     private String email;
     private String nickname;
+    private String name;
     private String password;
     private String role;
 }

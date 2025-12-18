@@ -8,21 +8,20 @@
 
       <!-- 회원가입 폼 -->
       <div class="signup-form">
-        <!-- 이름 입력 -->
-        <div class="input-group">
-          <label class="input-label">이름</label>
-          <input type="text" class="input-field" placeholder="이름을 입력해주세요" v-model="name" />
-        </div>
-
         <!-- 이메일 입력 -->
         <div class="input-group">
           <label class="input-label">이메일</label>
           <input
             type="email"
             class="input-field"
+            :class="emailClass"
             placeholder="이메일을 입력해주세요"
             v-model="email"
+            @blur="checkEmail"
           />
+          <p v-if="emailError" class="warn">
+            {{ emailError }}
+          </p>
         </div>
 
         <!-- 비밀번호 입력 -->
@@ -31,9 +30,14 @@
           <input
             type="password"
             class="input-field"
+            :class="passwordClass"
             placeholder="비밀번호를 입력해주세요"
             v-model="password"
+            @blur="checkPassword"
           />
+          <p v-if="passwordError" class="warn">
+              {{ passwordError }}
+            </p>
         </div>
 
         <!-- 닉네임 입력 -->
@@ -42,9 +46,20 @@
           <input
             type="text"
             class="input-field"
+            :class="nicknameClass"
             placeholder="사용할 닉네임을 입력해주세요"
             v-model="nickname"
+            @blur="checkNickname"
           />
+          <p v-if="nicknameError" class="warn">
+            {{ nicknameError }}
+          </p>
+        </div>
+
+        <!-- 이름 입력 -->
+        <div class="input-group">
+          <label class="input-label">이름</label>
+          <input type="text" class="input-field" placeholder="이름을 입력해주세요" v-model="name" />
         </div>
 
         <!-- 회원가입 버튼 -->
@@ -55,8 +70,9 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
+import authApi, { checkEmailApi, checkNicknameApi } from "@/api/user/authApi";
 
 const router = useRouter();
 
@@ -65,38 +81,110 @@ const email = ref("");
 const password = ref("");
 const nickname = ref("");
 
-const handleSignup = () => {
+const emailError = ref("");
+const nicknameError = ref("");
+const passwordError = ref("");
+
+const checkEmail = async () => {
+  if (!email.value) {
+    emailError.value = "이메일을 입력해주세요.";
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.value)) {
+    emailError.value = "올바른 이메일 형식이 아닙니다.";
+    return;
+  }
+
+try {
+  const res = await checkEmailApi(email.value);
+
+  emailError.value = res.data
+    ? "이미 사용 중인 이메일입니다."
+    : "사용 가능한 이메일입니다.";
+  } catch (e) {
+    emailError.value = "이메일 확인 중 오류가 발생했습니다.";
+  }
+};
+
+const checkNickname = async () => {
+  if (!nickname.value) {
+    nicknameError.value = "닉네임을 입력해주세요.";
+    return;
+  }
+
+  try {
+    const res = await checkNicknameApi(nickname.value);
+
+    nicknameError.value = res.data
+      ? "이미 사용 중인 닉네임입니다."
+      : "사용 가능한 닉네임입니다.";
+  } catch (e) {
+    nicknameError.value = "닉네임 확인 중 오류가 발생했습니다.";
+  }
+};
+
+const checkPassword = () => {
+  if (!password.value) {
+    passwordError.value = "비밀번호를 입력해주세요.";
+    return;
+  }
+
+  if (password.value.length < 6) {
+    passwordError.value = "비밀번호는 6자 이상이어야 합니다.";
+    return;
+  }
+
+  passwordError.value = "사용 가능한 비밀번호입니다.";
+};
+
+const handleSignup = async () => {
   // 유효성 검사
   if (!name.value || !email.value || !password.value || !nickname.value) {
     alert("모든 항목을 입력해주세요.");
     return;
   }
 
-  // 이메일 형식 검사
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email.value)) {
-    alert("올바른 이메일 형식을 입력해주세요.");
-    return;
+  try {
+    await authApi.post("/api/join", {
+      email: email.value,
+      password: password.value,
+      nickname: nickname.value,
+      name: name.value
+    });
+
+    alert("회원가입 성공! 로그인해주세요.");
+    router.push("/login");
+
+  } catch (err) {
+    console.error(err);
+    alert("회원가입 실패!");
   }
 
-  // 비밀번호 길이 검사
-  if (password.value.length < 6) {
-    alert("비밀번호는 6자 이상이어야 합니다.");
-    return;
-  }
-
-  // 실제로는 API 호출
-  console.log("Signup:", {
-    name: name.value,
-    email: email.value,
-    password: password.value,
-    nickname: nickname.value,
-  });
-
-  // 회원가입 성공 후 로그인 페이지로 이동
-  alert("회원가입이 완료되었습니다!");
-  router.push("/login");
 };
+
+const emailClass = computed(() => {
+  if (!emailError.value) return "";
+  return emailError.value === "사용 가능한 이메일입니다."
+    ? "success"
+    : "error";
+});
+
+const nicknameClass = computed(() => {
+  if (!nicknameError.value) return "";
+  return nicknameError.value === "사용 가능한 닉네임입니다."
+    ? "success"
+    : "error";
+});
+
+const passwordClass = computed(() => {
+  if (!passwordError.value) return "";
+  return passwordError.value === "사용 가능한 비밀번호입니다."
+    ? "success"
+    : "error";
+});
+
 </script>
 
 <style scoped>
@@ -106,6 +194,36 @@ const handleSignup = () => {
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* 에러 input 테두리 */
+.input-field.error {
+  border-color: #ef4444; /* 빨강 */
+}
+
+.input-field.success {
+  border-color: #22c55e;
+}
+
+/* 에러 메시지 */
+.warn {
+  font-size: 14px;
+  color: #ef4444;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.input-field.error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3);
+}
+
+.input-field.success + .warn {
+  color: #22c55e;
+}
+
+.warn.success {
+  color: #16a34a; /* 초록 */
 }
 
 .signup-page {

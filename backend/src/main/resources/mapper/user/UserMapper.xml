@@ -16,4 +16,13 @@
         WHERE email = #{email}
     </select>
 
+    <insert id="insertUser">
+        INSERT INTO users (email, password, nickname, role)
+        VALUES (#{email}, #{password}, #{nickname}, 'USER')
+    </insert>
+
+    <select id="findByNickname" resultType="com.gt.planit.domain.user.model.dto.UserReqDto">
+        SELECT * FROM users WHERE nickname = #{nickname}
+    </select>
+
 </mapper>

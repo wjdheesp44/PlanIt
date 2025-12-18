@@ -44,9 +44,11 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import authApi from "@/api/authApi";
+import authApi from "@/api/user/authApi";
+import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 const email = ref("");
 const password = ref("");
@@ -76,6 +78,7 @@ const handleLogin = async () => {
       }
 
       localStorage.setItem("accessToken", accessToken);
+      authStore.setLogin(accessToken, user);
 
       // 로그인 성공 후 이동
       router.replace("/"); // 뒤로가기 방지

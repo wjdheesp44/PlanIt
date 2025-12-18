@@ -11,6 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -36,13 +37,18 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:5173"));
-        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -56,10 +62,12 @@ public class SecurityConfig {
                 new JwtAuthorizationFilter(jwtUtil, userDetailsService);
 
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login").permitAll()
-                .requestMatchers("/auth/refresh").permitAll()
-                .requestMatchers(HttpMethod.GET,"/v1/spots").permitAll()
-                .requestMatchers(HttpMethod.GET,"/v1/regions").permitAll()
+                .requestMatchers(HttpMethod.GET, "/check-email").permitAll()
+                .requestMatchers(HttpMethod.GET, "/check-nickname").permitAll()
+                .requestMatchers(HttpMethod.POST, "/join").permitAll()
+                .requestMatchers("/login", "/auth/refresh").permitAll()
+                .requestMatchers(HttpMethod.GET, "/v1/spots").permitAll()
+                .requestMatchers(HttpMethod.GET, "/v1/regions").permitAll()
                 .anyRequest().authenticated()
         );
 

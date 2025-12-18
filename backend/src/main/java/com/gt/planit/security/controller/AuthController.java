@@ -1,11 +1,15 @@
 package com.gt.planit.security.controller;
 
+import com.gt.planit.domain.user.model.service.UserService;
+import com.gt.planit.security.dto.UserResDto;
 import com.gt.planit.security.jwt.JWTUtil;
 import com.gt.planit.domain.user.model.dto.UserReqDto;
 import com.gt.planit.domain.user.model.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +21,7 @@ public class AuthController {
 
     private final JWTUtil jwtUtil;
     private final UserMapper userMapper;
+    private final UserService userService;
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@RequestHeader("Authorization") String authorization) {
@@ -47,4 +52,13 @@ public class AuthController {
                 java.util.Map.of("accessToken", newAccessToken)
         );
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResDto> me(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResDto user = userService.getByEmail(userDetails.getUsername());
+        return ResponseEntity.ok(user);
+    }
+
 }
