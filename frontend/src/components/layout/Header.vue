@@ -8,7 +8,7 @@
       <nav class="nav">
         <RouterLink to="/spots" class="nav-link">스팟 탐색</RouterLink>
         <RouterLink to="/plans" class="nav-link">여행 플래너</RouterLink>
-        <RouterLink to="/mypage" class="nav-link">마이페이지</RouterLink>
+        <RouterLink to="/mypage" class="nav-link" :class="{ disabled: !isLogin }" @click.prevent="onClickMyPage">마이페이지</RouterLink>
       </nav>
 
       <div class="user-menu">
@@ -27,6 +27,22 @@
 
 <script setup>
 import { RouterLink } from "vue-router";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const isLogin = computed(() => {
+  return !!localStorage.getItem("accessToken");
+});
+
+const onClickMyPage = () => {
+  if (!isLogin.value) {
+    // 로그인 안 했으면 아무 반응 없음
+    return;
+  }
+  router.push("/mypage");
+};
 </script>
 
 <style scoped>
