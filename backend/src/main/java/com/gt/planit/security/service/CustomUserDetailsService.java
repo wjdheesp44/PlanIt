@@ -21,10 +21,12 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("유저 없음: " + email);
         }
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .authorities(user.getRole())
-                .build();
+        return new CustomUserDetails(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getNickname(),
+                user.getRole()
+        );
     }
 }
