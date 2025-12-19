@@ -2,9 +2,11 @@ package com.gt.planit.security.service;
 
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -26,7 +28,9 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(() -> role);
+//        return List.of(() -> role);
+        // `role`을 SimpleGrantedAuthority로 반환 (권한으로 인식)
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));  // "ROLE_" 접두사를 붙여야 Spring Security에서 권한으로 인식
     }
 
     @Override

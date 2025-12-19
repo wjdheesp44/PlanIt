@@ -54,9 +54,9 @@
             </svg>
           </div>
           <div class="profile-info">
-            <h2 class="profile-name">{{ userInfo.name }}</h2>
-            <p class="profile-nickname">{{ userInfo.nickname }}</p>
-            <span class="user-badge">일반 사용자</span>
+            <h2 class="profile-name" v-if="userInfo">{{ userInfo.name }}</h2>
+            <p class="profile-nickname" v-if="userInfo">{{ userInfo.nickname }}</p>
+            <span class="user-badge" v-if="userInfo">{{ userInfo.role === 'ADMIN' ? '관리자' : '일반 사용자' }}</span>
           </div>
         </div>
 
@@ -90,7 +90,7 @@
             </div>
             <div class="info-content">
               <span class="info-label">이름</span>
-              <p class="info-value">{{ userInfo.name }}</p>
+              <p class="info-value" v-if="userInfo">{{ userInfo.name }}</p>
             </div>
           </div>
 
@@ -122,7 +122,7 @@
             </div>
             <div class="info-content">
               <span class="info-label">아이디</span>
-              <p class="info-value">{{ userInfo.email }}</p>
+              <p class="info-value" v-if="userInfo">{{ userInfo.email }}</p>
             </div>
           </div>
 
@@ -154,7 +154,7 @@
             </div>
             <div class="info-content">
               <span class="info-label">닉네임</span>
-              <p class="info-value">{{ userInfo.nickname }}</p>
+              <p class="info-value" v-if="userInfo">{{ userInfo.nickname }}</p>
             </div>
           </div>
 
@@ -186,7 +186,7 @@
             </div>
             <div class="info-content">
               <span class="info-label">비밀번호</span>
-              <p class="info-value">••••••••</p>
+              <p class="info-value">••••••</p>
             </div>
             <button class="change-button">변경</button>
           </div>
@@ -212,7 +212,9 @@
             </div>
             <div class="info-content">
               <span class="info-label">권한</span>
-              <p class="info-value">일반 사용자</p>
+              <p class="info-value" v-if="userInfo">
+                {{ userInfo.role === 'ADMIN' ? '관리자' : '일반 사용자' }}
+              </p>
             </div>
           </div>
         </div>
@@ -227,15 +229,32 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import MyPageSidebar from "@/components/mypage/MyPageSidebar.vue";
+import { ref, onMounted } from "vue";
+import { getMyInfo } from "@/api/user/user";
 
-const userInfo = ref({
-  name: "김플랜",
-  email: "planit_user@email.com",
-  nickname: "여행가는김플랜",
-  role: "일반 사용자",
+const userInfo = ref(null);
+const isLoading = ref(true);  // 로딩 상태를 추적하는 변수
+
+onMounted(async () => {
+  try {
+    console.log("dkdkdkdkdk")
+    const res = await getMyInfo();
+    console.log(res)
+    userInfo.value = res.data; // API 응답 데이터를 userInfo에 할당
+    console.log(userInfo.value)
+  } catch (e) {
+    console.error("유저 정보 로드 실패", e);
+  } finally {
+    isLoading.value = false;  // API 호출 완료 후 로딩 상태 해제
+  }
 });
+
+// const userInfo = ref({
+//   name: "김플랜",
+//   email: "planit_user@email.com",
+//   nickname: "여행가는김플랜",
+//   role: "일반 사용자",
+// });
 
 const handleMenuChange = (menu) => {
   console.log("Selected menu:", menu);

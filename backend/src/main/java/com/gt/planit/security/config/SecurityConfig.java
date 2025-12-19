@@ -5,6 +5,7 @@ import com.gt.planit.security.jwt.JwtAuthenticationFilter;
 import com.gt.planit.security.jwt.JwtAuthorizationFilter;
 import com.gt.planit.security.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,11 +18,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     private final JWTUtil jwtUtil;
@@ -52,29 +55,40 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsFilter corsFilter() {
+        return new CorsFilter(corsConfigurationSource());
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         JwtAuthenticationFilter loginFilter =
                 new JwtAuthenticationFilter(authenticationManager(), jwtUtil);
         loginFilter.setFilterProcessesUrl("/login");
+        
+        log.info("얘는");
 
         JwtAuthorizationFilter authorizationFilter =
                 new JwtAuthorizationFilter(jwtUtil, userDetailsService);
 
+        log.info("여기서 막힌건가");
+        
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable());
+
+        log.info("여기까지 오나");
+        
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.GET, "/check-email").permitAll()
-                .requestMatchers(HttpMethod.GET, "/check-nickname").permitAll()
-                .requestMatchers(HttpMethod.POST, "/join").permitAll()
-                .requestMatchers("/login", "/auth/refresh").permitAll()
-                .requestMatchers(HttpMethod.GET, "/v1/spots").permitAll()
-                .requestMatchers(HttpMethod.GET, "/v1/regions").permitAll()
-                .anyRequest().authenticated()
-        );
+            .requestMatchers("/login", "/auth/refresh").permitAll()
+            .requestMatchers("/v1/auth/**").permitAll()
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .anyRequest().authenticated()
+        )
+        .formLogin(form -> form.disable());
 
-        http.csrf(csrf -> csrf.disable());
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
-
-        http.formLogin(form -> form.disable());
+        // CORS 필터를 제일 앞에
+        http.addFilterBefore(corsFilter(), UsernamePasswordAuthenticationFilter.class);
 
         http.addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(authorizationFilter, UsernamePasswordAuthenticationFilter.class);
