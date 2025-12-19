@@ -31,7 +31,7 @@ public class FolderServiceImpl implements FolderService {
         folderMapper.insert(folderDto);
         log.info("Folder created: id={}, userId={}, name={}", folderDto.getId(), userId, folderDto.getName());
 
-        return FolderResDto.from(folderDto);
+        return FolderResDto.from(folderMapper.findById(folderDto.getId()).orElseThrow());
     }
 
     @Override
@@ -49,7 +49,6 @@ public class FolderServiceImpl implements FolderService {
     public FolderResDto getFolderById(Long id) {
         FolderDto folderDto = folderMapper.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Folder not found: " + id));
-
         return FolderResDto.from(folderDto);
     }
 
