@@ -18,7 +18,7 @@ public class FolderResDto {
                 .id(folder.getId())
                 .name(folder.getName())
                 .thumbnailUrl(folder.getThumbnailPath() != null
-                        ? "/api/files/" + folder.getThumbnailPath()
+                        ? "/files/" + folder.getThumbnailPath()
                         : null)
                 .createdAt(folder.getCreatedAt())
                 .updatedAt(folder.getUpdatedAt())

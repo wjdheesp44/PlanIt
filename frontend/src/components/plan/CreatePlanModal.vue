@@ -176,7 +176,6 @@ const handleOverlayClick = () => {
   close();
 };
 
-// 제출 처리
 const handleSubmit = () => {
   // 유효성 검사
   if (!folderName.value.trim()) {
@@ -192,8 +191,7 @@ const handleSubmit = () => {
   // 새 일정 데이터 생성
   const newPlan = {
     folderName: folderName.value,
-    thumbnail: previewImage.value,
-    file: selectedFile.value,
+    thumbnailFile: selectedFile.value,
   };
 
   emit("create", newPlan);

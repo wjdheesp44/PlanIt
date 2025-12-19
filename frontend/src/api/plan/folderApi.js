@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "http://localhost:8080/api";
 
 // Axios 인스턴스 생성
 const axiosInstance = axios.create({
@@ -65,7 +65,7 @@ export const folderApi = {
    * 내 폴더 목록 조회
    */
   getMyFolders: async () => {
-    const response = await axiosInstance.get("/api/v1/plans");
+    const response = await axiosInstance.get("/v1/plans");
     return response.data;
   },
 
@@ -73,7 +73,7 @@ export const folderApi = {
    * 폴더 상세 조회
    */
   getFolderById: async (id) => {
-    const response = await axiosInstance.get(`/api/v1/plans/${id}`);
+    const response = await axiosInstance.get(`/v1/plans/${id}`);
     return response.data;
   },
 
@@ -90,7 +90,7 @@ export const folderApi = {
       formData.append("thumbnail", thumbnail);
     }
 
-    const response = await axiosInstance.post("/api/v1/plans", formData, {
+    const response = await axiosInstance.post("/v1/plans", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -109,7 +109,7 @@ export const folderApi = {
       formData.append("thumbnail", thumbnail);
     }
 
-    const response = await axiosInstance.put(`/api/v1/plans/${id}`, formData, {
+    const response = await axiosInstance.put(`/v1/plans/${id}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -121,6 +121,6 @@ export const folderApi = {
    * 폴더 삭제
    */
   deleteFolder: async (id) => {
-    await axiosInstance.delete(`/api/v1/plans/${id}`);
+    await axiosInstance.delete(`/v1/plans/${id}`);
   },
 };
