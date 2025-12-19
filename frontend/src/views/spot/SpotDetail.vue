@@ -1,10 +1,18 @@
 <template>
   <div class="spot-detail">
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-spinner"></div>
+    </div>
+
     <!-- 메인 컨텐츠 -->
-    <main class="main-content">
+    <main class="main-content" :class="{ 'is-loading': isLoading }">
       <!-- 메인 이미지 -->
       <div class="main-image-section">
-        <img :src="spot.mainImage" :alt="spot.title" class="main-image" />
+        <img
+          :src="spot.image1 || 'https://placehold.co/1020x1389'"
+          :alt="spot.title"
+          class="main-image"
+        />
       </div>
 
       <!-- 스팟 정보 -->
@@ -39,39 +47,38 @@
                 stroke-width="1.33333"
               />
             </svg>
-            <span class="rating-score">{{ spot.rating }}</span>
-            <span class="rating-count">({{ spot.reviewCount.toLocaleString() }})</span>
+            <span class="rating-score">{{ spot.avgRating || "-" }}</span>
+            <span class="rating-count">({{ formatNumber(spot.reviewCount) }})</span>
           </div>
         </div>
 
         <div class="info-detail">
-          <p class="info-date">{{ spot.date }}</p>
-          <p class="info-address">{{ spot.address }}</p>
+          <p class="info-date">{{ spot.date || "상시운영" }}</p>
+          <p class="info-address">{{ spot.doroAddr || spot.jibunAddr }}</p>
           <p class="info-description">{{ spot.description }}</p>
         </div>
       </section>
 
       <!-- 지도 섹션 -->
-      <section class="map-section">
+      <section class="map-section" v-if="spot.latitude && spot.longitude">
         <div class="map-container">
-          <img :src="spot.mapImage" alt="Map" class="map-image" />
-          <button class="map-marker">
-            <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-              <circle cx="28" cy="18" r="16" fill="#FB2C36" stroke="white" stroke-width="4" />
-            </svg>
-          </button>
+          <div id="map" class="map-image"></div>
         </div>
         <div class="map-address">
-          <p>{{ spot.address }}</p>
+          <p>{{ spot.doroAddr || spot.jibunAddr }}</p>
         </div>
       </section>
 
       <!-- 함께 많이 본 여행지 -->
-      <section class="related-spots">
+      <section class="related-spots" v-if="spot.hotSpots && spot.hotSpots.length > 0">
         <h2 class="section-title">함께 많이 본 여행지</h2>
 
         <div class="spots-carousel">
-          <button class="carousel-btn prev" @click="scrollCarousel('prev')">
+          <button
+            class="carousel-btn prev"
+            @click="scrollCarousel('prev')"
+            v-if="spot.hotSpots.length > 3"
+          >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
                 d="M15 18L9 12L15 6"
@@ -85,7 +92,7 @@
 
           <div class="spots-grid" ref="carouselRef">
             <SpotCard
-              v-for="relatedSpot in relatedSpots"
+              v-for="relatedSpot in spot.hotSpots"
               :key="relatedSpot.id"
               :spot="relatedSpot"
               @click="goToSpot"
@@ -93,7 +100,11 @@
             />
           </div>
 
-          <button class="carousel-btn next" @click="scrollCarousel('next')">
+          <button
+            class="carousel-btn next"
+            @click="scrollCarousel('next')"
+            v-if="spot.hotSpots.length > 3"
+          >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
                 d="M9 18L15 12L9 6"
@@ -112,7 +123,7 @@
         <div class="reviews-header">
           <h2 class="section-title">후기</h2>
           <p class="reviews-count">
-            총 <span class="count-highlight">{{ spot.reviewCount.toLocaleString() }}</span
+            총 <span class="count-highlight">{{ formatNumber(spot.reviewCount) }}</span
             >건
           </p>
         </div>
@@ -131,111 +142,92 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SpotCard from "@/components/SpotCard.vue";
 import ReviewCard from "@/components/spot/ReviewCard.vue";
+import spotApi from "@/api/spot/spotApi";
 
 const route = useRoute();
 const router = useRouter();
 const carouselRef = ref(null);
+const isLoading = ref(false);
 
-// 스팟 상세 정보 (실제로는 API에서 가져옴)
+// 스팟 상세 정보
 const spot = ref({
-  id: route.params.id,
-  title: "김천김밥축제",
-  rating: 2.7,
-  reviewCount: 30123,
-  date: "2025.10.1~2025.12.25",
-  address: "경상북도 김천시 대항면 직지사길 130",
-  description: "김천김밥 판매부스 및 시식회, 다양한 체험프로그램 운영",
-  mainImage: "https://placehold.co/1020x1389",
-  mapImage: "https://placehold.co/995x263",
+  id: null,
+  title: "",
+  badge: "",
+  avgRating: null,
+  reviewCount: "0",
+  date: "",
+  doroAddr: "",
+  jibunAddr: "",
+  latitude: null,
+  longitude: null,
+  tel: "",
+  homepage: "",
+  image1: null,
+  image2: null,
+  image3: null,
+  image4: null,
+  image5: null,
+  description: "",
   isFavorite: false,
+  hotSpots: [],
 });
 
-// 관련 스팟 (SpotCard 컴포넌트 형식에 맞게 변환)
-const relatedSpots = ref([
-  {
-    id: "1",
-    name: "감천문화마을",
-    badge: "관광지",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "부산광역시 사하구 감내2로 203",
-    tags: "#감천 #마을",
-    image: "https://placehold.co/280x192",
-    isFavorite: true,
-  },
-  {
-    id: "2",
-    name: "강남 팝업스토어",
-    badge: "팝업스토어",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 강남구 테헤란로 203",
-    tags: "#강남 #팝업",
-    image: "https://placehold.co/280x192",
-    isFavorite: true,
-  },
-  {
-    id: "3",
-    name: "벚꽃축제",
-    badge: "축제",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 여의도 한강공원 203",
-    tags: "#벚꽃 #축제",
-    image: "https://placehold.co/280x192",
-    isFavorite: true,
-  },
-  {
-    id: "4",
-    name: "해운대 해수욕장",
-    badge: "관광지",
-    rating: 4.8,
-    time: "AM 9:00 - PM 10:00",
-    location: "부산광역시 해운대구 우동",
-    tags: "#해운대 #바다",
-    image: "https://placehold.co/280x192",
-    isFavorite: false,
-  },
-]);
+// 후기 (임시 데이터)
+const reviews = ref([]);
 
-// 후기
-const reviews = ref([
-  {
-    id: 1,
-    rating: 5,
-    userName: "Before",
-    userTag: "가족여행으로 좋아요",
-    userAge: "60대",
-    date: "2025.10.20",
-    title:
-      "[신흥특가]하노이(하롱베이) 5일 #찍찍스쿠터와 #단풍탕&낭풍폭포UP #예가견뽀읍 #예이크쿠즈폭뽕&키퍼 #1팀1건식 #푸꾸딘내#두도닥",
-    content:
-      "9년만에 디시간 하노이 하롱베이는 공항부터 딸랑겉고 오토바이보단 자동차가 월씬 많이댔다 하롱베이투어는 목선이 아닌 하노투어크루즈로 바뀌운만 없었고통거다 만만 비좁을 감상하며 추억을 쌓기웬 라이브뮤직전지가지만 너무길고 불룬또한 지나치다는 다수의 의견이였다 박씬앙인가이드는 친절하고도 친절하고 배셕싱은 27명을 잘 이끌어주셔서 편안한 여행이였습니다~ 두분모두 감시하고 건강하시길~*",
-    tags: [
-      { icon: "✨", text: "객실이 깨끗해요" },
-      { icon: "🛏️", text: "침실이 맘에요" },
-      { icon: "😊", text: "환대 좋았어요" },
-      { icon: "😊", text: "가이드가 친절해요" },
-    ],
-    images: ["https://placehold.co/128x128", "https://placehold.co/128x128"],
-    helpfulCount: 1,
-  },
-]);
+// 숫자 포맷팅
+const formatNumber = (num) => {
+  if (!num) return "0";
+  return Number(num).toLocaleString();
+};
+
+// 스팟 데이터 로드
+const loadSpotData = async () => {
+  try {
+    isLoading.value = true;
+    const spotId = route.params.id;
+    const data = await spotApi.getSpotById(spotId);
+    spot.value = data;
+  } catch (error) {
+    console.error("Failed to load spot:", error);
+    // 에러 처리 (예: 404 페이지로 이동)
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 // 좋아요 토글
-const toggleFavorite = () => {
-  spot.value.isFavorite = !spot.value.isFavorite;
+const toggleFavorite = async () => {
+  try {
+    await spotApi.toggleFavorite(spot.value.id);
+    spot.value.isFavorite = !spot.value.isFavorite;
+  } catch (error) {
+    console.error("Failed to toggle favorite:", error);
+    // 로그인 필요 시 로그인 페이지로 이동
+    if (error.response?.status === 401) {
+      router.push("/login");
+    }
+  }
 };
 
 // 관련 스팟 좋아요 처리
-const handleRelatedFavorite = (relatedSpot) => {
-  const spot = relatedSpots.value.find((s) => s.id === relatedSpot.id);
-  if (spot) {
-    spot.isFavorite = !spot.isFavorite;
+const handleRelatedFavorite = async (relatedSpot) => {
+  try {
+    await spotApi.toggleSpotFavorite(relatedSpot.id);
+    const spotInList = spot.value.hotSpots.find((s) => s.id === relatedSpot.id);
+    if (spotInList) {
+      spotInList.isFavorite = !spotInList.isFavorite;
+    }
+  } catch (error) {
+    console.error("Failed to toggle related spot favorite:", error);
+    if (error.response?.status === 401) {
+      router.push("/login");
+    }
   }
 };
 
@@ -255,6 +247,8 @@ const scrollCarousel = (direction) => {
 const goToSpot = (relatedSpot) => {
   router.push(`/spots/${relatedSpot.id}`);
   window.scrollTo({ top: 0, behavior: "smooth" });
+  // // 데이터 새로 로드
+  // loadSpotData();
 };
 
 // 도움이 돼요 처리
@@ -265,14 +259,20 @@ const handleHelpful = (reviewId) => {
   }
 };
 
-// 컴포넌트 마운트 시 데이터 로드
-onMounted(() => {
-  // 실제로는 API 호출
-  console.log("Loading spot:", route.params.id);
-});
+// 라우트 파라미터 변경 감지
+watch(
+  () => route.params.id,
+  async (newId) => {
+    if (newId) {
+      await loadSpotData();
+    }
+  },
+  { immediate: true } // 컴포넌트 마운트 시에도 즉시 실행
+);
 </script>
 
 <style scoped>
+/* 기존 스타일 유지 */
 @import url("https://fonts.googleapis.com/css2?family=Arimo:wght@400;500;600;700&display=swap");
 
 * {
@@ -394,17 +394,6 @@ onMounted(() => {
 .map-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-}
-
-.map-marker {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border: none;
-  background: none;
-  cursor: pointer;
 }
 
 .map-address {
@@ -508,6 +497,43 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/* 로딩 오버레이 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.main-content.is-loading {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* 반응형 */

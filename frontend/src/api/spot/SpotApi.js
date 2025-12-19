@@ -1,6 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:8080/api/v1";
+import api from "../user/api";
 
 const spotApi = {
   /**
@@ -10,7 +8,7 @@ const spotApi = {
    */
   getSpots: async (params = {}) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/spots`, {
+      const response = await api.get(`/api/v1/spots`, {
         params: {
           type: params.type || [],
           "start-date": params.startDate || undefined,
@@ -44,7 +42,20 @@ const spotApi = {
    */
   toggleFavorite: async (spotId) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/spots/${spotId}/favorite`);
+      const response = await api.post(`/api/v1/spots/${spotId}/favorite`);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * 스팟 상세 조회
+   */
+  getSpotById: async (spotId) => {
+    try {
+      const response = await api.get(`/api/v1/spots/${spotId}`);
       return response.data;
     } catch (error) {
       console.error("Failed to toggle favorite:", error);
