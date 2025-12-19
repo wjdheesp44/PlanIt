@@ -142,7 +142,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SpotCard from "@/components/SpotCard.vue";
 import ReviewCard from "@/components/spot/ReviewCard.vue";
@@ -186,6 +186,39 @@ const formatNumber = (num) => {
   return Number(num).toLocaleString();
 };
 
+// 카카오맵 초기화
+const initMap = () => {
+  if (!spot.value.latitude || !spot.value.longitude) return;
+
+  // kakao maps SDK 로드 확인
+  if (!window.kakao || !window.kakao.maps) {
+    console.error("Kakao Maps SDK is not loaded");
+    return;
+  }
+
+  window.kakao.maps.load(() => {
+    // 여기!
+    const container = document.getElementById("map");
+    const options = {
+      center: new window.kakao.maps.LatLng(spot.value.latitude, spot.value.longitude),
+      level: 3,
+    };
+
+    const map = new window.kakao.maps.Map(container, options);
+
+    const markerPosition = new window.kakao.maps.LatLng(spot.value.latitude, spot.value.longitude);
+    const marker = new window.kakao.maps.Marker({
+      position: markerPosition,
+    });
+    marker.setMap(map);
+
+    const infowindow = new window.kakao.maps.InfoWindow({
+      content: `<div style="padding:5px;font-size:12px;">${spot.value.title}</div>`,
+    });
+    infowindow.open(map, marker);
+  });
+};
+
 // 스팟 데이터 로드
 const loadSpotData = async () => {
   try {
@@ -193,6 +226,9 @@ const loadSpotData = async () => {
     const spotId = route.params.id;
     const data = await spotApi.getSpotById(spotId);
     spot.value = data;
+
+    await nextTick();
+    initMap();
   } catch (error) {
     console.error("Failed to load spot:", error);
     // 에러 처리 (예: 404 페이지로 이동)
@@ -520,6 +556,26 @@ watch(
   border-top: 4px solid #2563eb;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 263px;
+  border-radius: 0.625rem;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+
+.map-image {
+  width: 100%;
+  height: 100%;
+}
+
+/* 카카오맵 컨트롤 숨기기 (선택사항) */
+#map .custom_zoomcontrol {
+  display: none;
 }
 
 @keyframes spin {
