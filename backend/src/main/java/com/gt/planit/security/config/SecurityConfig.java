@@ -67,7 +67,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/join").permitAll()
                 .requestMatchers("/login", "/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/spots").permitAll()
+                .requestMatchers(HttpMethod.GET, "/v1/spots/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/regions").permitAll()
+                .requestMatchers("/files/**").permitAll()
                 .anyRequest().authenticated()
         );
 

@@ -1,11 +1,11 @@
 package com.gt.planit.domain.spot.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class SpotRes {
     private Long id;

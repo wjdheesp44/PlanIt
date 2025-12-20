@@ -98,7 +98,6 @@
 
 <script setup>
 import { computed, defineProps, defineEmits } from "vue";
-import placeholderImage from "@/assets/img/no-image.svg";
 const props = defineProps({
   spot: {
     type: Object,
@@ -107,9 +106,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["click", "favorite"]);
-
-// Placeholder image for missing images
-// const placeholderImage = "@/assets/img/no-image.svg";
+const placeholderImage =
+  "https://img.freepik.com/premium-vector/default-image-icon-vector-missing-picture-page-website-design-mobile-app-no-photo-available_87543-11093.jpg";
 
 const badgeClass = computed(() => {
   const badgeMap = {
