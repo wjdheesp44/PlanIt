@@ -65,20 +65,14 @@ public class SecurityConfig {
         JwtAuthenticationFilter loginFilter =
                 new JwtAuthenticationFilter(authenticationManager(), jwtUtil);
         loginFilter.setFilterProcessesUrl("/login");
-        
-        log.info("얘는");
 
         JwtAuthorizationFilter authorizationFilter =
                 new JwtAuthorizationFilter(jwtUtil, userDetailsService);
 
-        log.info("여기서 막힌건가");
-        
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable());
 
-        log.info("여기까지 오나");
-        
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers("/login", "/auth/refresh").permitAll()
             .requestMatchers("/v1/auth/**").permitAll()

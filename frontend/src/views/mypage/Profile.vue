@@ -237,24 +237,14 @@ const isLoading = ref(true);  // 로딩 상태를 추적하는 변수
 
 onMounted(async () => {
   try {
-    console.log("dkdkdkdkdk")
     const res = await getMyInfo();
-    console.log(res)
     userInfo.value = res.data; // API 응답 데이터를 userInfo에 할당
-    console.log(userInfo.value)
   } catch (e) {
     console.error("유저 정보 로드 실패", e);
   } finally {
     isLoading.value = false;  // API 호출 완료 후 로딩 상태 해제
   }
 });
-
-// const userInfo = ref({
-//   name: "김플랜",
-//   email: "planit_user@email.com",
-//   nickname: "여행가는김플랜",
-//   role: "일반 사용자",
-// });
 
 const handleMenuChange = (menu) => {
   console.log("Selected menu:", menu);

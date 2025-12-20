@@ -51,12 +51,8 @@ public class JWTUtil {
     }
 
     public Claims getClaims(String token) {
-        log.info("11111111");
         JwtParser parser = Jwts.parser().verifyWith(key).build();
-        log.info("22222222");
-        log.info("token:{}", token);
         Jws<Claims> jws = parser.parseSignedClaims(token);
-        log.info("33333333");
         return jws.getPayload();
     }
 }

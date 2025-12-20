@@ -22,7 +22,7 @@ public class MypageController {
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),
-                user.getUsername(),
+                user.getName(),
                 user.getRole()
         );
     }
