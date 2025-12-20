@@ -1,227 +1,173 @@
 <template>
   <div class="planner-page">
-    <!-- 헤더 섹션 -->
-    <div class="planner-header">
-      <div class="header-content">
-        <div class="title-section">
-          <h1 class="page-title">나의 여행 일정</h1>
-          <p class="plan-count">총 {{ plans.length }}개의 일정</p>
-        </div>
-        <button class="create-button" @click="createNewPlan">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M4.1665 10H15.8332"
-              stroke="white"
-              stroke-width="1.66667"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M10 4.1665V15.8332"
-              stroke="white"
-              stroke-width="1.66667"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          <span>새 일정 만들기</span>
-        </button>
-      </div>
+    <!-- 로딩 상태 -->
+    <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>로딩 중...</p>
     </div>
 
-    <!-- 일정 목록 -->
-    <div class="plans-container">
-      <div
-        v-for="(plan, index) in plans"
-        :key="plan.id"
-        class="plan-card"
-        :class="{ 'has-delete': plan.showDelete }"
-        @click="goToPlanDetail(plan.id)"
-        style="cursor: pointer"
-      >
-        <!-- 썸네일 이미지 -->
-        <div class="plan-thumbnail">
-          <img :src="plan.thumbnail" :alt="plan.title" />
+    <!-- 에러 상태 -->
+    <div v-else-if="error" class="error-container">
+      <p>{{ error }}</p>
+      <button @click="fetchFolders" class="retry-button">다시 시도</button>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <template v-else>
+      <!-- 헤더 섹션 -->
+      <div class="planner-header">
+        <div class="header-content">
+          <div class="title-section">
+            <h1 class="page-title">나의 여행 일정</h1>
+            <p class="plan-count">총 {{ folders.length }}개의 일정</p>
+          </div>
+          <button class="create-button" @click="createNewPlan">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4.1665 10H15.8332"
+                stroke="white"
+                stroke-width="1.66667"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M10 4.1665V15.8332"
+                stroke="white"
+                stroke-width="1.66667"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span>새 일정 만들기</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 일정 목록 -->
+      <div class="plans-container">
+        <!-- 일정이 없을 때 -->
+        <div v-if="folders.length === 0" class="empty-state">
+          <p>아직 생성된 일정이 없습니다.</p>
+          <button @click="createNewPlan" class="create-first-button">첫 일정 만들기</button>
         </div>
 
-        <!-- 일정 정보 -->
-        <div class="plan-info">
-          <div class="plan-header-row">
-            <h2 class="plan-title">{{ plan.title }}</h2>
-            <button class="menu-button" @click.stop="toggleMenu(index)">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M9.99984 10.8332C10.4601 10.8332 10.8332 10.4601 10.8332 9.99984C10.8332 9.5396 10.4601 9.1665 9.99984 9.1665C9.5396 9.1665 9.1665 9.5396 9.1665 9.99984C9.1665 10.4601 9.5396 10.8332 9.99984 10.8332Z"
-                  stroke="#6A7282"
-                  stroke-width="1.66667"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M9.99984 5.00016C10.4601 5.00016 10.8332 4.62707 10.8332 4.16683C10.8332 3.70659 10.4601 3.3335 9.99984 3.3335C9.5396 3.3335 9.1665 3.70659 9.1665 4.16683C9.1665 4.62707 9.5396 5.00016 9.99984 5.00016Z"
-                  stroke="#6A7282"
-                  stroke-width="1.66667"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M9.99984 16.6667C10.4601 16.6667 10.8332 16.2936 10.8332 15.8333C10.8332 15.3731 10.4601 15 9.99984 15C9.5396 15 9.1665 15.3731 9.1665 15.8333C9.1665 16.2936 9.5396 16.6667 9.99984 16.6667Z"
-                  stroke="#6A7282"
-                  stroke-width="1.66667"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </button>
+        <!-- 일정 카드 -->
+        <div
+          v-for="(folder, index) in folders"
+          :key="folder.id"
+          class="plan-card"
+          :class="{ 'has-delete': folder.showDelete }"
+          @click="goToPlanDetail(folder.id)"
+          style="cursor: pointer"
+        >
+          <!-- 썸네일 이미지 -->
+          <div class="plan-thumbnail">
+            <img
+              :src="getThumbnailUrl(folder.thumbnailUrl)"
+              :alt="folder.name"
+              @error="handleImageError"
+            />
+          </div>
 
-            <!-- 삭제 버튼 (메뉴 클릭시 표시) -->
-            <div v-if="plan.showDelete" class="delete-dropdown">
-              <button class="delete-button" @click.stop="deletePlan(index)">
+          <!-- 일정 정보 -->
+          <div class="plan-info">
+            <div class="plan-header-row">
+              <h2 class="plan-title">{{ folder.name }}</h2>
+              <button class="menu-button" @click.stop="toggleMenu(index)">
                 <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="M6.6665 7.3335V11.3335"
-                    stroke="#E7000B"
-                    stroke-width="1.33333"
+                    d="M9.99984 10.8332C10.4601 10.8332 10.8332 10.4601 10.8332 9.99984C10.8332 9.5396 10.4601 9.1665 9.99984 9.1665C9.5396 9.1665 9.1665 9.5396 9.1665 9.99984C9.1665 10.4601 9.5396 10.8332 9.99984 10.8332Z"
+                    stroke="#6A7282"
+                    stroke-width="1.66667"
                     stroke-linecap="round"
                     stroke-linejoin="round"
                   />
                   <path
-                    d="M9.3335 7.3335V11.3335"
-                    stroke="#E7000B"
-                    stroke-width="1.33333"
+                    d="M9.99984 5.00016C10.4601 5.00016 10.8332 4.62707 10.8332 4.16683C10.8332 3.70659 10.4601 3.3335 9.99984 3.3335C9.5396 3.3335 9.1665 3.70659 9.1665 4.16683C9.1665 4.62707 9.5396 5.00016 9.99984 5.00016Z"
+                    stroke="#6A7282"
+                    stroke-width="1.66667"
                     stroke-linecap="round"
                     stroke-linejoin="round"
                   />
                   <path
-                    d="M12.6668 4V13.3333C12.6668 13.687 12.5264 14.0261 12.2763 14.2761C12.0263 14.5262 11.6871 14.6667 11.3335 14.6667H4.66683C4.31321 14.6667 3.97407 14.5262 3.72402 14.2761C3.47397 14.0261 3.3335 13.687 3.3335 13.3333V4"
-                    stroke="#E7000B"
-                    stroke-width="1.33333"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M2 4H14"
-                    stroke="#E7000B"
-                    stroke-width="1.33333"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M5.3335 4.00016V2.66683C5.3335 2.31321 5.47397 1.97407 5.72402 1.72402C5.97407 1.47397 6.31321 1.3335 6.66683 1.3335H9.3335C9.68712 1.3335 10.0263 1.47397 10.2763 1.72402C10.5264 1.97407 10.6668 2.31321 10.6668 2.66683V4.00016"
-                    stroke="#E7000B"
-                    stroke-width="1.33333"
+                    d="M9.99984 16.6667C10.4601 16.6667 10.8332 16.2936 10.8332 15.8333C10.8332 15.3731 10.4601 15 9.99984 15C9.5396 15 9.1665 15.3731 9.1665 15.8333C9.1665 16.2936 9.5396 16.6667 9.99984 16.6667Z"
+                    stroke="#6A7282"
+                    stroke-width="1.66667"
                     stroke-linecap="round"
                     stroke-linejoin="round"
                   />
                 </svg>
-                <span>삭제</span>
               </button>
-            </div>
-          </div>
 
-          <!-- 스팟 개수 -->
-          <div class="spot-info">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M13.3332 6.66683C13.3332 9.9955 9.6405 13.4622 8.4005 14.5328C8.28499 14.6197 8.14437 14.6667 7.99984 14.6667C7.85531 14.6667 7.71469 14.6197 7.59917 14.5328C6.35917 13.4622 2.6665 9.9955 2.6665 6.66683C2.6665 5.25234 3.22841 3.89579 4.2286 2.89559C5.2288 1.8954 6.58535 1.3335 7.99984 1.3335C9.41433 1.3335 10.7709 1.8954 11.7711 2.89559C12.7713 3.89579 13.3332 5.25234 13.3332 6.66683Z"
-                stroke="#4A5565"
-                stroke-width="1.33333"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M8 8.6665C9.10457 8.6665 10 7.77107 10 6.6665C10 5.56193 9.10457 4.6665 8 4.6665C6.89543 4.6665 6 5.56193 6 6.6665C6 7.77107 6.89543 8.6665 8 8.6665Z"
-                stroke="#4A5565"
-                stroke-width="1.33333"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <span>스팟 {{ plan.spotCount }}개</span>
-          </div>
-
-          <!-- 공유 정보 -->
-          <div class="share-info">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M10.6668 14V12.6667C10.6668 11.9594 10.3859 11.2811 9.88578 10.781C9.38568 10.281 8.70741 10 8.00016 10H4.00016C3.29292 10 2.61464 10.281 2.11454 10.781C1.61445 11.2811 1.3335 11.9594 1.3335 12.6667V14"
-                stroke="#6A7282"
-                stroke-width="1.33333"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M10.6665 2.08545C11.2383 2.2337 11.7448 2.56763 12.1063 3.03482C12.4678 3.50202 12.664 4.07604 12.664 4.66678C12.664 5.25752 12.4678 5.83154 12.1063 6.29874C11.7448 6.76594 11.2383 7.09987 10.6665 7.24812"
-                stroke="#6A7282"
-                stroke-width="1.33333"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M14.6665 13.9998V12.6664C14.6661 12.0756 14.4694 11.5016 14.1074 11.0346C13.7454 10.5677 13.2386 10.2341 12.6665 10.0864"
-                stroke="#6A7282"
-                stroke-width="1.33333"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M6.00016 7.33333C7.47292 7.33333 8.66683 6.13943 8.66683 4.66667C8.66683 3.19391 7.47292 2 6.00016 2C4.5274 2 3.3335 3.19391 3.3335 4.66667C3.3335 6.13943 4.5274 7.33333 6.00016 7.33333Z"
-                stroke="#6A7282"
-                stroke-width="1.33333"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-
-            <div class="user-avatars">
-              <div
-                v-for="(user, idx) in plan.sharedUsers"
-                :key="idx"
-                class="avatar"
-                :style="{ left: idx * 20 + 'px' }"
-              >
-                {{ user }}
+              <!-- 삭제 버튼 (메뉴 클릭시 표시) -->
+              <div v-if="folder.showDelete" class="delete-dropdown">
+                <button class="delete-button" @click.stop="deleteFolder(folder.id, index)">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M6.6665 7.3335V11.3335"
+                      stroke="#E7000B"
+                      stroke-width="1.33333"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M9.3335 7.3335V11.3335"
+                      stroke="#E7000B"
+                      stroke-width="1.33333"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M12.6668 4V13.3333C12.6668 13.687 12.5264 14.0261 12.2763 14.2761C12.0263 14.5262 11.6871 14.6667 11.3335 14.6667H4.66683C4.31321 14.6667 3.97407 14.5262 3.72402 14.2761C3.47397 14.0261 3.3335 13.687 3.3335 13.3333V4"
+                      stroke="#E7000B"
+                      stroke-width="1.33333"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M2 4H14"
+                      stroke="#E7000B"
+                      stroke-width="1.33333"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M5.3335 4.00016V2.66683C5.3335 2.31321 5.47397 1.97407 5.72402 1.72402C5.97407 1.47397 6.31321 1.3335 6.66683 1.3335H9.3335C9.68712 1.3335 10.0263 1.47397 10.2763 1.72402C10.5264 1.97407 10.6668 2.31321 10.6668 2.66683V4.00016"
+                      stroke="#E7000B"
+                      stroke-width="1.33333"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <span>삭제</span>
+                </button>
               </div>
             </div>
 
-            <span class="share-count">{{ plan.sharedCount }}명과 공유</span>
+            <!-- 최근 수정일 -->
+            <div class="last-modified">최근 수정: {{ formatDate(folder.updatedAt) }}</div>
           </div>
-
-          <!-- 최근 수정일 -->
-          <div class="last-modified">최근 수정: {{ plan.lastModified }}</div>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 
   <!-- 새 일정 만들기 모달 -->
@@ -229,56 +175,67 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import CreatePlanModal from "@/components/plan/CreatePlanModal.vue";
+import { folderApi } from "@/api/plan/folderApi";
 
 const router = useRouter();
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 const isModalOpen = ref(false);
+const folders = ref([]);
+const loading = ref(true);
+const error = ref(null);
 
-const plans = ref([
-  {
-    id: 1,
-    thumbnail: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400",
-    title: "제주도 여행",
-    spotCount: 12,
-    sharedUsers: ["김", "이", "박"],
-    sharedCount: 3,
-    lastModified: "2025.12.02",
-    showDelete: false,
-  },
-  {
-    id: 2,
-    thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400",
-    title: "부산 여행",
-    spotCount: 8,
-    sharedUsers: ["최", "정"],
-    sharedCount: 2,
-    lastModified: "2025.12.01",
-    showDelete: false,
-  },
-  {
-    id: 3,
-    thumbnail: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400",
-    title: "서울 여행",
-    spotCount: 15,
-    sharedUsers: ["강", "윤", "조", "임"],
-    sharedCount: 4,
-    lastModified: "2025.11.30",
-    showDelete: false,
-  },
-  {
-    id: 4,
-    thumbnail: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400",
-    title: "강릉 여행",
-    spotCount: 6,
-    sharedUsers: ["한"],
-    sharedCount: 1,
-    lastModified: "2025.11.28",
-    showDelete: false,
-  },
-]);
+// 컴포넌트 마운트 시 폴더 목록 조회
+onMounted(() => {
+  fetchFolders();
+});
+
+// 폴더 목록 조회
+const fetchFolders = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    const data = await folderApi.getMyFolders();
+    folders.value = data.map((folder) => ({
+      ...folder,
+      showDelete: false,
+    }));
+  } catch (err) {
+    console.error("폴더 목록 조회 실패:", err);
+    error.value = "폴더 목록을 불러오는데 실패했습니다.";
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 썸네일 URL 생성
+const getThumbnailUrl = (thumbnailUrl) => {
+  if (!thumbnailUrl) {
+    return "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400";
+  }
+  return `${API_BASE_URL}${thumbnailUrl}`;
+};
+
+// 이미지 로드 실패 시 기본 이미지
+const handleImageError = (event) => {
+  event.target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400";
+};
+
+// 날짜 포맷팅
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}.${month}.${day}`;
+};
 
 // 새 일정 만들기
 const createNewPlan = () => {
@@ -291,40 +248,52 @@ const closeModal = () => {
 };
 
 // 새 일정 생성
-const handleCreatePlan = (newPlanData) => {
-  const newPlan = {
-    id: plans.value.length + 1,
-    thumbnail: newPlanData.thumbnail,
-    title: newPlanData.folderName,
-    spotCount: 0,
-    sharedUsers: [],
-    sharedCount: 0,
-    lastModified: new Date().toISOString().split("T")[0].replace(/-/g, "."),
-    showDelete: false,
-  };
+const handleCreatePlan = async (newPlanData) => {
+  try {
+    const createdFolder = await folderApi.createFolder(
+      newPlanData.folderName,
+      newPlanData.thumbnailFile
+    );
 
-  plans.value.unshift(newPlan);
-  closeModal();
+    // 생성된 폴더를 목록 맨 앞에 추가
+    folders.value.unshift({
+      ...createdFolder,
+      showDelete: false,
+    });
 
-  // 선택적: 생성된 일정으로 바로 이동
-  // router.push(`/plans/${newPlan.id}`);
+    closeModal();
+
+    // 선택적: 생성된 일정으로 바로 이동
+    // router.push(`/plans/${createdFolder.id}`);
+  } catch (err) {
+    console.error("폴더 생성 실패:", err);
+    alert("폴더 생성에 실패했습니다.");
+  }
 };
 
 // 메뉴 토글
 const toggleMenu = (index) => {
   // 다른 메뉴 닫기
-  plans.value.forEach((plan, idx) => {
+  folders.value.forEach((folder, idx) => {
     if (idx !== index) {
-      plan.showDelete = false;
+      folder.showDelete = false;
     }
   });
-  plans.value[index].showDelete = !plans.value[index].showDelete;
+  folders.value[index].showDelete = !folders.value[index].showDelete;
 };
 
-// 일정 삭제
-const deletePlan = (index) => {
-  if (confirm("정말 삭제하시겠습니까?")) {
-    plans.value.splice(index, 1);
+// 폴더 삭제
+const deleteFolder = async (folderId, index) => {
+  if (!confirm("정말 삭제하시겠습니까?")) {
+    return;
+  }
+
+  try {
+    await folderApi.deleteFolder(folderId);
+    folders.value.splice(index, 1);
+  } catch (err) {
+    console.error("폴더 삭제 실패:", err);
+    alert("폴더 삭제에 실패했습니다.");
   }
 };
 
@@ -575,6 +544,76 @@ const goToPlanDetail = (planId) => {
   font-size: 14px;
   color: #9ca3af;
   margin-top: auto;
+}
+
+/* 로딩 스타일 추가 */
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top-color: #1e3a8a;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.retry-button {
+  padding: 0.75rem 1.5rem;
+  background: #1e3a8a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.retry-button:hover {
+  background: #1e40af;
+}
+
+/* 빈 상태 스타일 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1.5rem;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.create-first-button {
+  padding: 0.75rem 1.5rem;
+  background: #1e3a8a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.2s ease;
+}
+
+.create-first-button:hover {
+  background: #1e40af;
 }
 
 /* 반응형 - 태블릿 */

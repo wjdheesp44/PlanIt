@@ -1,16 +1,16 @@
 package com.gt.planit.domain.spot.controller;
 
+import com.gt.planit.domain.spot.model.dto.SpotDetailResDto;
 import com.gt.planit.domain.spot.model.dto.SpotRes;
 import com.gt.planit.domain.spot.model.dto.SpotSearchCondition;
 import com.gt.planit.domain.spot.model.service.SpotService;
 import com.gt.planit.global.response.PageRes;
+import com.gt.planit.security.service.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,6 +23,7 @@ public class SpotController {
 
     @GetMapping("/v1/spots")
     public ResponseEntity<PageRes<SpotRes>> getAllSpots(
+            @AuthenticationPrincipal CustomUserDetails user,
             @RequestParam List<String> type,
 
             @RequestParam(name = "start-date", required = false)
@@ -60,6 +61,7 @@ public class SpotController {
             @RequestParam(name = "size", required = false, defaultValue = "18")
             int size
     ) {
+        Long userId = (user != null) ? user.getId() : null;
         SpotSearchCondition condition = SpotSearchCondition.builder()
                 .types(type)
                 .startDate(startDate)
@@ -73,7 +75,17 @@ public class SpotController {
                 .sort(sort)
                 .build();
 
-        PageRes<SpotRes> result = spotService.searchSpots(condition, page, size);
+        PageRes<SpotRes> result = spotService.searchSpots(condition, page, size, userId);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/v1/spots/{spotId}")
+    public ResponseEntity<SpotDetailResDto> getSpotById(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable Long spotId
+    ) {
+        Long userId = (user != null) ? user.getId() : null;
+        SpotDetailResDto result = spotService.searchSpotsById(spotId, userId);
         return ResponseEntity.ok(result);
     }
 }

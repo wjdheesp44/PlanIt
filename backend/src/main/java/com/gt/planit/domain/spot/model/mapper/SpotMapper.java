@@ -1,5 +1,6 @@
 package com.gt.planit.domain.spot.model.mapper;
 
+import com.gt.planit.domain.spot.model.dto.SpotDetailResDto;
 import com.gt.planit.domain.spot.model.dto.SpotRes;
 import com.gt.planit.domain.spot.model.dto.SpotSearchCondition;
 import org.apache.ibatis.annotations.Mapper;
@@ -26,6 +27,19 @@ public interface SpotMapper {
      * 스팟 전체 개수 (페이징 totalElements)
      */
     long countSpots(@Param("cond") SpotSearchCondition cond);
-//    List<Book> search(Map<String, Object> param);
 
+    List<Long> selectLikedSpotIds(@Param("spotIds") List<Long> spotIds, @Param("userId") Long userId);
+
+    // 스팟 세부 페이지 조회
+    SpotDetailResDto selectSpotDetailById(Long spotId);
+
+    boolean checkSpotLike(@Param("spotId") Long spotId, @Param("userId") Long userId);
+
+    List<SpotRes> selectRandomHotSpotsBySido(
+            @Param("sidoId") Long sidoId,
+            @Param("excludeSpotId") Long excludeSpotId,
+            @Param("limit") int limit
+    );
+
+    void insertSpotView(Long spotId);
 }

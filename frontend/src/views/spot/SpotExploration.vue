@@ -77,7 +77,7 @@ import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import FilterSidebar from "@/components/spot/FilterSidebar.vue";
 import SpotCard from "@/components/SpotCard.vue";
-import spotApi from "@/api/spot/SpotApi";
+import spotApi from "@/api/spot/spotApi";
 
 const router = useRouter();
 const activeTab = ref("events");

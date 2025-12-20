@@ -74,13 +74,19 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable());
 
         http.authorizeHttpRequests(auth -> auth
-            .requestMatchers("/login", "/auth/refresh").permitAll()
-            .requestMatchers("/v1/auth/**").permitAll()
-            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .anyRequest().authenticated()
-        )
-        .formLogin(form -> form.disable());
-
+                .requestMatchers(HttpMethod.GET, "/check-email").permitAll()
+                .requestMatchers(HttpMethod.GET, "/check-nickname").permitAll()
+                .requestMatchers(HttpMethod.POST, "/join").permitAll()
+                .requestMatchers("/login", "/auth/refresh").permitAll()
+                .requestMatchers(HttpMethod.GET, "/v1/spots").permitAll()
+                .requestMatchers(HttpMethod.GET, "/v1/spots/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/v1/regions").permitAll()
+                .requestMatchers("/v1/auth/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/files/**").permitAll()
+                .anyRequest().authenticated()
+        ).formLogin(form -> form.disable());
+      
         // CORS 필터를 제일 앞에
         http.addFilterBefore(corsFilter(), UsernamePasswordAuthenticationFilter.class);
 
