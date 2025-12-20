@@ -7,11 +7,7 @@
 
     <select id="findByEmail" resultType="com.gt.planit.domain.user.model.dto.UserReqDto">
         SELECT
-        id,
-        email,
-        nickname,
-        password,
-        role
+        *
         FROM users
         WHERE email = #{email}
     </select>

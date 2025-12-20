@@ -82,6 +82,8 @@ const handleLogin = async () => {
 
       // 로그인 성공 후 이동
       router.replace("/"); // 뒤로가기 방지
+      // 로그인 성공 후 메인 페이지로 이동
+      router.push("/");
     } catch (err) {
       console.error(err);
 
@@ -90,13 +92,13 @@ const handleLogin = async () => {
           ? "이메일 또는 비밀번호가 올바르지 않습니다."
           : "로그인 중 오류가 발생했습니다.";
 
+      router.push("/login");
+
       alert(message);
+
     } finally {
       isLoading.value = false;
     }
-
-  // 로그인 성공 후 메인 페이지로 이동
-  router.push("/");
 };
 </script>
 

@@ -2,7 +2,6 @@
   <div class="mypage-layout">
     <!-- 사이드바 -->
     <MyPageSidebar />
-
     <!-- 메인 콘텐츠 (동적) -->
     <main class="layout-content">
       <RouterView />
