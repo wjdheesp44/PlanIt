@@ -142,7 +142,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from "vue";
+import { ref, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SpotCard from "@/components/SpotCard.vue";
 import ReviewCard from "@/components/spot/ReviewCard.vue";
@@ -152,6 +152,10 @@ const route = useRoute();
 const router = useRouter();
 const carouselRef = ref(null);
 const isLoading = ref(false);
+
+let mapInstance = null;
+let markerOverlay = null;
+let infoOverlay = null;
 
 // 스팟 상세 정보
 const spot = ref({
@@ -190,34 +194,129 @@ const formatNumber = (num) => {
 const initMap = () => {
   if (!spot.value.latitude || !spot.value.longitude) return;
 
-  // kakao maps SDK 로드 확인
   if (!window.kakao || !window.kakao.maps) {
     console.error("Kakao Maps SDK is not loaded");
     return;
   }
 
   window.kakao.maps.load(() => {
-    // 여기!
     const container = document.getElementById("map");
+    if (!container) return;
+
     const options = {
       center: new window.kakao.maps.LatLng(spot.value.latitude, spot.value.longitude),
       level: 3,
     };
 
-    const map = new window.kakao.maps.Map(container, options);
+    mapInstance = new window.kakao.maps.Map(container, options);
 
+    // 커스텀 마커 생성
     const markerPosition = new window.kakao.maps.LatLng(spot.value.latitude, spot.value.longitude);
-    const marker = new window.kakao.maps.Marker({
-      position: markerPosition,
-    });
-    marker.setMap(map);
 
-    const infowindow = new window.kakao.maps.InfoWindow({
-      content: `<div style="padding:5px;font-size:12px;">${spot.value.title}</div>`,
+    const markerElement = document.createElement("div");
+    markerElement.style.cssText = `
+      position: relative;
+      width: 30px;
+      height: 38px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    `;
+
+    const pinIcon = document.createElement("div");
+    pinIcon.innerHTML = `
+      <svg width="30" height="38" viewBox="0 0 30 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 0C6.75 0 0 6.75 0 15C0 26.25 15 38 15 38C15 38 30 26.25 30 15C30 6.75 23.25 0 15 0Z" fill="#2563EB"/>
+        <circle cx="15" cy="15" r="6" fill="white"/>
+      </svg>
+    `;
+    markerElement.appendChild(pinIcon);
+
+    markerOverlay = new window.kakao.maps.CustomOverlay({
+      position: markerPosition,
+      content: markerElement,
+      yAnchor: 1,
     });
-    infowindow.open(map, marker);
+    markerOverlay.setMap(mapInstance);
+
+    // 인포윈도우 생성
+    const infoElement = document.createElement("div");
+    infoElement.style.cssText = `
+      position: relative;
+      background: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      min-width: 150px;
+      max-width: 220px;
+      transform: translateY(-45px);
+    `;
+
+    infoElement.innerHTML = `
+      <div style="
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e1e1e;
+        margin-bottom: 4px;
+        line-height: 1.3;
+      ">${spot.value.title}</div>
+      ${
+        spot.value.address
+          ? `
+      <div style="
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.3;
+      ">${spot.value.address}</div>
+      `
+          : ""
+      }
+      <div style="
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid white;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+      "></div>
+    `;
+
+    infoOverlay = new window.kakao.maps.CustomOverlay({
+      position: markerPosition,
+      content: infoElement,
+      yAnchor: 1.4,
+    });
+    infoOverlay.setMap(mapInstance);
   });
 };
+
+const cleanupMap = () => {
+  if (markerOverlay) {
+    markerOverlay.setMap(null); // 마커 제거
+    markerOverlay = null;
+  }
+
+  if (infoOverlay) {
+    infoOverlay.setMap(null); // 인포윈도우 제거
+    infoOverlay = null;
+  }
+
+  if (mapInstance) {
+    mapInstance = null; // 지도 인스턴스 제거
+  }
+};
+
+onMounted(() => {
+  initMap();
+});
+
+onUnmounted(() => {
+  cleanupMap();
+});
 
 // 스팟 데이터 로드
 const loadSpotData = async () => {
