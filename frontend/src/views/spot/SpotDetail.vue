@@ -126,27 +126,65 @@
             총 <span class="count-highlight">{{ formatNumber(spot.reviewCount) }}</span
             >건
           </p>
+          <button class="review-open-btn" @click="openReviewModal" @click.prevent="onClickReview">
+            후기 작성
+          </button>
         </div>
-
         <div class="reviews-list">
           <ReviewCard
             v-for="review in reviews"
             :key="review.id"
             :review="review"
             @helpful="handleHelpful"
+            @delete="deleteReview"
+            @edit="startEdit"
           />
         </div>
       </section>
     </main>
+
+    <!-- 후기 작성 모달 -->
+      <div v-if="isReviewModalOpen" class="modal-overlay" @click.self="closeReviewModal">
+        <div class="modal">
+          <h3 class="modal-title">후기 작성</h3>
+
+          <!-- 별점 -->
+          <div class="rating-input">
+            <span
+              v-for="n in 5"
+              :key="n"
+              class="star"
+              :class="{ active: n <= newReview.rating }"
+              @click="newReview.rating = n"
+            >
+              ★
+            </span>
+          </div>
+
+          <!-- 후기 내용 -->
+          <textarea
+            v-model="newReview.content"
+            placeholder="후기를 작성해 주세요"
+            rows="5"
+          />
+
+          <!-- 버튼 -->
+          <div class="modal-actions">
+            <button class="cancel-btn" @click="closeReviewModal">취소</button>
+            <button class="submit-btn" @click="submitReview">등록</button>
+          </div>
+        </div>
+      </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from "vue";
+import { ref, watch, nextTick, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SpotCard from "@/components/SpotCard.vue";
 import ReviewCard from "@/components/spot/ReviewCard.vue";
 import spotApi from "@/api/spot/spotApi";
+import reviewApi from "@/api/review/reviewApi";
 
 const route = useRoute();
 const router = useRouter();
@@ -301,10 +339,64 @@ watch(
   async (newId) => {
     if (newId) {
       await loadSpotData();
+      await loadReviews();
     }
   },
   { immediate: true } // 컴포넌트 마운트 시에도 즉시 실행
 );
+
+////////////////////////
+const isLogin = computed(() => {
+  return !!localStorage.getItem("accessToken");
+});
+
+// 후기 작성 버튼
+const onClickReview = () => {
+  if (!isLogin.value) {
+    // 로그인 안 했으면 아무 반응 없음
+    router.push("/login");
+    return;
+  }
+};
+
+// 모달
+const isReviewModalOpen = ref(false);
+
+const newReview = ref({
+  rating: 5,
+  content: ""
+});
+
+const openReviewModal = () => {
+  isReviewModalOpen.value = true;
+};
+
+const closeReviewModal = () => {
+  isReviewModalOpen.value = false;
+  newReview.value = { rating: 5, content: "" };
+};
+
+const submitReview = async () => {
+  if (!newReview.value.content.trim()) {
+    alert("후기 내용을 입력하세요");
+    return;
+  }
+
+  await reviewApi.createReview(route.params.id, newReview.value);
+  await loadReviews();
+  closeReviewModal();
+
+};
+
+const loadReviews = async () => {
+  const res = await reviewApi.getReviews(route.params.id);
+
+  reviews.value = res.data;
+
+  spot.value.reviewCount = reviews.value.length;
+};
+
+////////////////////////////////
 </script>
 
 <style scoped>
@@ -534,6 +626,100 @@ watch(
   flex-direction: column;
   gap: 1.5rem;
 }
+
+/* 모달 */
+.review-open-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.review-open-btn:hover {
+  background: #6d28d9;
+}
+
+/* 모달 배경 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* 모달 박스 */
+.modal {
+  background: white;
+  width: 90%;
+  max-width: 420px;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+/* 제목 */
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+/* 별점 */
+.rating-input {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.star {
+  cursor: pointer;
+  color: #d1d5db;
+}
+
+.star.active {
+  color: #facc15;
+}
+
+/* 입력 */
+.modal textarea {
+  width: 100%;
+  resize: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+
+/* 버튼 */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.cancel-btn {
+  background: #e5e7eb;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+}
+
+.submit-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+}
+
 
 /* 로딩 오버레이 */
 .loading-overlay {
