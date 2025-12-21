@@ -8,4 +8,5 @@ public interface UserMapper {
     UserReqDto findByEmail(String email);
     void insertUser(UserReqDto user);
     UserReqDto findByNickname(String nickname);
+    boolean updateMyInfo(UserReqDto user);
 }

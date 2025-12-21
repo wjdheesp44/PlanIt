@@ -5,7 +5,7 @@
       <!-- 헤더 -->
       <div class="page-header">
         <h1 class="page-title">회원정보</h1>
-        <button class="edit-button" @click="goEdit">
+        <button class="cancel-button" @click="cancel">
           <svg
             width="16"
             height="16"
@@ -21,8 +21,26 @@
               stroke-linejoin="round"
             />
           </svg>
-          <span>정보 수정</span>
+          취소
         </button>
+        <button class="save-button" @click="save">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M14.1063 4.53832C14.4586 4.18616 14.6565 3.7085 14.6566 3.21042C14.6566 2.71233 14.4588 2.23463 14.1067 1.88238C13.7545 1.53014 13.2769 1.33222 12.7788 1.33215C12.2807 1.33209 11.803 1.52989 11.4507 1.88205L2.55919 10.7756C2.4045 10.9298 2.29011 11.1197 2.22607 11.3286L1.34598 14.228C1.32876 14.2856 1.32746 14.3468 1.34222 14.4051C1.35697 14.4634 1.38723 14.5166 1.42979 14.5591C1.47234 14.6016 1.52561 14.6318 1.58393 14.6465C1.64225 14.6611 1.70345 14.6597 1.76104 14.6424L4.66115 13.763C4.8698 13.6995 5.05967 13.5858 5.21413 13.4319L14.1063 4.53832Z"
+                      stroke="white"
+                      stroke-width="1.33247"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  저장
+                </button>
       </div>
 
       <!-- 프로필 카드 -->
@@ -90,7 +108,7 @@
             </div>
             <div class="info-content">
               <span class="info-label">이름</span>
-              <p class="info-value" v-if="userInfo">{{ userInfo.name }}</p>
+              <input class="info-value" v-model="form.name"/>
             </div>
           </div>
 
@@ -154,7 +172,7 @@
             </div>
             <div class="info-content">
               <span class="info-label">닉네임</span>
-              <p class="info-value" v-if="userInfo">{{ userInfo.nickname }}</p>
+              <input class="info-value" v-model="form.nickname"/>
             </div>
           </div>
 
@@ -185,10 +203,9 @@
               </svg>
             </div>
             <div class="info-content">
-              <span class="info-label">비밀번호</span>
-              <p class="info-value">••••••</p>
+              <span class="info-label">새 비밀번호</span>
+              <input class="info-value" type="password" placeholder="사용할 비밀번호를 입력해주세요" v-model="form.password"/>
             </div>
-            <button class="change-button">변경</button>
           </div>
 
           <!-- 권한 -->
@@ -219,28 +236,34 @@
           </div>
         </div>
       </div>
-
-      <!-- 회원 탈퇴 -->
-      <div class="withdraw-section">
-        <button class="withdraw-button">회원 탈퇴</button>
-      </div>
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { getMyInfo } from "@/api/user/user";
+import { ref, reactive, onMounted } from "vue";
+import { getMyInfo, updateMyInfo } from "@/api/user/user";
 import { useRouter } from "vue-router";
+import { checkNicknameApi } from "@/api/user/authApi";
 
 const router = useRouter();
 const userInfo = ref(null);
 const isLoading = ref(true);  // 로딩 상태를 추적하는 변수
 
+const form = reactive({
+  name: "",
+  nickname: "",
+  password: "",
+});
+
 onMounted(async () => {
   try {
     const res = await getMyInfo();
-    userInfo.value = res.data; // API 응답 데이터를 userInfo에 할당
+
+    userInfo.value = res.data;
+
+    form.name = res.data.name;
+    form.nickname = res.data.nickname;
   } catch (e) {
     console.error("유저 정보 로드 실패", e);
   } finally {
@@ -250,6 +273,53 @@ onMounted(async () => {
 
 const goEdit = () => {
   router.push({ name: "MemberInfoEdit" });
+};
+
+const cancel = () => {
+  router.push("/mypage/profile");
+};
+
+const save = async () => {
+  /* 빈 값 체크 */
+  console.log(form.name)
+  console.log(form.nickname)
+  console.log(form.password)
+  if (!form.name || !form.nickname || !form.password ) {
+    alert("값을 모두 입력해주세요.");
+    return;
+  }
+
+  /* 비밀번호 길이 체크 (입력했을 때만) */
+  if (form.password && form.password.length < 6) {
+    alert("비밀번호는 6자리 이상이어야 합니다.");
+    return;
+  }
+
+  /* 닉네임 중복 체크 (변경된 경우만) */
+  if (form.nickname !== userInfo.value.nickname) {
+    const res = await checkNicknameApi(form.nickname);
+
+    if (res.data.isDuplicate) {
+      alert("이미 사용 중인 닉네임입니다.");
+      return;
+    }
+  }
+
+console.log(userInfo.value.email)
+console.log(form.name)
+console.log(form.nickname)
+console.log(form.password)
+
+  /* 실제 저장 API 호출 */
+  await updateMyInfo({
+    email: userInfo.value.email,
+    name: form.name,
+    nickname: form.nickname,
+    password: form.password || null,
+  });
+
+  alert("회원정보가 저장되었습니다.");
+  router.push("/mypage/profile");
 };
 
 const handleMenuChange = (menu) => {
@@ -294,7 +364,7 @@ const handleMenuChange = (menu) => {
   line-height: 1.5;
 }
 
-.edit-button {
+.cancel-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -308,7 +378,25 @@ const handleMenuChange = (menu) => {
   transition: background 0.2s ease;
 }
 
-.edit-button:hover {
+.cancel-button:hover {
+  background: #6d28d9;
+}
+
+.save-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.save-button:hover {
   background: #6d28d9;
 }
 
@@ -423,43 +511,6 @@ const handleMenuChange = (menu) => {
   line-height: 1.5;
 }
 
-.change-button {
-  background: none;
-  border: none;
-  color: #7c3aed;
-  font-size: 14px;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-  line-height: 1.43;
-}
-
-.change-button:hover {
-  color: #6d28d9;
-}
-
-/* 회원 탈퇴 */
-.withdraw-section {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: 1rem;
-}
-
-.withdraw-button {
-  background: none;
-  border: none;
-  color: #dc2626;
-  font-size: 16px;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-  line-height: 1.5;
-}
-
-.withdraw-button:hover {
-  color: #b91c1c;
-}
-
 /* 반응형 - 태블릿 */
 @media (max-width: 1024px) {
   .mypage {
@@ -483,7 +534,7 @@ const handleMenuChange = (menu) => {
     gap: 1rem;
   }
 
-  .edit-button {
+  .save-button {
     width: 100%;
     justify-content: center;
   }

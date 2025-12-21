@@ -73,6 +73,11 @@ const router = createRouter({
           name: "Reviews",
           component: () => import("@/views/mypage/Reviews.vue"),
         },
+        {
+          path: "profile/edit",
+          name: "MemberInfoEdit",
+          component: () => import("@/views/mypage/MemberInfo.vue"),
+        }
       ],
     },
   ],
