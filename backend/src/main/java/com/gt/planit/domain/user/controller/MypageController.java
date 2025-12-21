@@ -36,4 +36,10 @@ public class MypageController {
         return ResponseEntity.ok(exists);
     }
 
+    @DeleteMapping("/v1/profile")
+    public ResponseEntity<Boolean> deleteMyInfo(@AuthenticationPrincipal CustomUserDetails user) {
+        boolean exists = userService.deleteMyInfo(user);
+        return ResponseEntity.ok(exists);
+    }
+
 }

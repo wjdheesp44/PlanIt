@@ -4,6 +4,7 @@ import com.gt.planit.domain.user.model.dto.UserReqDto;
 import com.gt.planit.domain.user.model.mapper.UserMapper;
 import com.gt.planit.security.dto.MyUserResDto;
 import com.gt.planit.security.dto.UserResDto;
+import com.gt.planit.security.service.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -59,6 +60,10 @@ public class UserService {
         user.setEmail(dto.getEmail());
 
         return userMapper.updateMyInfo(user);
+    }
+
+    public boolean deleteMyInfo(CustomUserDetails dto) {
+        return userMapper.deleteMyInfo(dto);
     }
 
 }

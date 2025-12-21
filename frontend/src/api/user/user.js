@@ -7,3 +7,7 @@ export const getMyInfo = () => {
 export const updateMyInfo = (data) => {
   return api.put("/api/v1/profile", data)
 }
+
+export const deleteMyInfo = () => {
+  return api.delete("/api/v1/profile");
+}
