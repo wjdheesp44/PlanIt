@@ -12,13 +12,11 @@
       </nav>
 
       <div class="user-menu">
-        <button class="user-icon">
-          <RouterLink to="/login" class="login">
-            <svg width="28" height="28" viewBox="0 0 34 34" fill="currentColor">
-              <circle cx="17" cy="12" r="5" />
-              <path d="M5 30c0-6.627 5.373-12 12-12s12 5.373 12 12" />
-            </svg>
-          </RouterLink>
+        <button class="user-icon" @click="handleUserIconClick">
+          <svg width="28" height="28" viewBox="0 0 34 34" fill="currentColor">
+            <circle cx="17" cy="12" r="5" />
+            <path d="M5 30c0-6.627 5.373-12 12-12s12 5.373 12 12" />
+          </svg>
         </button>
       </div>
     </div>
@@ -36,12 +34,31 @@ const isLogin = computed(() => {
   return !!localStorage.getItem("accessToken");
 });
 
+// 마이페이지 메뉴
 const onClickMyPage = () => {
   if (!isLogin.value) {
     // 로그인 안 했으면 아무 반응 없음
     return;
   }
   router.push("/mypage");
+};
+
+// 사람 아이콘
+const handleUserIconClick = () => {
+  const accessToken = localStorage.getItem("accessToken");
+
+  // 로그인 안 된 상태
+  if (!accessToken) {
+    router.push("/login");
+    return;
+  }
+
+  // 로그인 된 상태 → 로그아웃
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken"); // 있다면 같이 삭제
+
+  alert("로그아웃 되었습니다.");
+  router.push("/"); // 또는 /login
 };
 </script>
 

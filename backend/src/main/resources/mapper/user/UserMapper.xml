@@ -21,4 +21,13 @@
         SELECT * FROM users WHERE nickname = #{nickname}
     </select>
 
+    <update id="updateMyInfo">
+        UPDATE users
+        SET
+        name = #{name},
+        nickname = #{nickname},
+        password = #{password}
+        WHERE email = #{email};
+    </update>
+
 </mapper>

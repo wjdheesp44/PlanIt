@@ -2,6 +2,7 @@ package com.gt.planit.domain.user.model.service;
 
 import com.gt.planit.domain.user.model.dto.UserReqDto;
 import com.gt.planit.domain.user.model.mapper.UserMapper;
+import com.gt.planit.security.dto.MyUserResDto;
 import com.gt.planit.security.dto.UserResDto;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.User;
@@ -47,6 +48,17 @@ public class UserService {
                 user.getName(),
                 user.getRole()
         );
+    }
+
+    public boolean updateMyInfo(UserReqDto dto) {
+        UserReqDto user = new UserReqDto();
+        user.setId(dto.getId());
+        user.setName(dto.getName());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setNickname(dto.getNickname());
+        user.setEmail(dto.getEmail());
+
+        return userMapper.updateMyInfo(user);
     }
 
 }
