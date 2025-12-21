@@ -222,7 +222,7 @@
 
       <!-- 회원 탈퇴 -->
       <div class="withdraw-section">
-        <button class="withdraw-button">회원 탈퇴</button>
+        <button class="withdraw-button" @click="withdraw">회원 탈퇴</button>
       </div>
     </main>
   </div>
@@ -230,7 +230,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { getMyInfo } from "@/api/user/user";
+import { getMyInfo, deleteMyInfo } from "@/api/user/user";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -250,6 +250,25 @@ onMounted(async () => {
 
 const goEdit = () => {
   router.push({ name: "MemberInfoEdit" });
+};
+
+const withdraw = async () => {
+  const ok = confirm("정말 회원 탈퇴하시겠습니까?\n탈퇴 후 복구할 수 없습니다.");
+  if (!ok) return;
+
+  try {
+    await deleteMyInfo(); // 회원 탈퇴 API
+    alert("회원 탈퇴가 완료되었습니다.");
+
+    // 토큰 삭제
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+
+    router.push("/"); // 메인
+  } catch (e) {
+    console.error(e);
+    alert("회원 탈퇴 실패");
+  }
 };
 
 const handleMenuChange = (menu) => {

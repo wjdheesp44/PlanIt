@@ -30,4 +30,9 @@
         WHERE email = #{email};
     </update>
 
+    <delete id="deleteMyInfo">
+        DELETE FROM users
+        WHERE email = #{email};
+    </delete>
+
 </mapper>
