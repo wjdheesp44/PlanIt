@@ -10,7 +10,7 @@
       />
 
       <!-- 중앙 스팟 목록 사이드바 -->
-      <aside class="spot-sidebar">
+      <aside class="spot-sidebar" :style="{ width: sidebarWidth + 'px' }">
         <div class="sidebar-top">
           <!-- 검색 -->
           <div class="search-box">
@@ -107,16 +107,16 @@
                 <div class="order-control">
                   <button class="order-button" @click="moveSpotUp(index)" :disabled="index === 0">
                     <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 12 12"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M6 9.5V2.5M6 2.5L2.5 6M6 2.5L9.5 6"
-                        stroke="currentColor"
-                        stroke-width="1.5"
+                        d="M12 10L8 6L4 10"
+                        :stroke="index === 0 ? '#D1D5DC' : '#6A7282'"
+                        stroke-width="1.33333"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                       />
@@ -129,16 +129,16 @@
                     :disabled="index === spots.length - 1"
                   >
                     <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 12 12"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M6 2.5V9.5M6 9.5L9.5 6M6 9.5L2.5 6"
-                        stroke="currentColor"
-                        stroke-width="1.5"
+                        d="M4 6L8 10L12 6"
+                        :stroke="index === spots.length - 1 ? '#D1D5DC' : '#6A7282'"
+                        stroke-width="1.33333"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                       />
@@ -181,9 +181,9 @@
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M17.3667 3.8415C16.9412 3.41583 16.4369 3.07803 15.8815 2.84757C15.3261 2.61711 14.7301 2.49854 14.1284 2.49854C13.5266 2.49854 12.9306 2.61711 12.3752 2.84757C11.8198 3.07803 11.3155 3.41583 10.89 3.8415L9.99999 4.73150L9.10999 3.8415C8.25113 2.98264 7.09142 2.49898 5.88165 2.49898C4.67189 2.49898 3.51218 2.98264 2.65332 3.8415C1.79446 4.70036 1.31079 5.86007 1.31079 7.06984C1.31079 8.2796 1.79446 9.43931 2.65332 10.2982L3.54332 11.1882L9.99999 17.6448L16.4567 11.1882L17.3467 10.2982C17.7723 9.87265 18.1101 9.36833 18.3406 8.81293C18.5711 8.25754 18.6896 7.66152 18.6896 7.05984C18.6896 6.45816 18.5711 5.86214 18.3406 5.30674C18.1101 4.75135 17.7723 4.24703 17.3467 3.8215"
+                        d="M1.6665 7.91662C1.66652 6.98929 1.94783 6.08377 2.47328 5.31967C2.99873 4.55557 3.7436 3.96883 4.60951 3.63695C5.47542 3.30507 6.42164 3.24366 7.32318 3.46082C8.22473 3.67799 9.03919 4.16352 9.659 4.85329C9.70266 4.89996 9.75544 4.93718 9.81407 4.96262C9.8727 4.98806 9.93593 5.00119 9.99984 5.00119C10.0637 5.00119 10.127 4.98806 10.1856 4.96262C10.2442 4.93718 10.297 4.89996 10.3407 4.85329C10.9585 4.15904 11.7732 3.66943 12.6762 3.44962C13.5792 3.22982 14.5277 3.29024 15.3956 3.62286C16.2634 3.95547 17.0093 4.5445 17.5341 5.31154C18.0589 6.07858 18.3376 6.98725 18.3332 7.91662C18.3332 9.82495 17.0832 11.25 15.8332 12.5L11.2565 16.9275C11.1012 17.1058 10.9098 17.249 10.6949 17.3477C10.48 17.4464 10.2465 17.4982 10.0101 17.4997C9.77362 17.5012 9.53954 17.4523 9.32341 17.3564C9.10728 17.2605 8.91403 17.1196 8.7565 16.9433L4.1665 12.5C2.9165 11.25 1.6665 9.83329 1.6665 7.91662Z"
                         :fill="spot.isFavorite ? '#FB2C36' : 'none'"
-                        :stroke="spot.isFavorite ? '#FB2C36' : 'currentColor'"
+                        :stroke="spot.isFavorite ? '#FB2C36' : '#99A1AF'"
                         stroke-width="1.66667"
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -199,15 +199,36 @@
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M2.5 5H4.16667H17.5"
-                        stroke="currentColor"
+                        d="M8.3335 9.16675V14.1667"
+                        stroke="#99A1AF"
                         stroke-width="1.66667"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                       />
                       <path
-                        d="M15.8332 5.00016V16.6668C15.8332 17.1087 15.6576 17.5327 15.345 17.8453C15.0325 18.1578 14.6085 18.3335 14.1665 18.3335H5.83317C5.39114 18.3335 4.96722 18.1578 4.65466 17.8453C4.3421 17.5327 4.1665 17.1087 4.1665 16.6668V5.00016M6.6665 5.00016V3.3335C6.6665 2.89147 6.8421 2.46755 7.15466 2.15499C7.46722 1.84243 7.89114 1.66683 8.33317 1.66683H11.6665C12.1085 1.66683 12.5325 1.84243 12.845 2.15499C13.1576 2.46755 13.3332 2.89147 13.3332 3.3335V5.00016"
-                        stroke="currentColor"
+                        d="M11.6665 9.16675V14.1667"
+                        stroke="#99A1AF"
+                        stroke-width="1.66667"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M15.8332 5V16.6667C15.8332 17.1087 15.6576 17.5326 15.345 17.8452C15.0325 18.1577 14.6085 18.3333 14.1665 18.3333H5.83317C5.39114 18.3333 4.96722 18.1577 4.65466 17.8452C4.3421 17.5326 4.1665 17.1087 4.1665 16.6667V5"
+                        stroke="#99A1AF"
+                        stroke-width="1.66667"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M2.5 5H17.5"
+                        stroke="#99A1AF"
+                        stroke-width="1.66667"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M6.6665 5.00008V3.33341C6.6665 2.89139 6.8421 2.46746 7.15466 2.1549C7.46722 1.84234 7.89114 1.66675 8.33317 1.66675H11.6665C12.1085 1.66675 12.5325 1.84234 12.845 2.1549C13.1576 2.46746 13.3332 2.89139 13.3332 3.33341V5.00008"
+                        stroke="#99A1AF"
                         stroke-width="1.66667"
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -254,6 +275,7 @@
           </div>
         </div>
       </aside>
+      <div class="sidebar-resizer" @mousedown="startResize"></div>
 
       <!-- 오른쪽 지도 영역 -->
       <div class="map-area">
@@ -330,6 +352,32 @@ const route = useRoute();
 const currentFolderId = ref(Number(route.params.id) || 1);
 const searchQuery = ref("");
 const newComment = ref("");
+
+const sidebarWidth = ref(660); // 기본 너비
+const isResizing = ref(false);
+
+const startResize = (e) => {
+  isResizing.value = true;
+  document.addEventListener("mousemove", handleResize);
+  document.addEventListener("mouseup", stopResize);
+};
+
+const handleResize = (e) => {
+  if (!isResizing.value) return;
+
+  const newWidth = e.clientX - 130; // 260은 왼쪽 폴더 사이드바 너비
+
+  // 최소/최대 너비 제한
+  if (newWidth >= 400 && newWidth <= 1200) {
+    sidebarWidth.value = newWidth;
+  }
+};
+
+const stopResize = () => {
+  isResizing.value = false;
+  document.removeEventListener("mousemove", handleResize);
+  document.removeEventListener("mouseup", stopResize);
+};
 
 // 폴더 목록
 const folders = ref([
@@ -578,12 +626,35 @@ const zoomOut = () => {
 
 /* 중앙 스팟 목록 사이드바 */
 .spot-sidebar {
-  width: 660px;
+  min-width: 600px;
+  max-width: 1200px;
   background: #ffffff;
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.sidebar-resizer {
+  width: 4px;
+  background: transparent;
+  cursor: col-resize;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.sidebar-resizer:hover {
+  background: #e5e7eb;
+}
+
+.sidebar-resizer::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 0;
+  bottom: 0;
 }
 
 .sidebar-top {
@@ -692,15 +763,16 @@ const zoomOut = () => {
 .spots-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .spot-card {
-  background: #f9fafb;
-  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
   padding: 1rem;
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: flex-start;
 }
 
@@ -711,38 +783,37 @@ const zoomOut = () => {
   align-items: center;
   gap: 0.25rem;
   flex-shrink: 0;
+  padding-top: 0.5rem;
 }
 
 .order-button {
   width: 24px;
   height: 24px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
+  background: transparent;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #4b5563;
+  padding: 0.25rem;
+  border-radius: 4px;
   transition: all 0.2s;
 }
 
 .order-button:hover:not(:disabled) {
   background: #f3f4f6;
-  border-color: #2563eb;
-  color: #2563eb;
 }
 
 .order-button:disabled {
-  opacity: 0.3;
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .order-number {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1e1e1e;
-  min-width: 20px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #6b7280;
+  min-width: 16px;
   text-align: center;
 }
 
@@ -750,7 +821,7 @@ const zoomOut = () => {
 .spot-thumbnail {
   width: 96px;
   height: 96px;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -777,30 +848,30 @@ const zoomOut = () => {
 }
 
 .spot-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1e1e1e;
+  font-size: 16px;
+  font-weight: 400;
+  color: #111827;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .spot-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 400;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .badge-tourist {
-  background: #dbeafe;
-  color: #2563eb;
+  background: #eef2ff;
+  color: #4f46e5;
 }
 
 .badge-popup {
-  background: #ede9fe;
+  background: #f5f3ff;
   color: #7c3aed;
 }
 
@@ -810,7 +881,7 @@ const zoomOut = () => {
 }
 
 .spot-address {
-  font-size: 12px;
+  font-size: 14px;
   color: #6b7280;
   white-space: nowrap;
   overflow: hidden;
@@ -820,37 +891,44 @@ const zoomOut = () => {
 .spot-memo {
   display: flex;
   gap: 0.5rem;
-  padding: 0.5rem;
-  background: #ffffff;
-  border-radius: 6px;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .memo-label {
   color: #6b7280;
-  font-weight: 500;
+  font-weight: 400;
   flex-shrink: 0;
 }
 
 .memo-text {
-  color: #1e1e1e;
+  color: #374151;
   flex: 1;
 }
 
 /* 액션 버튼 */
 .spot-actions {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
   flex-shrink: 0;
 }
 
 .action-button {
   width: 36px;
   height: 36px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0.5rem;
+}
+
+.action-button:hover {
+  background: #f9fafb;
+
   display: flex;
   align-items: center;
   justify-content: center;
