@@ -279,18 +279,7 @@
 
       <!-- 오른쪽 지도 영역 -->
       <div class="map-area">
-        <div class="map-placeholder">
-          <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1200" alt="Map" />
-          <!-- 마커들 -->
-          <div
-            v-for="(marker, index) in mapMarkers"
-            :key="index"
-            class="map-marker"
-            :style="{ left: marker.x + '%', top: marker.y + '%' }"
-          >
-            <div class="marker-pin">{{ index + 1 }}</div>
-          </div>
-        </div>
+        <div id="map" class="map-image"></div>
 
         <!-- 줌 컨트롤 -->
         <div class="zoom-controls">
@@ -342,7 +331,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import FolderSidebar from "@/components/plan/FolderSiderbar.vue";
 
@@ -355,6 +344,9 @@ const newComment = ref("");
 
 const sidebarWidth = ref(660); // 기본 너비
 const isResizing = ref(false);
+
+let map = null;
+const markers = ref([]);
 
 const startResize = (e) => {
   isResizing.value = true;
@@ -417,6 +409,8 @@ const spots = ref([
     image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200",
     memo: "아침 일찍 가면 사람이 적어요",
     isFavorite: true,
+    latitude: 35.1587,
+    longitude: 129.1603,
   },
   {
     id: 2,
@@ -426,6 +420,8 @@ const spots = ref([
     image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200",
     memo: "",
     isFavorite: false,
+    latitude: 35.1532,
+    longitude: 129.1189,
   },
   {
     id: 3,
@@ -435,6 +431,8 @@ const spots = ref([
     image: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=200",
     memo: "경사가 있으니 편한 신발 추천",
     isFavorite: true,
+    latitude: 35.0975,
+    longitude: 129.0107,
   },
 ]);
 
@@ -524,14 +522,163 @@ const addComment = () => {
   }
 };
 
-// 지도 줌
+const initKakaoMap = () => {
+  if (!window.kakao || !window.kakao.maps) {
+    console.error("Kakao Maps SDK not loaded");
+    return;
+  }
+
+  const container = document.getElementById("map");
+  const options = {
+    center: new window.kakao.maps.LatLng(35.1796, 129.0756), // 부산 중심
+    level: 5,
+  };
+
+  map = new window.kakao.maps.Map(container, options);
+
+  // 스팟 목록 기반 마커 생성
+  updateMarkers();
+};
+
+// 마커 업데이트
+const updateMarkers = () => {
+  if (!map) return;
+
+  markers.value.forEach((marker) => marker.setMap(null));
+  markers.value = [];
+
+  spots.value.forEach((spot, index) => {
+    if (!spot.latitude || !spot.longitude) return;
+
+    const position = new window.kakao.maps.LatLng(spot.latitude, spot.longitude);
+
+    // DOM 요소로 생성
+    const markerElement = document.createElement("div");
+    markerElement.style.cssText =
+      "position: relative; display: flex; flex-direction: column; align-items: center;";
+
+    const pinElement = document.createElement("div");
+    pinElement.className = "marker-pin";
+    pinElement.style.cssText = `
+      width: 32px;
+      height: 32px;
+      background: #2563eb;
+      color: white;
+      border: 3px solid white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      transition: all 0.2s;
+    `;
+    pinElement.textContent = index + 1;
+
+    const labelElement = document.createElement("div");
+    labelElement.className = "marker-label";
+    labelElement.style.cssText = `
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      color: #1e1e1e;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+      pointer-events: none;
+      z-index: 1000;
+    `;
+    labelElement.textContent = spot.name;
+
+    const arrow = document.createElement("div");
+    arrow.style.cssText = `
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid white;
+    `;
+    labelElement.appendChild(arrow);
+
+    markerElement.appendChild(pinElement);
+    markerElement.appendChild(labelElement);
+
+    // 호버 이벤트
+    markerElement.addEventListener("mouseenter", () => {
+      pinElement.style.transform = "scale(1.1)";
+      pinElement.style.background = "#1e40af";
+      labelElement.style.opacity = "1";
+      labelElement.style.visibility = "visible";
+      labelElement.style.top = "-45px";
+    });
+
+    markerElement.addEventListener("mouseleave", () => {
+      pinElement.style.transform = "scale(1)";
+      pinElement.style.background = "#2563eb";
+      labelElement.style.opacity = "0";
+      labelElement.style.visibility = "hidden";
+      labelElement.style.top = "-40px";
+    });
+
+    const customOverlay = new window.kakao.maps.CustomOverlay({
+      position: position,
+      content: markerElement,
+      yAnchor: 0.5,
+    });
+
+    customOverlay.setMap(map);
+    markers.value.push(customOverlay);
+  });
+
+  if (markers.value.length > 0) {
+    const bounds = new window.kakao.maps.LatLngBounds();
+    spots.value.forEach((spot) => {
+      if (spot.latitude && spot.longitude) {
+        bounds.extend(new window.kakao.maps.LatLng(spot.latitude, spot.longitude));
+      }
+    });
+    map.setBounds(bounds);
+  }
+};
+
+// 줌 컨트롤
 const zoomIn = () => {
-  console.log("Zoom in");
+  if (map) {
+    map.setLevel(map.getLevel() - 1);
+  }
 };
 
 const zoomOut = () => {
-  console.log("Zoom out");
+  if (map) {
+    map.setLevel(map.getLevel() + 1);
+  }
 };
+
+// 컴포넌트 마운트 시 카카오 지도 초기화
+onMounted(() => {
+  // 카카오 지도 SDK 로드 확인 후 초기화
+  if (window.kakao && window.kakao.maps) {
+    window.kakao.maps.load(() => {
+      initKakaoMap();
+    });
+  } else {
+    console.error("Kakao Maps SDK not loaded. Please add the script to index.html");
+  }
+});
 </script>
 
 <style scoped>
@@ -541,6 +688,117 @@ const zoomOut = () => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* 지도 */
+.map-area {
+  flex: 1;
+  position: relative;
+  background: #f3f4f6;
+}
+
+.map-image {
+  width: 100%;
+  height: 100%;
+}
+
+.zoom-controls {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.zoom-button {
+  width: 40px;
+  height: 40px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4b5563;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+.zoom-button:hover {
+  background: #f9fafb;
+  color: #2563eb;
+}
+
+/* 커스텀 마커 스타일 */
+:deep(.custom-marker) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+:deep(.marker-pin) {
+  width: 32px;
+  height: 32px;
+  background: #2563eb;
+  color: white;
+  border: 3px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+:deep(.marker-pin:hover) {
+  transform: scale(1.1);
+  background: #1e40af;
+}
+
+:deep(.marker-label) {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  color: #1e1e1e;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+:deep(.marker-label::after) {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid white;
+}
+
+:deep(.custom-marker:hover .marker-label) {
+  opacity: 1;
+  visibility: visible;
+  top: -40px;
 }
 
 .planner-folder-page {
