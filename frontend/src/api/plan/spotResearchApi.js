@@ -1,41 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:8080/api/v1";
-
-// axios 인스턴스 생성
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// 요청 인터셉터
-apiClient.interceptors.request.use(
-  (config) => {
-    // 필요시 토큰 추가
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// 응답 인터셉터
-apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    console.error("API Error:", error.response || error);
-    return Promise.reject(error);
-  }
-);
+import api from "../user/api";
 
 /**
  * 스팟 검색 API
@@ -73,7 +36,7 @@ export const searchSpots = async ({
 
     console.log("검색 요청:", `/spots?${params.toString()}`);
 
-    const response = await apiClient.get(`/spots?${params.toString()}`);
+    const response = await api.get(`/api/v1/spots?${params.toString()}`);
     console.log("검색 응답:", response.data);
 
     return response.data;
@@ -101,7 +64,7 @@ export const addSpotToFolder = async (folderId, spotId) => {
   try {
     console.log("스팟 추가 요청:", { folderId, spotId });
 
-    const response = await apiClient.post(`/folders/${folderId}/spots`, {
+    const response = await api.post(`/api/v1/folders/${folderId}/spots`, {
       spotId,
     });
 
