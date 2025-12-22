@@ -554,15 +554,18 @@
 </template>
 
 <script setup>
+// script 부분만 수정 (기존 template과 style은 동일)
+
 import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import FolderSidebar from "@/components/plan/FolderSiderbar.vue";
-import { searchSpots, addSpotToFolder } from "@/api/plan/spotResearchApi";
+import { searchSpots } from "@/api/plan/spotResearchApi";
+import { addSpotToGroup, getGroupSpots, updatePlan, deletePlan } from "@/api/plan/planApi";
 
 const router = useRouter();
 const route = useRoute();
 
-const currentFolderId = ref(Number(route.params.id) || 1);
+const currentGroupId = ref(Number(route.params.id) || 1);
 const searchQuery = ref("");
 const newComment = ref("");
 const showSearchResults = ref(false);
@@ -571,7 +574,7 @@ const searchResults = ref([]);
 const toast = ref({
   show: false,
   message: "",
-  type: "success", // 'success', 'error', 'info'
+  type: "success",
 });
 
 let searchTimeout = null;
@@ -593,13 +596,11 @@ const handleImageError = (event) => {
 const vClickOutside = {
   mounted(el, binding) {
     el.clickOutsideEvent = (event) => {
-      // 검색 컨테이너 전체를 확인
       const searchContainer = el.closest(".search-container") || el;
       if (!(searchContainer === event.target || searchContainer.contains(event.target))) {
         binding.value();
       }
     };
-    // mousedown 대신 click 이벤트 사용 (focus 이벤트 이후에 발생)
     setTimeout(() => {
       document.addEventListener("click", el.clickOutsideEvent);
     }, 0);
@@ -624,32 +625,26 @@ const showToast = (message, type = "success") => {
 
 // 검색 입력 핸들러 (디바운싱)
 const handleSearchInput = () => {
-  // 이전 타이머 취소
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
 
-  // 검색어가 비어있으면 결과 초기화
   if (!searchQuery.value.trim()) {
     searchResults.value = [];
     showSearchResults.value = false;
     return;
   }
 
-  // 검색 결과 표시
   showSearchResults.value = true;
 
-  // 새로운 타이머 설정
   searchTimeout = setTimeout(async () => {
     await performSearch();
-  }, 300); // 300ms 디바운싱
+  }, 300);
 };
 
 // 검색창 포커스 핸들러
 const handleSearchFocus = async () => {
-  // nextTick으로 이벤트 순서 보장
   await nextTick();
-  // 검색어가 있으면 드롭다운 표시
   if (searchQuery.value.trim()) {
     showSearchResults.value = true;
   }
@@ -664,7 +659,7 @@ const performSearch = async () => {
 
   try {
     isSearching.value = true;
-    searchResults.value = []; // 기존 결과 초기화
+    searchResults.value = [];
 
     const response = await searchSpots({
       types: ["ATTRACTION", "FESTIVAL", "POPUP"],
@@ -676,7 +671,6 @@ const performSearch = async () => {
 
     console.log("검색 응답 전체:", response);
 
-    // API 응답 구조에 따라 조정 (여러 경우 대응)
     if (response) {
       if (response.content) {
         searchResults.value = response.content;
@@ -697,7 +691,6 @@ const performSearch = async () => {
     console.error("검색 오류:", error);
     searchResults.value = [];
 
-    // 네트워크 에러 처리
     if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
       showToast("서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.", "error");
     } else if (error.response?.status === 404) {
@@ -716,30 +709,17 @@ const performSearch = async () => {
 const addSearchResult = async (result) => {
   try {
     // 이미 목록에 있는지 확인
-    const exists = spots.value.some((spot) => spot.id === result.id);
+    const exists = spots.value.some((spot) => spot.spotId === result.id);
     if (exists) {
       showToast("이미 추가된 스팟입니다.", "info");
       return;
     }
 
-    // API 호출하여 폴더에 추가
-    await addSpotToFolder(currentFolderId.value, result.id);
+    // API 호출하여 그룹에 추가
+    await addSpotToGroup(currentGroupId.value, result.id, "");
 
-    // 로컬 상태 업데이트
-    spots.value.push({
-      id: result.id,
-      name: result.name,
-      category: result.category,
-      address: result.address,
-      image: result.image || "https://via.placeholder.com/200",
-      memo: "",
-      isFavorite: false,
-      latitude: result.latitude,
-      longitude: result.longitude,
-    });
-
-    // 지도 마커 업데이트
-    updateMarkers();
+    // 스팟 목록 다시 불러오기
+    await loadSpots();
 
     // 검색 초기화
     clearSearch();
@@ -747,7 +727,7 @@ const addSearchResult = async (result) => {
     showToast("스팟이 추가되었습니다.", "success");
   } catch (error) {
     console.error("스팟 추가 오류:", error);
-    if (error.response?.status === 409) {
+    if (error.response?.status === 400 && error.response?.data?.message?.includes("이미")) {
       showToast("이미 추가된 스팟입니다.", "info");
     } else {
       showToast("스팟 추가에 실패했습니다.", "error");
@@ -773,6 +753,9 @@ const getCategoryLabel = (category) => {
     ATTRACTION: "관광지",
     POPUP: "팝업스토어",
     FESTIVAL: "축제",
+    관광지: "관광지",
+    팝업스토어: "팝업스토어",
+    축제: "축제",
   };
   return labels[category] || category;
 };
@@ -799,7 +782,7 @@ const stopResize = () => {
   document.removeEventListener("mouseup", stopResize);
 };
 
-// 폴더 목록
+// 폴더 목록 (임시 데이터 - 추후 API 연동)
 const folders = ref([
   {
     id: 1,
@@ -828,43 +811,9 @@ const folders = ref([
 ]);
 
 // 스팟 목록
-const spots = ref([
-  {
-    id: 1,
-    name: "해운대 해수욕장",
-    category: "ATTRACTION",
-    address: "부산 해운대구 우동",
-    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200",
-    memo: "아침 일찍 가면 사람이 적어요",
-    isFavorite: true,
-    latitude: 35.1587,
-    longitude: 129.1603,
-  },
-  {
-    id: 2,
-    name: "광안리 해수욕장",
-    category: "ATTRACTION",
-    address: "부산 수영구 광안동",
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200",
-    memo: "",
-    isFavorite: false,
-    latitude: 35.1532,
-    longitude: 129.1189,
-  },
-  {
-    id: 3,
-    name: "감천문화마을",
-    category: "ATTRACTION",
-    address: "부산 사하구 감천동",
-    image: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=200",
-    memo: "경사가 있으니 편한 신발 추천",
-    isFavorite: true,
-    latitude: 35.0975,
-    longitude: 129.0107,
-  },
-]);
+const spots = ref([]);
 
-// 댓글 목록
+// 댓글 목록 (임시 데이터 - 추후 API 연동)
 const comments = ref([
   {
     id: 1,
@@ -882,6 +831,40 @@ const comments = ref([
   },
 ]);
 
+// 스팟 목록 불러오기
+const loadSpots = async () => {
+  try {
+    const response = await getGroupSpots(currentGroupId.value);
+
+    console.log("스팟 목록 응답:", response);
+
+    // API 응답 구조에 맞게 데이터 매핑
+    const spotsData = response.data || [];
+
+    spots.value = spotsData.map((spot) => ({
+      id: spot.id, // plan ID
+      spotId: spot.spotId, // spot ID
+      name: spot.name,
+      category: spot.badge, // 한글로 이미 변환됨 ("관광지", "축제", "팝업스토어")
+      address: spot.location,
+      image: spot.image || placeholderImage,
+      memo: spot.memo || "",
+      isFavorite: spot.isFavorite || false,
+      latitude: spot.latitude,
+      longitude: spot.longitude,
+      sortOrder: spot.sortOrder,
+    }));
+
+    // 지도 마커 업데이트
+    updateMarkers();
+
+    console.log("스팟 목록 로드 완료:", spots.value);
+  } catch (error) {
+    console.error("스팟 목록 로드 실패:", error);
+    showToast("스팟 목록을 불러오는데 실패했습니다.", "error");
+  }
+};
+
 // 폴더 선택
 const selectFolder = (folderId) => {
   router.push(`/plans/${folderId}`);
@@ -893,43 +876,82 @@ const getBadgeClass = (category) => {
     ATTRACTION: "badge-tourist",
     POPUP: "badge-popup",
     FESTIVAL: "badge-festival",
+    관광지: "badge-tourist",
+    팝업스토어: "badge-popup",
+    축제: "badge-festival",
   };
   return classes[category] || "";
 };
 
-// 스팟 이동
-const moveSpotUp = (index) => {
-  if (index > 0) {
-    const temp = spots.value[index];
-    spots.value[index] = spots.value[index - 1];
-    spots.value[index - 1] = temp;
+// 스팟 이동 (위로)
+const moveSpotUp = async (index) => {
+  if (index === 0) return;
+
+  const spot = spots.value[index];
+  const newOrder = index; // 배열 인덱스 기반이므로 index가 새로운 순서
+
+  try {
+    await updatePlan(currentGroupId.value, spot.id, {
+      sortOrder: newOrder,
+    });
+
+    // 목록 다시 불러오기
+    await loadSpots();
+
+    showToast("순서가 변경되었습니다.", "success");
+  } catch (error) {
+    console.error("순서 변경 실패:", error);
+    showToast("순서 변경에 실패했습니다.", "error");
   }
 };
 
-const moveSpotDown = (index) => {
-  if (index < spots.value.length - 1) {
-    const temp = spots.value[index];
-    spots.value[index] = spots.value[index + 1];
-    spots.value[index + 1] = temp;
+// 스팟 이동 (아래로)
+const moveSpotDown = async (index) => {
+  if (index >= spots.value.length - 1) return;
+
+  const spot = spots.value[index];
+  const newOrder = index + 2; // 배열 인덱스 기반이므로 +2
+
+  try {
+    await updatePlan(currentGroupId.value, spot.id, {
+      sortOrder: newOrder,
+    });
+
+    // 목록 다시 불러오기
+    await loadSpots();
+
+    showToast("순서가 변경되었습니다.", "success");
+  } catch (error) {
+    console.error("순서 변경 실패:", error);
+    showToast("순서 변경에 실패했습니다.", "error");
   }
 };
 
-// 좋아요 토글
+// 좋아요 토글 (추후 API 연동)
 const toggleFavorite = (spot) => {
   spot.isFavorite = !spot.isFavorite;
+  // TODO: 좋아요 API 호출
+  showToast(spot.isFavorite ? "좋아요에 추가되었습니다." : "좋아요가 취소되었습니다.", "success");
 };
 
 // 스팟 삭제
-const deleteSpot = (id) => {
-  if (confirm("이 스팟을 삭제하시겠습니까?")) {
-    const index = spots.value.findIndex((s) => s.id === id);
-    if (index > -1) {
-      spots.value.splice(index, 1);
-    }
+const deleteSpot = async (planId) => {
+  if (!confirm("이 스팟을 삭제하시겠습니까?")) return;
+
+  try {
+    await deletePlan(currentGroupId.value, planId);
+
+    // 목록 다시 불러오기
+    await loadSpots();
+
+    showToast("스팟이 삭제되었습니다.", "success");
+  } catch (error) {
+    console.error("스팟 삭제 실패:", error);
+    showToast("스팟 삭제에 실패했습니다.", "error");
   }
 };
 
-// 댓글 추가
+// 댓글 추가 (추후 API 연동)
 const addComment = () => {
   if (newComment.value.trim()) {
     comments.value.unshift({
@@ -940,6 +962,7 @@ const addComment = () => {
       text: newComment.value,
     });
     newComment.value = "";
+    // TODO: 댓글 추가 API 호출
   }
 };
 
@@ -1085,7 +1108,11 @@ const zoomOut = () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // 스팟 목록 불러오기
+  await loadSpots();
+
+  // 카카오 지도 초기화
   if (window.kakao && window.kakao.maps) {
     window.kakao.maps.load(() => {
       initKakaoMap();
@@ -1096,7 +1123,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  // 타이머 정리
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
