@@ -1,5 +1,6 @@
 package com.gt.planit.domain.plan.model.dto;
 
+import com.gt.planit.domain.plan.model.entity.GroupRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,6 +17,7 @@ public class FolderDto {
     private Long userId;
     private String name;
     private String thumbnailPath;
+    private GroupRole userRole;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

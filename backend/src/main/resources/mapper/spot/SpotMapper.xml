@@ -119,7 +119,7 @@
     <sql id="spotOrderBy">
         <choose>
             <when test="cond.sort == 'LIKES_DESC'">
-                ORDER BY COALESCE(sl.likes_count, 0) DESC, s.id DESC
+                ORDER BY COALESCE(sl.likes_count, 0) DESC, s.id ASC
             </when>
             <when test="cond.sort == 'RATING_DESC'">
                 ORDER BY s.avg_rating DESC, s.id DESC

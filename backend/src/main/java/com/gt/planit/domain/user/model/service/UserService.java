@@ -1,5 +1,9 @@
 package com.gt.planit.domain.user.model.service;
 
+import com.gt.planit.domain.plan.model.dto.GroupShareReqDto;
+import com.gt.planit.domain.plan.model.dto.GroupUserResDto;
+import com.gt.planit.domain.plan.model.dto.SearchUserResDto;
+import com.gt.planit.domain.plan.model.entity.GroupRole;
 import com.gt.planit.domain.user.model.dto.UserReqDto;
 import com.gt.planit.domain.user.model.mapper.UserMapper;
 import com.gt.planit.security.dto.MyUserResDto;
@@ -9,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.apache.catalina.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +56,18 @@ public class UserService {
                 user.getName(),
                 user.getRole()
         );
+    }
+
+    public List<SearchUserResDto> getByNickname(String nickname) {
+        UserReqDto user = userMapper.findByNickname(nickname);
+
+        SearchUserResDto dto = new SearchUserResDto(
+                user.getId(),
+                user.getNickname(),
+                user.getEmail()
+        );
+
+        return List.of(dto);
     }
 
     public boolean updateMyInfo(UserReqDto dto) {

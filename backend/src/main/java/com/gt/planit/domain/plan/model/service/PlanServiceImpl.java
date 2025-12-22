@@ -4,19 +4,39 @@ package com.gt.planit.domain.plan.model.service;
 import com.gt.planit.domain.plan.model.dto.PlanDto;
 import com.gt.planit.domain.plan.model.dto.PlanSpotResDto;
 import com.gt.planit.domain.plan.model.dto.UpdatePlanReqDto;
+import com.gt.planit.domain.plan.model.entity.GroupRole;
+import com.gt.planit.domain.plan.model.entity.GroupUser;
 import com.gt.planit.domain.plan.model.mapper.PlanMapper;
+import com.gt.planit.domain.plan.model.mapper.GroupUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlanServiceImpl implements PlanService {
     private final PlanMapper planMapper;
+    private final GroupUserMapper groupUserMapper;
+
+    /**
+     * 플랜 조회 - 권한 체크
+     */
+    public PlanDto getPlan(Long planId, Long userId) {
+        // 조회 권한 확인
+        if (!groupUserMapper.canView(planId, userId)) {
+            throw new SecurityException("조회 권한이 없습니다");
+        }
+
+        PlanDto plan = planMapper.findById(planId)
+                .orElseThrow(() -> new IllegalArgumentException("플랜을 찾을 수 없습니다"));
+
+        return plan;
+    }
 
     /**
      * 그룹에 스팟 추가
@@ -25,6 +45,11 @@ public class PlanServiceImpl implements PlanService {
     @Transactional
     public Long addSpotToGroup(Long groupId, Long spotId, Long userId, String memo) {
         log.info("Adding spot to group - groupId: {}, spotId: {}", groupId, spotId);
+
+        // 그룹 편집 권한 확인
+        if (!groupUserMapper.canEdit(groupId, userId)) {
+            throw new SecurityException("편집 권한이 없습니다");
+        }
 
         // 중복 체크
         boolean exists = planMapper.existsByGroupIdAndSpotId(groupId, spotId);
@@ -58,7 +83,10 @@ public class PlanServiceImpl implements PlanService {
     @Transactional(readOnly = true)
     public List<PlanSpotResDto> getGroupSpots(Long groupId, Long userId) {
         log.info("Getting group spots - groupId: {}, userId: {}", groupId, userId);
-
+        // 그룹 편집 권한 확인
+        if (!groupUserMapper.canView(groupId, userId)) {
+            throw new SecurityException("조회 권한이 없습니다");
+        }
         List<PlanSpotResDto> spots = planMapper.findPlanSpotsByGroupId(groupId, userId);
 
         log.info("Found {} spots in group {}", spots.size(), groupId);
@@ -74,9 +102,17 @@ public class PlanServiceImpl implements PlanService {
         log.info("Updating plan - planId: {}, memo: {}, sortOrder: {}",
                 planId, request.getMemo(), request.getSortOrder());
 
-        PlanDto plan = planMapper.findById(planId);
+
+
+        Optional<PlanDto> opt = planMapper.findById(planId);
+        PlanDto plan = opt.get();
         if (plan == null) {
             throw new IllegalArgumentException("존재하지 않는 플랜입니다.");
+        }
+
+        // 그룹 편집 권한 확인
+        if (!groupUserMapper.canEdit(plan.getGroupId(), userId)) {
+            throw new SecurityException("편집 권한이 없습니다");
         }
 
         // 메모 업데이트
@@ -128,9 +164,12 @@ public class PlanServiceImpl implements PlanService {
     public void deletePlan(Long planId, Long userId) {
         log.info("Deleting plan - planId: {}", planId);
 
-        PlanDto plan = planMapper.findById(planId);
-        if (plan == null) {
-            throw new IllegalArgumentException("존재하지 않는 플랜입니다.");
+        Optional<PlanDto> opt = planMapper.findById(planId);
+        PlanDto plan = opt.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 플랜입니다."));
+
+        // 그룹 OWNER 권한 확인
+        if (!groupUserMapper.isOwner(plan.getGroupId(), userId)) {
+            throw new SecurityException("삭제 권한이 없습니다 (OWNER만 가능)");
         }
 
         // soft delete

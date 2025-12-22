@@ -180,6 +180,7 @@ import { useRouter } from "vue-router";
 import CreatePlanModal from "@/components/plan/CreatePlanModal.vue";
 import { folderApi } from "@/api/plan/folderApi";
 
+
 const router = useRouter();
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
@@ -187,6 +188,8 @@ const isModalOpen = ref(false);
 const folders = ref([]);
 const loading = ref(true);
 const error = ref(null);
+
+
 
 // 컴포넌트 마운트 시 폴더 목록 조회
 onMounted(() => {

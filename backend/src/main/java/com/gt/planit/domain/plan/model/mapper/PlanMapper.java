@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface PlanMapper {
@@ -17,7 +18,7 @@ public interface PlanMapper {
     /**
      * 플랜 조회 (단건)
      */
-    PlanDto findById(@Param("planId") Long planId);
+    Optional<PlanDto> findById(@Param("planId") Long planId);
 
     /**
      * 그룹의 플랜 목록 조회 (스팟 정보 포함)

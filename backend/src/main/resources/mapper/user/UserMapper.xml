@@ -5,6 +5,13 @@
 
 <mapper namespace="com.gt.planit.domain.user.model.mapper.UserMapper">
 
+    <select id="findById" resultType="com.gt.planit.domain.user.model.dto.UserReqDto">
+        SELECT
+        *
+        FROM users
+        WHERE id = #{id}
+    </select>
+
     <select id="findByEmail" resultType="com.gt.planit.domain.user.model.dto.UserReqDto">
         SELECT
         *
