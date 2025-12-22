@@ -14,10 +14,10 @@
           <span>{{ review.rating }}</span>
         </div>
         <div class="user-avatar-small">👤</div>
-        <span class="user-name">{{ review.userName }}</span>
+        <span class="user-name">{{ review.nickname }}</span>
         <span class="user-tag">{{ review.userTag }}</span>
         <span class="user-age">{{ review.userAge }}</span>
-        <span class="review-date">{{ review.date }}</span>
+        <span class="review-date">{{ review.createdAt }}</span>
       </div>
     </div>
 

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gt.planit.domain.review.model.mapper.ReviewMapper">
+
+    <!-- 후기 목록 (삭제 안 된 것만) -->
+    <select id="selectReviewsBySpotId" resultType="com.gt.planit.domain.review.model.dto.ReviewDto">
+        SELECT
+        r.id,
+        r.rating,
+        r.content,
+        r.is_deleted AS isDeleted,
+        r.user_id AS userId,
+        u.nickname AS nickname,
+        r.spot_id AS spotId,
+        DATE_FORMAT(r.created_at, '%Y-%m-%d') AS createdAt,
+        r.modified_at AS modifiedAt
+        FROM reviews r
+        JOIN users u ON r.user_id = u.id
+        WHERE r.spot_id = #{spotId}
+        AND r.is_deleted = 'F'
+        ORDER BY r.created_at DESC
+    </select>
+
+    <resultMap id="myReviewMap" type="com.gt.planit.domain.review.model.dto.MyReviewResDto">
+        <id property="id" column="review_id"/>
+        <result property="title" column="title"/>
+        <result property="category" column="category"/>
+        <result property="date" column="date"/>
+        <result property="location" column="location"/>
+        <result property="rating" column="rating"/>
+        <result property="text" column="text"/>
+        <result property="image" column="image"/>
+        <result property="spotId" column="spotId"/>
+    </resultMap>
+
+    <!-- 내가 쓴 후기 -->
+    <select id="selectReviewsByEmail" resultMap="myReviewMap">
+        select
+            r.id as review_id,
+            s.title,
+            s.content_type as category,
+            date(r.created_at) as date,
+            s.doro_addr as location,
+            r.rating,
+            r.content as text,
+            s.image1 as image
+        from reviews r
+            join spots s on r.spot_id = s.id
+            join users u on r.user_id = u.id
+        where u.email = #{username}
+    </select>
+
+    <!-- 후기 단건 조회 -->
+    <select id="selectReviewById" resultType="com.gt.planit.domain.review.model.dto.ReviewDto">
+        SELECT
+        id,
+        rating,
+        content,
+        is_deleted AS isDeleted,
+        user_id AS userId,
+        spot_id AS spotId
+        FROM reviews
+        WHERE id = #{id}
+        AND is_deleted = 'F'
+    </select>
+
+    <!-- 후기 작성 -->
+    <insert id="insertReview">
+        INSERT INTO reviews (
+        rating,
+        content,
+        is_deleted,
+        user_id,
+        spot_id
+        ) VALUES (
+        #{rating},
+        #{content},
+        'F',
+        #{userId},
+        #{spotId}
+        )
+    </insert>
+
+    <!-- 후기 수정 -->
+    <update id="updateReview">
+        UPDATE reviews
+        SET
+        rating = #{rating},
+        content = #{content}
+        WHERE id = #{id}
+        AND is_deleted = 'F'
+    </update>
+
+    <!-- 후기 삭제 (soft delete) -->
+    <update id="softDeleteReview">
+        UPDATE reviews
+        SET is_deleted = 'T'
+        WHERE id = #{id}
+        AND is_deleted = 'F'
+    </update>
+
+</mapper>

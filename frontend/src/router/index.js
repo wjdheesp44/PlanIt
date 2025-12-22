@@ -75,7 +75,7 @@ const router = createRouter({
         },
         {
           path: "profile/edit",
-          name: "MemberInfoEdit",
+          name: "MemberInfo",
           component: () => import("@/views/mypage/MemberInfo.vue"),
         }
       ],
