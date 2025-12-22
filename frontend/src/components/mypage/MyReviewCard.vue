@@ -2,7 +2,6 @@
   <div class="review-card">
     <!-- 이미지 -->
     <img :src="review.image" :alt="review.title" class="review-image" />
-
     <!-- 콘텐츠 -->
     <div class="review-content">
       <!-- 헤더 -->
@@ -109,7 +108,7 @@ const categoryClass = computed(() => {
 });
 
 const handleEdit = () => {
-  emit("edit", props.review.id);
+  emit("edit", props.review);
 };
 
 const handleDelete = () => {

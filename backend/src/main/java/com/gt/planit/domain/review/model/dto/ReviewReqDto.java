@@ -10,4 +10,3 @@ public class ReviewReqDto {
     private Integer rating;
     private String content;
 }
-

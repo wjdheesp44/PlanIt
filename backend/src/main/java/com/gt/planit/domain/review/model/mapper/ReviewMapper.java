@@ -1,5 +1,6 @@
 package com.gt.planit.domain.review.model.mapper;
 
+import com.gt.planit.domain.review.model.dto.MyReviewResDto;
 import com.gt.planit.domain.review.model.dto.ReviewDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -11,7 +12,7 @@ public interface ReviewMapper {
 
     List<ReviewDto> selectReviewsBySpotId(@Param("spotId") Long spotId);
 
-    List<ReviewDto> selectReviewsByEmail(@Param("username") String username);
+    List<MyReviewResDto> selectReviewsByEmail(@Param("username") String username);
 
     ReviewDto selectReviewById(@Param("id") Long id);
 

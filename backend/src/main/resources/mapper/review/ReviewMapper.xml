@@ -6,7 +6,7 @@
 <mapper namespace="com.gt.planit.domain.review.model.mapper.ReviewMapper">
 
     <!-- 후기 목록 (삭제 안 된 것만) -->
-    <select id="selectReviewsBySpotId" resultType="ReviewDto">
+    <select id="selectReviewsBySpotId" resultType="com.gt.planit.domain.review.model.dto.ReviewDto">
         SELECT
         r.id,
         r.rating,
@@ -24,26 +24,37 @@
         ORDER BY r.created_at DESC
     </select>
 
+    <resultMap id="myReviewMap" type="com.gt.planit.domain.review.model.dto.MyReviewResDto">
+        <id property="id" column="review_id"/>
+        <result property="title" column="title"/>
+        <result property="category" column="category"/>
+        <result property="date" column="date"/>
+        <result property="location" column="location"/>
+        <result property="rating" column="rating"/>
+        <result property="text" column="text"/>
+        <result property="image" column="image"/>
+        <result property="spotId" column="spotId"/>
+    </resultMap>
+
     <!-- 내가 쓴 후기 -->
-    <select id="selectReviewsByEmail" resultType="ReviewDto">
-        SELECT
-        r.id,
-        r.rating,
-        r.content,
-        r.is_deleted AS isDeleted,
-        r.user_id AS userId,
-        r.spot_id AS spotId,
-        DATE_FORMAT(r.created_at, '%Y-%m-%d') AS createdAt,
-        r.modified_at AS modifiedAt
-        FROM reviews r
-        JOIN users u ON r.user_id = u.id
-        WHERE u.email = #{username}
-        AND r.is_deleted = 'F'
-        ORDER BY r.created_at DESC;
+    <select id="selectReviewsByEmail" resultMap="myReviewMap">
+        select
+            r.id as review_id,
+            s.title,
+            s.content_type as category,
+            date(r.created_at) as date,
+            s.doro_addr as location,
+            r.rating,
+            r.content as text,
+            s.image1 as image
+        from reviews r
+            join spots s on r.spot_id = s.id
+            join users u on r.user_id = u.id
+        where u.email = #{username}
     </select>
 
     <!-- 후기 단건 조회 -->
-    <select id="selectReviewById" resultType="ReviewDto">
+    <select id="selectReviewById" resultType="com.gt.planit.domain.review.model.dto.ReviewDto">
         SELECT
         id,
         rating,

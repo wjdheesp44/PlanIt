@@ -345,7 +345,6 @@ watch(
   { immediate: true } // 컴포넌트 마운트 시에도 즉시 실행
 );
 
-////////////////////////
 const isLogin = computed(() => {
   return !!localStorage.getItem("accessToken");
 });
@@ -385,7 +384,6 @@ const submitReview = async () => {
   await reviewApi.createReview(route.params.id, newReview.value);
   await loadReviews();
   closeReviewModal();
-
 };
 
 const loadReviews = async () => {
@@ -395,8 +393,6 @@ const loadReviews = async () => {
 
   spot.value.reviewCount = reviews.value.length;
 };
-
-////////////////////////////////
 </script>
 
 <style scoped>

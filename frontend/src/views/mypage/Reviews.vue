@@ -15,6 +15,12 @@
         @edit="editReview"
         @delete="deleteReview"
       />
+      <ReviewEditModal
+        v-if="isEditOpen"
+        :review="selectedReview"
+        @confirm="confirmEdit"
+        @close="closeEdit"
+      />
     </div>
   </div>
 </template>
@@ -24,18 +30,10 @@ import { ref } from "vue";
 import MyReviewCard from "@/components/mypage/MyReviewCard.vue";
 import { onMounted } from "vue";
 import reviewApi from "@/api/review/reviewApi";
-import { jwtDecode } from "jwt-decode";
+import ReviewEditModal from "@/components/mypage/ReviewEditModal.vue";
 
-const getLoginUserId = () => {
-  const token = localStorage.getItem("accessToken");
-  if (!token) return null;
-
-  const decoded = jwtDecode(token);
-  console.log(decoded)
-  return decoded.username;
-};
-
-const username = getLoginUserId();
+const isEditOpen = ref(false);
+const selectedReview = ref(null);
 
 onMounted(() => {
   loadMyReviews();
@@ -44,17 +42,39 @@ onMounted(() => {
 const reviews = ref([]);
 
 const loadMyReviews = async () => {
-  const res = await reviewApi.getMyReviews(username);
+  const res = await reviewApi.getMyReviews();
   reviews.value = res.data;
 };
 
-const editReview = (id) => {
-  console.log("Edit review:", id);
-  // 수정 페이지로 이동 또는 모달 열기
+const editReview = (review) => {
+  selectedReview.value = { ...review }; // 복사
+  isEditOpen.value = true;
 };
 
-const deleteReview = (id) => {
+const confirmEdit = async (updatedReview) => {
+  await reviewApi.updateReview(
+    updatedReview.id,
+    {
+      rating: updatedReview.rating,
+      content: updatedReview.text,
+    }
+  );
+
+  const idx = reviews.value.findIndex(r => r.id === updatedReview.id);
+  if (idx !== -1) {
+    reviews.value[idx] = { ...updatedReview };
+  }
+
+  isEditOpen.value = false;
+};
+
+const closeEdit = () => {
+  isEditOpen.value = false;
+};
+
+const deleteReview = async (id) => {
   if (confirm("정말 삭제하시겠습니까?")) {
+    await reviewApi.deleteReview(id);
     reviews.value = reviews.value.filter((review) => review.id !== id);
   }
 };

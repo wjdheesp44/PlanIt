@@ -188,7 +188,6 @@
               <span class="info-label">비밀번호</span>
               <p class="info-value">••••••</p>
             </div>
-            <button class="change-button">변경</button>
           </div>
 
           <!-- 권한 -->
@@ -249,7 +248,7 @@ onMounted(async () => {
 });
 
 const goEdit = () => {
-  router.push({ name: "MemberInfoEdit" });
+  router.push({ name: "MemberInfo" });
 };
 
 const withdraw = async () => {
@@ -269,11 +268,6 @@ const withdraw = async () => {
     console.error(e);
     alert("회원 탈퇴 실패");
   }
-};
-
-const handleMenuChange = (menu) => {
-  console.log("Selected menu:", menu);
-  // 메뉴 변경에 따른 로직 처리
 };
 </script>
 
@@ -440,21 +434,6 @@ const handleMenuChange = (menu) => {
   color: #1e1e1e;
   margin: 0;
   line-height: 1.5;
-}
-
-.change-button {
-  background: none;
-  border: none;
-  color: #7c3aed;
-  font-size: 14px;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-  line-height: 1.43;
-}
-
-.change-button:hover {
-  color: #6d28d9;
 }
 
 /* 회원 탈퇴 */

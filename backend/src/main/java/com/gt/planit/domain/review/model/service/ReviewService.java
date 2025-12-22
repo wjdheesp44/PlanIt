@@ -1,5 +1,6 @@
 package com.gt.planit.domain.review.model.service;
 
+import com.gt.planit.domain.review.model.dto.MyReviewResDto;
 import com.gt.planit.domain.review.model.dto.ReviewDto;
 import com.gt.planit.domain.review.model.dto.ReviewReqDto;
 import com.gt.planit.domain.review.model.mapper.ReviewMapper;
@@ -23,18 +24,13 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public List<ReviewDto> getReviewsByEmail(String username) {
+    public List<MyReviewResDto> getReviewsByEmail(String username) {
         return reviewMapper.selectReviewsByEmail(username);
     }
 
     @Transactional
     public void createReview(Long userId, Long spotId, ReviewReqDto req) {
         validate(req.getRating(), req.getContent());
-
-        log.info(userId.toString());
-        log.info(spotId.toString());
-        log.info(req.getRating().toString());
-        log.info(req.getContent());
 
         reviewMapper.insertReview(
                 userId,
