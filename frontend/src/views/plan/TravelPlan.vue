@@ -125,7 +125,7 @@
                 placeholder="스팟 검색"
                 v-model="searchQuery"
                 @input="handleSearchInput"
-                @focus="showSearchResults = true"
+                @focus="handleSearchFocus"
               />
               <button v-if="searchQuery" class="clear-button" @click="clearSearch">
                 <svg
@@ -554,7 +554,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import FolderSidebar from "@/components/plan/FolderSiderbar.vue";
 import { searchSpots, addSpotToFolder } from "@/api/plan/spotResearchApi";
@@ -593,11 +593,16 @@ const handleImageError = (event) => {
 const vClickOutside = {
   mounted(el, binding) {
     el.clickOutsideEvent = (event) => {
-      if (!(el === event.target || el.contains(event.target))) {
+      // 검색 컨테이너 전체를 확인
+      const searchContainer = el.closest(".search-container") || el;
+      if (!(searchContainer === event.target || searchContainer.contains(event.target))) {
         binding.value();
       }
     };
-    document.addEventListener("click", el.clickOutsideEvent);
+    // mousedown 대신 click 이벤트 사용 (focus 이벤트 이후에 발생)
+    setTimeout(() => {
+      document.addEventListener("click", el.clickOutsideEvent);
+    }, 0);
   },
   unmounted(el) {
     document.removeEventListener("click", el.clickOutsideEvent);
@@ -638,6 +643,16 @@ const handleSearchInput = () => {
   searchTimeout = setTimeout(async () => {
     await performSearch();
   }, 300); // 300ms 디바운싱
+};
+
+// 검색창 포커스 핸들러
+const handleSearchFocus = async () => {
+  // nextTick으로 이벤트 순서 보장
+  await nextTick();
+  // 검색어가 있으면 드롭다운 표시
+  if (searchQuery.value.trim()) {
+    showSearchResults.value = true;
+  }
 };
 
 // 검색 수행
