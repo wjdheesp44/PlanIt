@@ -9,7 +9,11 @@
         @click="selectFolder(folder.id)"
       >
         <div class="folder-thumbnail">
-          <img :src="folder.thumbnail" :alt="folder.name" />
+          <img
+            :src="getThumbnailUrl(folder.thumbnailUrl)"
+            :alt="folder.name"
+            @error="handleImageError"
+          />
         </div>
         <div class="folder-name">{{ folder.name }}</div>
       </div>
@@ -35,6 +39,18 @@ const emit = defineEmits(["select-folder"]);
 
 const selectFolder = (folderId) => {
   emit("select-folder", folderId);
+};
+
+const getThumbnailUrl = (thumbnailUrl) => {
+  if (!thumbnailUrl) {
+    return "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400";
+  }
+  return `http://localhost:8080/api${thumbnailUrl}`;
+};
+
+// 이미지 로드 실패 시 기본 이미지
+const handleImageError = (event) => {
+  event.target.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400";
 };
 </script>
 

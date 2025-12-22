@@ -1,5 +1,131 @@
 <template>
   <div class="planner-folder-page">
+    <!-- 토스트 알림 -->
+    <transition name="toast">
+      <div v-if="toast.show" class="toast" :class="`toast-${toast.type}`">
+        <svg
+          v-if="toast.type === 'success'"
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M16.6668 5L7.50016 14.1667L3.3335 10"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <svg
+          v-else-if="toast.type === 'error'"
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M10 6V10"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M10 14H10.01"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <svg
+          v-else
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M10 10V14"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M10 6H10.01"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span>{{ toast.message }}</span>
+      </div>
+    </transition>
+
+    <!-- 메모 편집 모달 -->
+    <transition name="modal">
+      <div v-if="editingSpot" class="modal-overlay" @click="closeEditModal">
+        <div class="modal-content" @click.stop>
+          <div class="modal-header">
+            <h3>메모 편집</h3>
+            <button class="modal-close" @click="closeEditModal">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 6L6 18M6 6L18 18"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="spot-preview">
+              <img :src="editingSpot.image" :alt="editingSpot.name" />
+              <div class="spot-preview-info">
+                <h4>{{ editingSpot.name }}</h4>
+                <p>{{ editingSpot.address }}</p>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>메모</label>
+              <textarea
+                v-model="editMemo"
+                placeholder="이 장소에 대한 메모를 입력하세요"
+                rows="4"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="closeEditModal">취소</button>
+            <button class="btn-save" @click="saveMemo">저장</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- 메인 컨텐츠 -->
     <div class="main-content">
       <!-- 왼쪽 폴더 목록 사이드바 -->
@@ -7,36 +133,177 @@
         :folders="folders"
         :current-folder-id="currentFolderId"
         @select-folder="selectFolder"
+        @error="handleImageError"
       />
 
       <!-- 중앙 스팟 목록 사이드바 -->
       <aside class="spot-sidebar" :style="{ width: sidebarWidth + 'px' }">
         <div class="sidebar-top">
           <!-- 검색 -->
-          <div class="search-box">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+          <div class="search-container">
+            <div class="search-box">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9.16667 15.8333C12.8486 15.8333 15.8333 12.8486 15.8333 9.16667C15.8333 5.48477 12.8486 2.5 9.16667 2.5C5.48477 2.5 2.5 5.48477 2.5 9.16667C2.5 12.8486 5.48477 15.8333 9.16667 15.8333Z"
+                  stroke="#9CA3AF"
+                  stroke-width="1.66667"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M17.5 17.5L13.875 13.875"
+                  stroke="#9CA3AF"
+                  stroke-width="1.66667"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <input
+                type="text"
+                placeholder="스팟 검색"
+                v-model="searchQuery"
+                @input="handleSearchInput"
+                @focus="handleSearchFocus"
+              />
+              <button v-if="searchQuery" class="clear-button" @click="clearSearch">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 4L4 12M4 4L12 12"
+                    stroke="#9CA3AF"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- 검색 결과 드롭다운 -->
+            <div
+              v-if="showSearchResults && searchQuery"
+              class="search-results-dropdown"
+              v-click-outside="closeSearchResults"
             >
-              <path
-                d="M9.16667 15.8333C12.8486 15.8333 15.8333 12.8486 15.8333 9.16667C15.8333 5.48477 12.8486 2.5 9.16667 2.5C5.48477 2.5 2.5 5.48477 2.5 9.16667C2.5 12.8486 5.48477 15.8333 9.16667 15.8333Z"
-                stroke="#9CA3AF"
-                stroke-width="1.66667"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M17.5 17.5L13.875 13.875"
-                stroke="#9CA3AF"
-                stroke-width="1.66667"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <input type="text" placeholder="스팟 검색" v-model="searchQuery" />
+              <div v-if="isSearching" class="search-loading">
+                <div class="spinner"></div>
+                <span>검색 중...</span>
+              </div>
+
+              <div v-else-if="searchResults.length === 0" class="search-empty">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 48 48"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z"
+                    stroke="#D1D5DB"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M24 16V24"
+                    stroke="#D1D5DB"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M24 32H24.02"
+                    stroke="#D1D5DB"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <p>검색 결과가 없습니다</p>
+              </div>
+
+              <div v-else class="search-results-list">
+                <div
+                  v-for="result in searchResults"
+                  :key="result.id"
+                  class="search-result-item"
+                  @click="addSearchResult(result)"
+                >
+                  <div class="result-thumbnail">
+                    <img
+                      :src="result.image || placeholderImage"
+                      :alt="result.name"
+                      @error="handleImageError"
+                    />
+                  </div>
+                  <div class="result-info">
+                    <div class="result-header">
+                      <h4 class="result-name">{{ result.name }}</h4>
+                      <span class="result-badge" :class="getBadgeClass(result.category)">
+                        {{ getCategoryLabel(result.category) }}
+                      </span>
+                    </div>
+                    <p class="result-address">{{ result.address }}</p>
+                    <div class="result-meta">
+                      <span class="result-likes">
+                        <svg
+                          width="30"
+                          height="30"
+                          viewBox="0 -4 10 30"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M1.0002 17.0834C9.90016 17.0834 9.80433 17.0542 9.72516 16.9917L4.25016 12.5667C3.79183 12.1834 3.41266 11.7126 3.13516 11.1792C2.85766 10.6459 2.68766 10.0626 2.63516 9.46258C2.58266 8.86258 2.64933 8.25841 2.83099 7.68758C3.01266 7.11675 3.30516 6.59175 3.69183 6.14591C4.47099 5.25425 5.54599 4.75008 6.67516 4.75008C7.45433 4.75008 8.20849 4.96258 8.87099 5.36675C9.20433 5.57091 9.51266 5.82925 9.79183 6.13758C9.87933 6.23341 9.96683 6.33341 10.0502 6.43758C10.1335 6.33341 10.221 6.23341 10.3085 6.13758C10.5877 5.82925 10.896 5.57091 11.2293 5.36675C11.8918 4.96258 12.646 4.75008 13.4252 4.75008C14.5543 4.75008 15.6293 5.25425 16.4085 6.14591C16.7952 6.59175 17.0877 7.11675 17.2693 7.68758C17.451 8.25841 17.5177 8.86258 17.4652 9.46258C17.4127 10.0626 17.2427 10.6459 16.9652 11.1792C16.6877 11.7126 16.3085 12.1834 15.8502 12.5667L10.3752 16.9917C10.296 17.0542 10.2002 17.0834 10.0002 17.0834Z"
+                            fill="#FB2C36"
+                          />
+                        </svg>
+                        {{ result.likes || 0 }}
+                      </span>
+                      <span class="result-rating" v-if="result.rating">
+                        ⭐ {{ result.rating }}
+                      </span>
+                    </div>
+                  </div>
+                  <button class="add-button">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M10 4.16667V15.8333"
+                        stroke="currentColor"
+                        stroke-width="1.66667"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M4.16699 10H15.8337"
+                        stroke="currentColor"
+                        stroke-width="1.66667"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- 폴더 정보 -->
@@ -156,7 +423,7 @@
                   <div class="spot-header">
                     <h3 class="spot-name">{{ spot.name }}</h3>
                     <span class="spot-badge" :class="getBadgeClass(spot.category)">
-                      {{ spot.category }}
+                      {{ getCategoryLabel(spot.category) }}
                     </span>
                   </div>
                   <p class="spot-address">{{ spot.address }}</p>
@@ -168,6 +435,18 @@
 
                 <!-- 액션 버튼 -->
                 <div class="spot-actions">
+                  <button class="action-button edit" @click="openEditModal(spot)">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M14.1667 2.49993C14.3856 2.28106 14.6454 2.10744 14.9314 1.98899C15.2173 1.87054 15.5238 1.80957 15.8334 1.80957C16.1429 1.80957 16.4494 1.87054 16.7353 1.98899C17.0213 2.10744 17.2811 2.28106 17.5 2.49993C17.7189 2.7188 17.8925 2.97863 18.011 3.2646C18.1294 3.55057 18.1904 3.85706 18.1904 4.16659C18.1904 4.47612 18.1294 4.78262 18.011 5.06859C17.8925 5.35455 17.7189 5.61439 17.5 5.83326L6.25002 17.0833L1.66669 18.3333L2.91669 13.7499L14.1667 2.49993Z"
+                        stroke="#99A1AF"
+                        stroke-width="1.66667"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+
                   <button
                     class="action-button favorite"
                     :class="{ active: spot.isFavorite }"
@@ -181,10 +460,10 @@
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M1.6665 7.91662C1.66652 6.98929 1.94783 6.08377 2.47328 5.31967C2.99873 4.55557 3.7436 3.96883 4.60951 3.63695C5.47542 3.30507 6.42164 3.24366 7.32318 3.46082C8.22473 3.67799 9.03919 4.16352 9.659 4.85329C9.70266 4.89996 9.75544 4.93718 9.81407 4.96262C9.8727 4.98806 9.93593 5.00119 9.99984 5.00119C10.0637 5.00119 10.127 4.98806 10.1856 4.96262C10.2442 4.93718 10.297 4.89996 10.3407 4.85329C10.9585 4.15904 11.7732 3.66943 12.6762 3.44962C13.5792 3.22982 14.5277 3.29024 15.3956 3.62286C16.2634 3.95547 17.0093 4.5445 17.5341 5.31154C18.0589 6.07858 18.3376 6.98725 18.3332 7.91662C18.3332 9.82495 17.0832 11.25 15.8332 12.5L11.2565 16.9275C11.1012 17.1058 10.9098 17.249 10.6949 17.3477C10.48 17.4464 10.2465 17.4982 10.0101 17.4997C9.77362 17.5012 9.53954 17.4523 9.32341 17.3564C9.10728 17.2605 8.91403 17.1196 8.7565 16.9433L4.1665 12.5C2.9165 11.25 1.6665 9.83329 1.6665 7.91662Z"
+                        d="M10.0002 17.0834C9.90016 17.0834 9.80433 17.0542 9.72516 16.9917L4.25016 12.5667C3.79183 12.1834 3.41266 11.7126 3.13516 11.1792C2.85766 10.6459 2.68766 10.0626 2.63516 9.46258C2.58266 8.86258 2.64933 8.25841 2.83099 7.68758C3.01266 7.11675 3.30516 6.59175 3.69183 6.14591C4.47099 5.25425 5.54599 4.75008 6.67516 4.75008C7.45433 4.75008 8.20849 4.96258 8.87099 5.36675C9.20433 5.57091 9.51266 5.82925 9.79183 6.13758C9.87933 6.23341 9.96683 6.33341 10.0502 6.43758C10.1335 6.33341 10.221 6.23341 10.3085 6.13758C10.5877 5.82925 10.896 5.57091 11.2293 5.36675C11.8918 4.96258 12.646 4.75008 13.4252 4.75008C14.5543 4.75008 15.6293 5.25425 16.4085 6.14591C16.7952 6.59175 17.0877 7.11675 17.2693 7.68758C17.451 8.25841 17.5177 8.86258 17.4652 9.46258C17.4127 10.0626 17.2427 10.6459 16.9652 11.1792C16.6877 11.7126 16.3085 12.1834 15.8502 12.5667L10.3752 16.9917C10.296 17.0542 10.2002 17.0834 10.0002 17.0834Z"
                         :fill="spot.isFavorite ? '#FB2C36' : 'none'"
                         :stroke="spot.isFavorite ? '#FB2C36' : '#99A1AF'"
-                        stroke-width="1.66667"
+                        stroke-width="1.5"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                       />
@@ -331,22 +610,223 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+// script 부분만 수정 (기존 template과 style은 동일)
+
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import FolderSidebar from "@/components/plan/FolderSiderbar.vue";
+import { folderApi } from "@/api/plan/folderApi.js";
+
+import { searchSpots } from "@/api/plan/spotResearchApi";
+import { addSpotToGroup, getGroupSpots, updatePlan, deletePlan } from "@/api/plan/planApi";
 
 const router = useRouter();
 const route = useRoute();
 
-const currentFolderId = ref(Number(route.params.id) || 1);
+const loading = ref(true);
+const error = ref(null);
+
+// const currentGroupId = ref(Number(route.params.id) || 1);
 const searchQuery = ref("");
 const newComment = ref("");
+const showSearchResults = ref(false);
+const isSearching = ref(false);
+const searchResults = ref([]);
+const toast = ref({
+  show: false,
+  message: "",
+  type: "success",
+});
+const editingSpot = ref(null);
+const editMemo = ref("");
 
-const sidebarWidth = ref(660); // 기본 너비
+let searchTimeout = null;
+
+const sidebarWidth = ref(660);
 const isResizing = ref(false);
 
 let map = null;
 const markers = ref([]);
+
+const currentGroupId = computed(() => {
+  const id = Number(route.params.id);
+  return Number.isFinite(id) ? id : null;
+});
+
+const placeholderImage =
+  "https://img.freepik.com/premium-vector/default-image-icon-vector-missing-picture-page-website-design-mobile-app-no-photo-available_87543-11093.jpg";
+
+const handleImageError = (event) => {
+  event.target.src = placeholderImage;
+};
+
+// 외부 클릭 감지 디렉티브
+const vClickOutside = {
+  mounted(el, binding) {
+    el.clickOutsideEvent = (event) => {
+      const searchContainer = el.closest(".search-container") || el;
+      if (!(searchContainer === event.target || searchContainer.contains(event.target))) {
+        binding.value();
+      }
+    };
+    setTimeout(() => {
+      document.addEventListener("click", el.clickOutsideEvent);
+    }, 0);
+  },
+  unmounted(el) {
+    document.removeEventListener("click", el.clickOutsideEvent);
+  },
+};
+
+// 토스트 알림 표시
+const showToast = (message, type = "success") => {
+  toast.value = {
+    show: true,
+    message,
+    type,
+  };
+
+  setTimeout(() => {
+    toast.value.show = false;
+  }, 3000);
+};
+
+// 검색 입력 핸들러 (디바운싱)
+const handleSearchInput = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+
+  if (!searchQuery.value.trim()) {
+    searchResults.value = [];
+    showSearchResults.value = false;
+    return;
+  }
+
+  showSearchResults.value = true;
+
+  searchTimeout = setTimeout(async () => {
+    await performSearch();
+  }, 300);
+};
+
+// 검색창 포커스 핸들러
+const handleSearchFocus = async () => {
+  await nextTick();
+  if (searchQuery.value.trim()) {
+    showSearchResults.value = true;
+  }
+};
+
+// 검색 수행
+const performSearch = async () => {
+  if (!searchQuery.value.trim()) {
+    searchResults.value = [];
+    return;
+  }
+
+  try {
+    isSearching.value = true;
+    searchResults.value = [];
+
+    const response = await searchSpots({
+      types: ["ATTRACTION", "FESTIVAL", "POPUP"],
+      search: searchQuery.value,
+      sort: "LIKES_DESC",
+      page: 1,
+      size: 10,
+    });
+
+    console.log("검색 응답 전체:", response);
+
+    if (response) {
+      if (response.content) {
+        searchResults.value = response.content;
+      } else if (response.data?.content) {
+        searchResults.value = response.data.content;
+      } else if (Array.isArray(response.data)) {
+        searchResults.value = response.data;
+      } else if (Array.isArray(response)) {
+        searchResults.value = response;
+      } else {
+        console.warn("예상치 못한 응답 구조:", response);
+        searchResults.value = [];
+      }
+    }
+
+    console.log("검색 결과:", searchResults.value);
+  } catch (error) {
+    console.error("검색 오류:", error);
+    searchResults.value = [];
+
+    if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
+      showToast("서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.", "error");
+    } else if (error.response?.status === 404) {
+      showToast("검색 API를 찾을 수 없습니다.", "error");
+    } else if (error.code === "ECONNABORTED") {
+      showToast("요청 시간이 초과되었습니다.", "error");
+    } else {
+      showToast("검색 중 오류가 발생했습니다.", "error");
+    }
+  } finally {
+    isSearching.value = false;
+  }
+};
+
+// 검색 결과 추가
+const addSearchResult = async (result) => {
+  try {
+    // 이미 목록에 있는지 확인
+    const exists = spots.value.some((spot) => spot.spotId === result.id);
+    if (exists) {
+      showToast("이미 추가된 스팟입니다.", "info");
+      return;
+    }
+
+    // API 호출하여 그룹에 추가
+    await addSpotToGroup(currentGroupId.value, result.id, "");
+
+    // 스팟 목록 다시 불러오기
+    await loadSpots();
+
+    // 검색 초기화
+    clearSearch();
+
+    showToast("스팟이 추가되었습니다.", "success");
+  } catch (error) {
+    console.error("스팟 추가 오류:", error);
+    if (error.response?.status === 400 && error.response?.data?.message?.includes("이미")) {
+      showToast("이미 추가된 스팟입니다.", "info");
+    } else {
+      showToast("스팟 추가에 실패했습니다.", "error");
+    }
+  }
+};
+
+// 검색 초기화
+const clearSearch = () => {
+  searchQuery.value = "";
+  searchResults.value = [];
+  showSearchResults.value = false;
+};
+
+// 검색 결과 닫기
+const closeSearchResults = () => {
+  showSearchResults.value = false;
+};
+
+// 카테고리 라벨 변환
+const getCategoryLabel = (category) => {
+  const labels = {
+    ATTRACTION: "관광지",
+    POPUP: "팝업스토어",
+    FESTIVAL: "축제",
+    관광지: "관광지",
+    팝업스토어: "팝업스토어",
+    축제: "축제",
+  };
+  return labels[category] || category;
+};
 
 const startResize = (e) => {
   isResizing.value = true;
@@ -357,9 +837,8 @@ const startResize = (e) => {
 const handleResize = (e) => {
   if (!isResizing.value) return;
 
-  const newWidth = e.clientX - 130; // 260은 왼쪽 폴더 사이드바 너비
+  const newWidth = e.clientX - 130;
 
-  // 최소/최대 너비 제한
   if (newWidth >= 400 && newWidth <= 1200) {
     sidebarWidth.value = newWidth;
   }
@@ -371,72 +850,13 @@ const stopResize = () => {
   document.removeEventListener("mouseup", stopResize);
 };
 
-// 폴더 목록
-const folders = ref([
-  {
-    id: 1,
-    name: "부산 여행",
-    thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200",
-    spotCount: 8,
-  },
-  {
-    id: 2,
-    name: "제주도 여행",
-    thumbnail: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200",
-    spotCount: 12,
-  },
-  {
-    id: 3,
-    name: "서울 여행",
-    thumbnail: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=200",
-    spotCount: 15,
-  },
-  {
-    id: 4,
-    name: "강릉 여행",
-    thumbnail: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=200",
-    spotCount: 6,
-  },
-]);
+// 폴더 목록 (임시 데이터 - 추후 API 연동)
+const folders = ref([]);
 
 // 스팟 목록
-const spots = ref([
-  {
-    id: 1,
-    name: "해운대 해수욕장",
-    category: "관광지",
-    address: "부산 해운대구 우동",
-    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200",
-    memo: "아침 일찍 가면 사람이 적어요",
-    isFavorite: true,
-    latitude: 35.1587,
-    longitude: 129.1603,
-  },
-  {
-    id: 2,
-    name: "광안리 해수욕장",
-    category: "관광지",
-    address: "부산 수영구 광안동",
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200",
-    memo: "",
-    isFavorite: false,
-    latitude: 35.1532,
-    longitude: 129.1189,
-  },
-  {
-    id: 3,
-    name: "감천문화마을",
-    category: "관광지",
-    address: "부산 사하구 감천동",
-    image: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=200",
-    memo: "경사가 있으니 편한 신발 추천",
-    isFavorite: true,
-    latitude: 35.0975,
-    longitude: 129.0107,
-  },
-]);
+const spots = ref([]);
 
-// 댓글 목록
+// 댓글 목록 (임시 데이터 - 추후 API 연동)
 const comments = ref([
   {
     id: 1,
@@ -454,12 +874,39 @@ const comments = ref([
   },
 ]);
 
-// 지도 마커
-const mapMarkers = ref([
-  { x: 30, y: 40 },
-  { x: 50, y: 55 },
-  { x: 65, y: 35 },
-]);
+// 스팟 목록 불러오기
+const loadSpots = async () => {
+  try {
+    const response = await getGroupSpots(currentGroupId.value);
+
+    console.log("스팟 목록 응답:", response);
+
+    // API 응답 구조에 맞게 데이터 매핑
+    const spotsData = response.data || [];
+
+    spots.value = spotsData.map((spot) => ({
+      id: spot.id, // plan ID
+      spotId: spot.spotId, // spot ID
+      name: spot.name,
+      category: spot.badge, // 한글로 이미 변환됨 ("관광지", "축제", "팝업스토어")
+      address: spot.location,
+      image: spot.image || placeholderImage,
+      memo: spot.memo || "",
+      isFavorite: spot.isFavorite || false,
+      latitude: spot.latitude,
+      longitude: spot.longitude,
+      sortOrder: spot.sortOrder,
+    }));
+
+    // 지도 마커 업데이트
+    updateMarkers();
+
+    console.log("스팟 목록 로드 완료:", spots.value);
+  } catch (error) {
+    console.error("스팟 목록 로드 실패:", error);
+    showToast("스팟 목록을 불러오는데 실패했습니다.", "error");
+  }
+};
 
 // 폴더 선택
 const selectFolder = (folderId) => {
@@ -469,6 +916,9 @@ const selectFolder = (folderId) => {
 // 배지 클래스
 const getBadgeClass = (category) => {
   const classes = {
+    ATTRACTION: "badge-tourist",
+    POPUP: "badge-popup",
+    FESTIVAL: "badge-festival",
     관광지: "badge-tourist",
     팝업스토어: "badge-popup",
     축제: "badge-festival",
@@ -476,39 +926,107 @@ const getBadgeClass = (category) => {
   return classes[category] || "";
 };
 
-// 스팟 이동
-const moveSpotUp = (index) => {
-  if (index > 0) {
-    const temp = spots.value[index];
-    spots.value[index] = spots.value[index - 1];
-    spots.value[index - 1] = temp;
+// 스팟 이동 (위로)
+const moveSpotUp = async (index) => {
+  if (index === 0) return;
+
+  const spot = spots.value[index];
+  const newOrder = index; // 배열 인덱스 기반이므로 index가 새로운 순서
+
+  try {
+    await updatePlan(currentGroupId.value, spot.id, {
+      sortOrder: newOrder,
+    });
+
+    // 목록 다시 불러오기
+    await loadSpots();
+
+    showToast("순서가 변경되었습니다.", "success");
+  } catch (error) {
+    console.error("순서 변경 실패:", error);
+    showToast("순서 변경에 실패했습니다.", "error");
   }
 };
 
-const moveSpotDown = (index) => {
-  if (index < spots.value.length - 1) {
-    const temp = spots.value[index];
-    spots.value[index] = spots.value[index + 1];
-    spots.value[index + 1] = temp;
+// 스팟 이동 (아래로)
+const moveSpotDown = async (index) => {
+  if (index >= spots.value.length - 1) return;
+
+  const spot = spots.value[index];
+  const newOrder = index + 2; // 배열 인덱스 기반이므로 +2
+
+  try {
+    await updatePlan(currentGroupId.value, spot.id, {
+      sortOrder: newOrder,
+    });
+
+    // 목록 다시 불러오기
+    await loadSpots();
+
+    showToast("순서가 변경되었습니다.", "success");
+  } catch (error) {
+    console.error("순서 변경 실패:", error);
+    showToast("순서 변경에 실패했습니다.", "error");
   }
 };
 
-// 좋아요 토글
+// 편집 모달 열기
+const openEditModal = (spot) => {
+  editingSpot.value = { ...spot };
+  editMemo.value = spot.memo || "";
+};
+
+// 편집 모달 닫기
+const closeEditModal = () => {
+  editingSpot.value = null;
+  editMemo.value = "";
+};
+
+// 메모 저장
+const saveMemo = async () => {
+  if (!editingSpot.value) return;
+
+  try {
+    await updatePlan(currentGroupId.value, editingSpot.value.id, {
+      memo: editMemo.value,
+    });
+
+    // 목록 다시 불러오기
+    await loadSpots();
+
+    closeEditModal();
+    showToast("메모가 저장되었습니다.", "success");
+  } catch (error) {
+    console.error("메모 저장 실패:", error);
+    showToast("메모 저장에 실패했습니다.", "error");
+  }
+};
+
+// 좋아요 토글 (추후 API 연동)
 const toggleFavorite = (spot) => {
   spot.isFavorite = !spot.isFavorite;
+  // TODO: 좋아요 API 호출
+  showToast(spot.isFavorite ? "좋아요에 추가되었습니다." : "좋아요가 취소되었습니다.", "success");
 };
 
 // 스팟 삭제
-const deleteSpot = (id) => {
-  if (confirm("이 스팟을 삭제하시겠습니까?")) {
-    const index = spots.value.findIndex((s) => s.id === id);
-    if (index > -1) {
-      spots.value.splice(index, 1);
-    }
+const deleteSpot = async (planId) => {
+  if (!confirm("이 스팟을 삭제하시겠습니까?")) return;
+
+  try {
+    await deletePlan(currentGroupId.value, planId);
+
+    // 목록 다시 불러오기
+    await loadSpots();
+
+    showToast("스팟이 삭제되었습니다.", "success");
+  } catch (error) {
+    console.error("스팟 삭제 실패:", error);
+    showToast("스팟 삭제에 실패했습니다.", "error");
   }
 };
 
-// 댓글 추가
+// 댓글 추가 (추후 API 연동)
 const addComment = () => {
   if (newComment.value.trim()) {
     comments.value.unshift({
@@ -519,6 +1037,7 @@ const addComment = () => {
       text: newComment.value,
     });
     newComment.value = "";
+    // TODO: 댓글 추가 API 호출
   }
 };
 
@@ -530,13 +1049,11 @@ const initKakaoMap = () => {
 
   const container = document.getElementById("map");
   const options = {
-    center: new window.kakao.maps.LatLng(35.1796, 129.0756), // 부산 중심
+    center: new window.kakao.maps.LatLng(35.1796, 129.0756),
     level: 5,
   };
 
   map = new window.kakao.maps.Map(container, options);
-
-  // 스팟 목록 기반 마커 생성
   updateMarkers();
 };
 
@@ -552,7 +1069,6 @@ const updateMarkers = () => {
 
     const position = new window.kakao.maps.LatLng(spot.latitude, spot.longitude);
 
-    // DOM 요소로 생성
     const markerElement = document.createElement("div");
     markerElement.style.cssText =
       "position: relative; display: flex; flex-direction: column; align-items: center;";
@@ -617,7 +1133,6 @@ const updateMarkers = () => {
     markerElement.appendChild(pinElement);
     markerElement.appendChild(labelElement);
 
-    // 호버 이벤트
     markerElement.addEventListener("mouseenter", () => {
       pinElement.style.transform = "scale(1.1)";
       pinElement.style.background = "#1e40af";
@@ -668,9 +1183,13 @@ const zoomOut = () => {
   }
 };
 
-// 컴포넌트 마운트 시 카카오 지도 초기화
-onMounted(() => {
-  // 카카오 지도 SDK 로드 확인 후 초기화
+onMounted(async () => {
+  // 스팟 목록 불러오기
+  // await loadSpots();
+  await fetchFolders();
+  await fetchByFolder();
+
+  // 카카오 지도 초기화
   if (window.kakao && window.kakao.maps) {
     window.kakao.maps.load(() => {
       initKakaoMap();
@@ -679,6 +1198,48 @@ onMounted(() => {
     console.error("Kakao Maps SDK not loaded. Please add the script to index.html");
   }
 });
+
+// 폴더 목록 조회
+const fetchFolders = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    const data = await folderApi.getMyFolders();
+    folders.value = data.map((folder) => ({
+      ...folder,
+      showDelete: false,
+    }));
+  } catch (err) {
+    console.error("폴더 목록 조회 실패:", err);
+    error.value = "폴더 목록을 불러오는데 실패했습니다.";
+  } finally {
+    loading.value = false;
+  }
+};
+
+const fetchByFolder = async () => {
+  const id = currentGroupId.value;
+  if (id == null) {
+    await loadSpots(); // 기본
+    return;
+  }
+  await loadSpots(); // 폴더별
+};
+
+onUnmounted(() => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+});
+
+watch(
+  () => route.params.id,
+  async () => {
+    console.log("route changed:", route.fullPath, route.params);
+    await fetchByFolder();
+  }
+);
 </script>
 
 <style scoped>
@@ -688,6 +1249,234 @@ onMounted(() => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* 검색 컨테이너 */
+.search-container {
+  position: relative;
+}
+
+/* 검색 박스 */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-box svg {
+  position: absolute;
+  left: 1rem;
+  pointer-events: none;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 3rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+  border-color: #2563eb;
+}
+
+.clear-button {
+  position: absolute;
+  right: 1rem;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.clear-button:hover {
+  background: #f3f4f6;
+}
+
+/* 검색 결과 드롭다운 */
+.search-results-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+/* 검색 로딩 */
+.search-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 1rem;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 검색 결과 없음 */
+.search-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 1rem;
+  color: #9ca3af;
+}
+
+.search-empty p {
+  font-size: 14px;
+}
+
+/* 검색 결과 리스트 */
+.search-results-list {
+  padding: 0.5rem;
+}
+
+.search-result-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-items: center;
+}
+
+.search-result-item:hover {
+  background: #f9fafb;
+}
+
+.search-result-item:hover .add-button {
+  opacity: 1;
+}
+
+/* 검색 결과 썸네일 */
+.result-thumbnail {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.result-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 검색 결과 정보 */
+.result-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.result-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.result-address {
+  font-size: 13px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 13px;
+}
+
+.result-likes {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #6b7280;
+}
+
+.result-rating {
+  color: #6b7280;
+}
+
+/* 추가 버튼 */
+.add-button {
+  width: 36px;
+  height: 36px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all 0.2s;
+}
+
+.add-button:hover {
+  background: #1e40af;
+  transform: scale(1.05);
 }
 
 /* 지도 */
@@ -732,147 +1521,78 @@ onMounted(() => {
   color: #2563eb;
 }
 
-/* 커스텀 마커 스타일 */
-:deep(.custom-marker) {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-:deep(.marker-pin) {
-  width: 32px;
-  height: 32px;
-  background: #2563eb;
-  color: white;
-  border: 3px solid white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-:deep(.marker-pin:hover) {
-  transform: scale(1.1);
-  background: #1e40af;
-}
-
-:deep(.marker-label) {
-  position: absolute;
-  top: -35px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: white;
-  color: #1e1e1e;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s;
-  pointer-events: none;
-  z-index: 1000;
-}
-
-:deep(.marker-label::after) {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid white;
-}
-
-:deep(.custom-marker:hover .marker-label) {
-  opacity: 1;
-  visibility: visible;
-  top: -40px;
-}
-
 .planner-folder-page {
   font-family: "Arimo", -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
   background: #ffffff;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
-/* 헤더 */
-.main-header {
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 1rem 2rem;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-content {
-  max-width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 2rem;
-}
-
-.logo {
+/* 토스트 알림 */
+.toast {
+  position: fixed;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 20px;
-  font-weight: 700;
-  color: #1e3a8a;
-  text-decoration: none;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 9999;
+  min-width: 300px;
+  max-width: 500px;
 }
 
-.main-nav {
-  display: flex;
-  gap: 2rem;
-  flex: 1;
-  justify-content: center;
+.toast-success {
+  background: #10b981;
+  color: white;
 }
 
-.nav-link {
-  color: #6b7280;
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 400;
-  transition: color 0.2s;
+.toast-error {
+  background: #ef4444;
+  color: white;
 }
 
-.nav-link:hover {
-  color: #1e3a8a;
+.toast-info {
+  background: #3b82f6;
+  color: white;
 }
 
-.nav-link.active {
-  color: #1e3a8a;
-  font-weight: 600;
+/* 토스트 애니메이션 */
+.toast-enter-active {
+  animation: toast-in 0.3s ease-out;
 }
 
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
+.toast-leave-active {
+  animation: toast-out 0.3s ease-in;
 }
 
-.user-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
 }
 
 /* 메인 컨텐츠 */
@@ -922,34 +1642,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-/* 검색 */
-.search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-box svg {
-  position: absolute;
-  left: 1rem;
-  pointer-events: none;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 3rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 14px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.search-box input:focus {
-  border-color: #2563eb;
 }
 
 /* 폴더 헤더 */
@@ -1186,17 +1878,6 @@ onMounted(() => {
 
 .action-button:hover {
   background: #f9fafb;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #6b7280;
-  transition: all 0.2s;
-}
-
-.action-button:hover {
-  background: #f9fafb;
 }
 
 .action-button.favorite.active {
@@ -1211,6 +1892,208 @@ onMounted(() => {
 .action-button.delete:hover {
   background: #fef2f2;
   border-color: #ef4444;
+}
+
+/* 편집 버튼 스타일 */
+.action-button.edit {
+  color: #6b7280;
+}
+
+.action-button.edit:hover {
+  background: #f3f4f6;
+  color: #2563eb;
+}
+
+/* 모달 오버레이 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+/* 모달 컨텐츠 */
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* 모달 헤더 */
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e1e1e;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #1e1e1e;
+}
+
+/* 모달 바디 */
+.modal-body {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.spot-preview {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.spot-preview img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.spot-preview-info h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e1e1e;
+  margin-bottom: 0.25rem;
+}
+
+.spot-preview-info p {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group textarea {
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group textarea:focus {
+  border-color: #2563eb;
+}
+
+/* 모달 푸터 */
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-save {
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-cancel {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.btn-save {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-save:hover {
+  background: #1e40af;
+}
+
+/* 모달 애니메이션 */
+.modal-enter-active {
+  animation: modal-in 0.3s ease-out;
+}
+
+.modal-leave-active {
+  animation: modal-out 0.2s ease-in;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 }
 
 /* 댓글 섹션 */
@@ -1314,74 +2197,6 @@ onMounted(() => {
   background: #1e40af;
 }
 
-/* 지도 영역 */
-.map-area {
-  flex: 1;
-  position: relative;
-  background: #f3f4f6;
-}
-
-.map-placeholder {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-.map-placeholder img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.map-marker {
-  position: absolute;
-  transform: translate(-50%, -100%);
-}
-
-.marker-pin {
-  width: 32px;
-  height: 32px;
-  background: #2563eb;
-  color: #ffffff;
-  border: 3px solid #ffffff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.zoom-controls {
-  position: absolute;
-  bottom: 2rem;
-  right: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.zoom-button {
-  width: 40px;
-  height: 40px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #4b5563;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s;
-}
-
-.zoom-button:hover {
-  background: #f9fafb;
-  color: #2563eb;
-}
-
 /* 반응형 */
 @media (max-width: 1440px) {
   .spot-sidebar {
@@ -1405,24 +2220,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .main-header {
-    padding: 1rem;
-  }
-
-  .header-content {
-    flex-wrap: wrap;
-  }
-
-  .main-nav {
-    order: 3;
-    width: 100%;
-    justify-content: space-around;
-  }
-
-  .spot-sidebar {
-    max-height: 50vh;
-  }
-
   .sidebar-top {
     padding: 1rem;
   }
