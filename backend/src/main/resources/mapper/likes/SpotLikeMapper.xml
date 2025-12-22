@@ -12,6 +12,30 @@
         LIMIT 1
     </select>
 
+    <select id="findLikedSpotsByUserId"
+            parameterType="long"
+            resultType="com.gt.planit.domain.likes.model.dto.MySpotLikeResDto">
+        SELECT
+        s.id,
+        s.title,
+        s.content_type,
+        s.image1,
+        s.avg_rating,
+        s.rating_count,
+        s.start_time,
+        s.end_time,
+        s.doro_addr,
+        s.jibun_addr,
+        TRUE AS isFavorite
+        FROM spot_likes sl
+        JOIN spots s ON s.id = sl.spot_id
+        WHERE sl.user_id = #{userId}
+        AND sl.is_deleted = 'F'
+        AND s.is_deleted = 'F'
+        ORDER BY sl.created_at DESC
+    </select>
+
+
     <insert id="insertLike">
         INSERT INTO spot_likes (user_id, spot_id, is_deleted)
         VALUES (#{userId}, #{spotId}, 'F')

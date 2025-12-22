@@ -1,8 +1,11 @@
 package com.gt.planit.domain.likes.model.mapper;
 
+import com.gt.planit.domain.likes.model.dto.MySpotLikeResDto;
 import com.gt.planit.domain.likes.model.dto.SpotLikeDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 @Mapper
 public interface SpotLikeMapper {
@@ -11,6 +14,8 @@ public interface SpotLikeMapper {
             @Param("userId") Long userId,
             @Param("spotId") Long spotId
     );
+
+    List<MySpotLikeResDto> findLikedSpotsByUserId(Long userId);
 
     int insertLike(
             @Param("userId") Long userId,

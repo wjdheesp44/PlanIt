@@ -1,11 +1,14 @@
 package com.gt.planit.domain.likes.model.service;
 
+import com.gt.planit.domain.likes.model.dto.MySpotLikeResDto;
 import com.gt.planit.domain.likes.model.dto.SpotLikeDto;
 import com.gt.planit.domain.likes.model.mapper.SpotLikeMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,10 @@ public class SpotLikeService {
         // 처음 좋아요
         spotLikeMapper.insertLike(userId, spotId);
         return true;
+    }
+
+    public List<MySpotLikeResDto> getLikedSpots(Long userId) {
+        return spotLikeMapper.findLikedSpotsByUserId(userId);
     }
 
 }

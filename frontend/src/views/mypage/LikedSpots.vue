@@ -22,80 +22,13 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { getLikedSpots } from "@/api/likes/likesApi";
 import SpotCard from "@/components/SpotCard.vue";
 
 const router = useRouter();
-
-const likedSpots = ref([
-  {
-    id: 1,
-    name: "감천문화마을",
-    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-    badge: "관광지",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "부산광역시 사하구 감내2로 203",
-    tags: "#감천 #마을",
-    isFavorite: true,
-  },
-  {
-    id: 2,
-    name: "강남 팝업스토어",
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400",
-    badge: "팝업스토어",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 강남구 테헤란로 203",
-    tags: "#강남 #팝업",
-    isFavorite: true,
-  },
-  {
-    id: 3,
-    name: "벚꽃축제",
-    image: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=400",
-    badge: "축제",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 여의도 한강공원 203",
-    tags: "#벚꽃 #축제",
-    isFavorite: true,
-  },
-  {
-    id: 4,
-    name: "해운대 해수욕장",
-    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400",
-    badge: "관광지",
-    rating: 4.8,
-    time: "24시간",
-    location: "부산광역시 해운대구 중동",
-    tags: "#해운대 #바다",
-    isFavorite: true,
-  },
-  {
-    id: 5,
-    name: "홍대 팝업스토어",
-    image: "https://images.unsplash.com/photo-1555421689-d68471e189f2?w=400",
-    badge: "팝업스토어",
-    rating: 4.3,
-    time: "PM 12:00 - PM 10:00",
-    location: "서울특별시 마포구 홍익로",
-    tags: "#홍대 #감성",
-    isFavorite: true,
-  },
-  {
-    id: 6,
-    name: "불꽃축제",
-    image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400",
-    badge: "축제",
-    rating: 4.7,
-    time: "PM 7:00 - PM 10:00",
-    location: "서울특별시 영등포구 여의도동",
-    tags: "#불꽃 #축제",
-    isFavorite: true,
-  },
-]);
+const likedSpots = ref([]);
 
 // 스팟 클릭 - 상세 페이지로 이동
 const handleSpotClick = (spot) => {
@@ -110,6 +43,33 @@ const handleFavorite = (spot) => {
   // 실제로는 API 호출로 서버에 좋아요 상태 업데이트
   console.log("Removed from favorites:", spot);
 };
+
+const formatTime = (dateTime) => {
+  if (!dateTime) return null;
+  return dateTime.split("T")[0]; // YYYY-MM-DD
+};
+
+onMounted(async () => {
+  try {
+    const res = await getLikedSpots();
+    likedSpots.value = res.data.map((item) => ({
+      id: item.id,
+      name: item.title,                 // 백엔드 title → 프론트 name
+      image: item.image1,
+      badge: item.contentType,           // ATTRACTION / FESTIVAL / POPUP
+      rating: item.avgRating,
+      ratingCount: item.ratingCount,
+      time:
+        item.startTime && item.endTime
+          ? `${formatTime(item.startTime)} - ${formatTime(item.endTime)}`
+          : "상시가능",
+      location: item.doroAddr ?? item.jibunAddr,
+      isFavorite: item.isFavorite,
+    }));
+  } catch (e) {
+    console.error("좋아요 목록 조회 실패", e);
+  }
+});
 </script>
 
 <style scoped>
