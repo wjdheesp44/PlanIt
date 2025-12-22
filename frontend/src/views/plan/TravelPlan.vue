@@ -83,6 +83,49 @@
       </div>
     </transition>
 
+    <!-- 메모 편집 모달 -->
+    <transition name="modal">
+      <div v-if="editingSpot" class="modal-overlay" @click="closeEditModal">
+        <div class="modal-content" @click.stop>
+          <div class="modal-header">
+            <h3>메모 편집</h3>
+            <button class="modal-close" @click="closeEditModal">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 6L6 18M6 6L18 18"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="spot-preview">
+              <img :src="editingSpot.image" :alt="editingSpot.name" />
+              <div class="spot-preview-info">
+                <h4>{{ editingSpot.name }}</h4>
+                <p>{{ editingSpot.address }}</p>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>메모</label>
+              <textarea
+                v-model="editMemo"
+                placeholder="이 장소에 대한 메모를 입력하세요"
+                rows="4"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="closeEditModal">취소</button>
+            <button class="btn-save" @click="saveMemo">저장</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- 메인 컨텐츠 -->
     <div class="main-content">
       <!-- 왼쪽 폴더 목록 사이드바 -->
@@ -90,6 +133,7 @@
         :folders="folders"
         :current-folder-id="currentFolderId"
         @select-folder="selectFolder"
+        @error="handleImageError"
       />
 
       <!-- 중앙 스팟 목록 사이드바 -->
@@ -391,6 +435,18 @@
 
                 <!-- 액션 버튼 -->
                 <div class="spot-actions">
+                  <button class="action-button edit" @click="openEditModal(spot)">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M14.1667 2.49993C14.3856 2.28106 14.6454 2.10744 14.9314 1.98899C15.2173 1.87054 15.5238 1.80957 15.8334 1.80957C16.1429 1.80957 16.4494 1.87054 16.7353 1.98899C17.0213 2.10744 17.2811 2.28106 17.5 2.49993C17.7189 2.7188 17.8925 2.97863 18.011 3.2646C18.1294 3.55057 18.1904 3.85706 18.1904 4.16659C18.1904 4.47612 18.1294 4.78262 18.011 5.06859C17.8925 5.35455 17.7189 5.61439 17.5 5.83326L6.25002 17.0833L1.66669 18.3333L2.91669 13.7499L14.1667 2.49993Z"
+                        stroke="#99A1AF"
+                        stroke-width="1.66667"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+
                   <button
                     class="action-button favorite"
                     :class="{ active: spot.isFavorite }"
@@ -556,16 +612,21 @@
 <script setup>
 // script 부분만 수정 (기존 template과 style은 동일)
 
-import { ref, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import FolderSidebar from "@/components/plan/FolderSiderbar.vue";
+import { folderApi } from "@/api/plan/folderApi.js";
+
 import { searchSpots } from "@/api/plan/spotResearchApi";
 import { addSpotToGroup, getGroupSpots, updatePlan, deletePlan } from "@/api/plan/planApi";
 
 const router = useRouter();
 const route = useRoute();
 
-const currentGroupId = ref(Number(route.params.id) || 1);
+const loading = ref(true);
+const error = ref(null);
+
+// const currentGroupId = ref(Number(route.params.id) || 1);
 const searchQuery = ref("");
 const newComment = ref("");
 const showSearchResults = ref(false);
@@ -576,6 +637,8 @@ const toast = ref({
   message: "",
   type: "success",
 });
+const editingSpot = ref(null);
+const editMemo = ref("");
 
 let searchTimeout = null;
 
@@ -584,6 +647,11 @@ const isResizing = ref(false);
 
 let map = null;
 const markers = ref([]);
+
+const currentGroupId = computed(() => {
+  const id = Number(route.params.id);
+  return Number.isFinite(id) ? id : null;
+});
 
 const placeholderImage =
   "https://img.freepik.com/premium-vector/default-image-icon-vector-missing-picture-page-website-design-mobile-app-no-photo-available_87543-11093.jpg";
@@ -783,32 +851,7 @@ const stopResize = () => {
 };
 
 // 폴더 목록 (임시 데이터 - 추후 API 연동)
-const folders = ref([
-  {
-    id: 1,
-    name: "부산 여행",
-    thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200",
-    spotCount: 8,
-  },
-  {
-    id: 2,
-    name: "제주도 여행",
-    thumbnail: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200",
-    spotCount: 12,
-  },
-  {
-    id: 3,
-    name: "서울 여행",
-    thumbnail: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=200",
-    spotCount: 15,
-  },
-  {
-    id: 4,
-    name: "강릉 여행",
-    thumbnail: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=200",
-    spotCount: 6,
-  },
-]);
+const folders = ref([]);
 
 // 스팟 목록
 const spots = ref([]);
@@ -924,6 +967,38 @@ const moveSpotDown = async (index) => {
   } catch (error) {
     console.error("순서 변경 실패:", error);
     showToast("순서 변경에 실패했습니다.", "error");
+  }
+};
+
+// 편집 모달 열기
+const openEditModal = (spot) => {
+  editingSpot.value = { ...spot };
+  editMemo.value = spot.memo || "";
+};
+
+// 편집 모달 닫기
+const closeEditModal = () => {
+  editingSpot.value = null;
+  editMemo.value = "";
+};
+
+// 메모 저장
+const saveMemo = async () => {
+  if (!editingSpot.value) return;
+
+  try {
+    await updatePlan(currentGroupId.value, editingSpot.value.id, {
+      memo: editMemo.value,
+    });
+
+    // 목록 다시 불러오기
+    await loadSpots();
+
+    closeEditModal();
+    showToast("메모가 저장되었습니다.", "success");
+  } catch (error) {
+    console.error("메모 저장 실패:", error);
+    showToast("메모 저장에 실패했습니다.", "error");
   }
 };
 
@@ -1110,7 +1185,9 @@ const zoomOut = () => {
 
 onMounted(async () => {
   // 스팟 목록 불러오기
-  await loadSpots();
+  // await loadSpots();
+  await fetchFolders();
+  await fetchByFolder();
 
   // 카카오 지도 초기화
   if (window.kakao && window.kakao.maps) {
@@ -1122,11 +1199,47 @@ onMounted(async () => {
   }
 });
 
+// 폴더 목록 조회
+const fetchFolders = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    const data = await folderApi.getMyFolders();
+    folders.value = data.map((folder) => ({
+      ...folder,
+      showDelete: false,
+    }));
+  } catch (err) {
+    console.error("폴더 목록 조회 실패:", err);
+    error.value = "폴더 목록을 불러오는데 실패했습니다.";
+  } finally {
+    loading.value = false;
+  }
+};
+
+const fetchByFolder = async () => {
+  const id = currentGroupId.value;
+  if (id == null) {
+    await loadSpots(); // 기본
+    return;
+  }
+  await loadSpots(); // 폴더별
+};
+
 onUnmounted(() => {
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
 });
+
+watch(
+  () => route.params.id,
+  async () => {
+    console.log("route changed:", route.fullPath, route.params);
+    await fetchByFolder();
+  }
+);
 </script>
 
 <style scoped>
@@ -1779,6 +1892,208 @@ onUnmounted(() => {
 .action-button.delete:hover {
   background: #fef2f2;
   border-color: #ef4444;
+}
+
+/* 편집 버튼 스타일 */
+.action-button.edit {
+  color: #6b7280;
+}
+
+.action-button.edit:hover {
+  background: #f3f4f6;
+  color: #2563eb;
+}
+
+/* 모달 오버레이 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+/* 모달 컨텐츠 */
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* 모달 헤더 */
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e1e1e;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #1e1e1e;
+}
+
+/* 모달 바디 */
+.modal-body {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.spot-preview {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.spot-preview img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.spot-preview-info h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e1e1e;
+  margin-bottom: 0.25rem;
+}
+
+.spot-preview-info p {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group textarea {
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group textarea:focus {
+  border-color: #2563eb;
+}
+
+/* 모달 푸터 */
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-save {
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-cancel {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.btn-save {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-save:hover {
+  background: #1e40af;
+}
+
+/* 모달 애니메이션 */
+.modal-enter-active {
+  animation: modal-in 0.3s ease-out;
+}
+
+.modal-leave-active {
+  animation: modal-out 0.2s ease-in;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 }
 
 /* 댓글 섹션 */
