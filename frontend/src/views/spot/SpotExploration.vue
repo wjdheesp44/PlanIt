@@ -186,7 +186,7 @@ const buildApiParams = () => {
   if (filters.value.stars) {
     for (let i = 1; i <= 5; i++) {
       if (filters.value.stars[i]) {
-        selectedRatings.push(i);
+        selectedRatings.push(6 - i);
       }
     }
   }

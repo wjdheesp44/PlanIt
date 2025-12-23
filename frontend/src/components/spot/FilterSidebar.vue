@@ -111,11 +111,11 @@
     <div class="filter-section">
       <h4 class="filter-label">좋아요수</h4>
       <div class="range-slider">
-        <div class="range-values">{{ filters.likes }}-1000+</div>
+        <div class="range-values">{{ filters.likes }}-100+</div>
         <input
           type="range"
           min="0"
-          max="1000"
+          max="100"
           v-model="filters.likes"
           class="slider"
           @input="handleFilterChange"
