@@ -135,6 +135,15 @@
       @error="handleShareError"
     />
 
+    <MemberModal
+      :show="showMemberModal"
+      :group-id="currentGroupId"
+      :current-user-role="currentUserRole"
+      @close="closeMemberModal"
+      @success="handleShareSuccess"
+      @error="handleShareError"
+    />
+
     <!-- 메인 컨텐츠 -->
     <div class="main-content">
       <!-- 왼쪽 폴더 목록 사이드바 -->
@@ -319,61 +328,65 @@
           <div class="folder-header">
             <h1 class="folder-title">부산 여행</h1>
             <div class="folder-meta">
-              <span>공유 중</span>
-              <span class="separator">·</span>
-              <span>나 포함 3명</span>
+              <span v-if="totalSharedUsers >= 2">공유 중</span>
+              <span v-if="totalSharedUsers >= 2" class="separator">·</span>
+              <span class="members-count">나 포함 {{ totalSharedUsers }}명</span>
+              <button
+                v-if="currentUserRole === 'OWNER'"
+                class="share-button"
+                @click="openShareModal"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15 6.66667C16.3807 6.66667 17.5 5.54738 17.5 4.16667C17.5 2.78595 16.3807 1.66667 15 1.66667C13.6193 1.66667 12.5 2.78595 12.5 4.16667C12.5 5.54738 13.6193 6.66667 15 6.66667Z"
+                    stroke="currentColor"
+                    stroke-width="1.66667"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M5 12.5C6.38071 12.5 7.5 11.3807 7.5 10C7.5 8.61929 6.38071 7.5 5 7.5C3.61929 7.5 2.5 8.61929 2.5 10C2.5 11.3807 3.61929 12.5 5 12.5Z"
+                    stroke="currentColor"
+                    stroke-width="1.66667"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M15 18.3333C16.3807 18.3333 17.5 17.214 17.5 15.8333C17.5 14.4526 16.3807 13.3333 15 13.3333C13.6193 13.3333 12.5 14.4526 12.5 15.8333C12.5 17.214 13.6193 18.3333 15 18.3333Z"
+                    stroke="currentColor"
+                    stroke-width="1.66667"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M7.15833 11.175L12.85 14.6583"
+                    stroke="currentColor"
+                    stroke-width="1.66667"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M12.8417 5.34167L7.15833 8.825"
+                    stroke="currentColor"
+                    stroke-width="1.66667"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                공유 설정
+              </button>
+              <button v-else class="share-button" @click="openMemberModal">멤버 보기</button>
             </div>
             <!-- 공유 버튼 클릭 이벤트 연결 -->
-            <button v-if="currentUserRole === 'OWNER'" class="share-button" @click="openShareModal">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <!-- 기존 SVG 경로 -->
-              </svg>
-              공유 설정
-            </button>
+
             <!-- <button class="share-button">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M15 6.66667C16.3807 6.66667 17.5 5.54738 17.5 4.16667C17.5 2.78595 16.3807 1.66667 15 1.66667C13.6193 1.66667 12.5 2.78595 12.5 4.16667C12.5 5.54738 13.6193 6.66667 15 6.66667Z"
-                  stroke="currentColor"
-                  stroke-width="1.66667"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M5 12.5C6.38071 12.5 7.5 11.3807 7.5 10C7.5 8.61929 6.38071 7.5 5 7.5C3.61929 7.5 2.5 8.61929 2.5 10C2.5 11.3807 3.61929 12.5 5 12.5Z"
-                  stroke="currentColor"
-                  stroke-width="1.66667"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M15 18.3333C16.3807 18.3333 17.5 17.214 17.5 15.8333C17.5 14.4526 16.3807 13.3333 15 13.3333C13.6193 13.3333 12.5 14.4526 12.5 15.8333C12.5 17.214 13.6193 18.3333 15 18.3333Z"
-                  stroke="currentColor"
-                  stroke-width="1.66667"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M7.15833 11.175L12.85 14.6583"
-                  stroke="currentColor"
-                  stroke-width="1.66667"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M12.8417 5.34167L7.15833 8.825"
-                  stroke="currentColor"
-                  stroke-width="1.66667"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              
             </button> -->
           </div>
 
@@ -451,7 +464,11 @@
 
                 <!-- 액션 버튼 -->
                 <div class="spot-actions">
-                  <button class="action-button edit" @click="openEditModal(spot)">
+                  <button
+                    v-if="currentUserRole === 'OWNER' || currentUserRole === 'EDITOR'"
+                    class="action-button edit"
+                    @click="openEditModal(spot)"
+                  >
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                       <path
                         d="M14.1667 2.49993C14.3856 2.28106 14.6454 2.10744 14.9314 1.98899C15.2173 1.87054 15.5238 1.80957 15.8334 1.80957C16.1429 1.80957 16.4494 1.87054 16.7353 1.98899C17.0213 2.10744 17.2811 2.28106 17.5 2.49993C17.7189 2.7188 17.8925 2.97863 18.011 3.2646C18.1294 3.55057 18.1904 3.85706 18.1904 4.16659C18.1904 4.47612 18.1294 4.78262 18.011 5.06859C17.8925 5.35455 17.7189 5.61439 17.5 5.83326L6.25002 17.0833L1.66669 18.3333L2.91669 13.7499L14.1667 2.49993Z"
@@ -485,7 +502,11 @@
                       />
                     </svg>
                   </button>
-                  <button class="action-button delete" @click="deleteSpot(spot.id)">
+                  <button
+                    v-if="currentUserRole === 'OWNER' || currentUserRole === 'EDITOR'"
+                    class="action-button delete"
+                    @click="deleteSpot(spot.id)"
+                  >
                     <svg
                       width="20"
                       height="20"
@@ -548,6 +569,7 @@
               <div class="comment-avatar">
                 <img :src="comment.avatar" :alt="comment.author" />
               </div>
+
               <div class="comment-content">
                 <div class="comment-header">
                   <span class="comment-author">{{ comment.author }}</span>
@@ -647,9 +669,17 @@ import { folderApi } from "@/api/plan/folderApi.js";
 import { searchSpots } from "@/api/plan/spotResearchApi";
 import { addSpotToGroup, getGroupSpots, updatePlan, deletePlan } from "@/api/plan/planApi";
 import ShareModal from "@/components/plan/ShareModal.vue";
+import MemberModal from "@/components/plan/MemberModal.vue";
 import { groupShareApi } from "@/api/plan/groupShareApi";
 import { commentApi } from "@/api/plan/commentApi";
 import spotApi from "@/api/spot/spotApi";
+
+const props = defineProps({
+  groupId: {
+    type: Number,
+    required: true,
+  },
+});
 
 const router = useRouter();
 const route = useRoute();
@@ -686,7 +716,14 @@ const currentGroupId = computed(() => {
 
 // 기존 refs에 추가
 const showShareModal = ref(false);
+const showMemberModal = ref(false);
 const currentUserRole = ref("VIEWER");
+
+const users = ref([]);
+
+const totalSharedUsers = computed(() => {
+  return users.value.length; // 나 포함
+});
 
 const placeholderImage =
   "https://img.freepik.com/premium-vector/default-image-icon-vector-missing-picture-page-website-design-mobile-app-no-photo-available_87543-11093.jpg";
@@ -1129,21 +1166,6 @@ const deleteSpot = async (planId) => {
   }
 };
 
-// 댓글 추가 (추후 API 연동)
-// const addComment = () => {
-//   if (newComment.value.trim()) {
-//     comments.value.unshift({
-//       id: Date.now(),
-//       author: "나",
-//       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=me",
-//       time: "방금",
-//       text: newComment.value,
-//     });
-//     newComment.value = "";
-//     // TODO: 댓글 추가 API 호출
-//   }
-// };
-
 const initKakaoMap = () => {
   if (!window.kakao || !window.kakao.maps) {
     console.error("Kakao Maps SDK not loaded");
@@ -1305,11 +1327,12 @@ const fetchFolders = async () => {
   }
 };
 
-// 폴더 정보 불러올 때 권한 정보도 함께 가져오기
+// 폴더 정보 불러올 때 권한 정보, 공유된 유저들도 함께 가져오기
 const loadFolderInfo = async () => {
   if (!currentGroupId.value) return;
 
   try {
+    users.value = await groupShareApi.getGroupUsers(currentGroupId.value);
     const folder = folders.value.find((f) => f.id === currentGroupId.value);
     if (folder && folder.userRole) {
       currentUserRole.value = folder.userRole;
@@ -1327,6 +1350,15 @@ const openShareModal = () => {
 // 공유 모달 닫기
 const closeShareModal = () => {
   showShareModal.value = false;
+};
+
+const openMemberModal = () => {
+  showMemberModal.value = true;
+};
+
+// 공유 모달 닫기
+const closeMemberModal = () => {
+  showMemberModal.value = false;
 };
 
 // 공유 성공 핸들러
@@ -1810,7 +1842,7 @@ watch(
 }
 
 .share-button {
-  margin-top: 0.5rem;
+  margin-top: 0.2rem;
   width: fit-content;
   padding: 0.5rem 1rem;
   background: #f3f4f6;
