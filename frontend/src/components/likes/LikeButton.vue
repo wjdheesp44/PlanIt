@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import api from "@/api/user/api";
 
 const props = defineProps({
@@ -55,8 +55,16 @@ const props = defineProps({
   },
 });
 
-const liked = ref(props.initialLiked);
+const liked = ref(false);
 let isProcessing = false;
+
+watch(
+  () => props.initialLiked,
+  (newVal) => {
+    liked.value = newVal;
+  },
+  { immediate: true }
+);
 
 const toggleLike = async () => {
   if (isProcessing) return; // 연타 방지
@@ -71,6 +79,7 @@ const toggleLike = async () => {
     isProcessing = false;
   }
 };
+
 </script>
 
 <style scoped>

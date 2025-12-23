@@ -22,4 +22,7 @@ public class ReviewDto {
 
     private String createdAt;
     private LocalDateTime modifiedAt;
+
+    private int helpfulCount;
+
 }
