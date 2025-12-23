@@ -66,7 +66,7 @@
                 WHEN 'ATTRACTION' THEN '관광지'
                 WHEN 'FESTIVAL'  THEN '축제'
                 WHEN 'POPUP'     THEN '팝업'
-            END                                                 AS badge,
+                END AS badge,
             COALESCE(s.doro_addr, s.jibun_addr) AS location,
             s.image1,
             p.memo,
@@ -76,6 +76,9 @@
             p.sort_order
         FROM plans p
                  INNER JOIN spots s ON p.spot_id = s.id
+                 INNER JOIN group_users gu ON p.group_id = gu.group_id
+            AND gu.user_id = #{userId}
+            AND gu.is_deleted = 'F'  /* ← 권한 체크 추가 */
                  LEFT JOIN spot_likes sl ON s.id = sl.spot_id
             AND sl.user_id = #{userId}
             AND sl.is_deleted = 'F'

@@ -126,6 +126,15 @@
       </div>
     </transition>
 
+    <ShareModal
+      :show="showShareModal"
+      :group-id="currentGroupId"
+      :current-user-role="currentUserRole"
+      @close="closeShareModal"
+      @success="handleShareSuccess"
+      @error="handleShareError"
+    />
+
     <!-- 메인 컨텐츠 -->
     <div class="main-content">
       <!-- 왼쪽 폴더 목록 사이드바 -->
@@ -314,7 +323,14 @@
               <span class="separator">·</span>
               <span>나 포함 3명</span>
             </div>
-            <button class="share-button">
+            <!-- 공유 버튼 클릭 이벤트 연결 -->
+            <button v-if="currentUserRole === 'OWNER'" class="share-button" @click="openShareModal">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <!-- 기존 SVG 경로 -->
+              </svg>
+              공유 설정
+            </button>
+            <!-- <button class="share-button">
               <svg
                 width="20"
                 height="20"
@@ -358,7 +374,7 @@
                   stroke-linejoin="round"
                 />
               </svg>
-            </button>
+            </button> -->
           </div>
 
           <!-- 스팟 목록 -->
@@ -619,6 +635,8 @@ import { folderApi } from "@/api/plan/folderApi.js";
 
 import { searchSpots } from "@/api/plan/spotResearchApi";
 import { addSpotToGroup, getGroupSpots, updatePlan, deletePlan } from "@/api/plan/planApi";
+import ShareModal from "@/components/plan/ShareModal.vue";
+import { groupShareApi } from "@/api/plan/groupShareApi";
 
 const router = useRouter();
 const route = useRoute();
@@ -652,6 +670,10 @@ const currentGroupId = computed(() => {
   const id = Number(route.params.id);
   return Number.isFinite(id) ? id : null;
 });
+
+// 기존 refs에 추가
+const showShareModal = ref(false);
+const currentUserRole = ref("VIEWER");
 
 const placeholderImage =
   "https://img.freepik.com/premium-vector/default-image-icon-vector-missing-picture-page-website-design-mobile-app-no-photo-available_87543-11093.jpg";
@@ -1183,22 +1205,6 @@ const zoomOut = () => {
   }
 };
 
-onMounted(async () => {
-  // 스팟 목록 불러오기
-  // await loadSpots();
-  await fetchFolders();
-  await fetchByFolder();
-
-  // 카카오 지도 초기화
-  if (window.kakao && window.kakao.maps) {
-    window.kakao.maps.load(() => {
-      initKakaoMap();
-    });
-  } else {
-    console.error("Kakao Maps SDK not loaded. Please add the script to index.html");
-  }
-});
-
 // 폴더 목록 조회
 const fetchFolders = async () => {
   try {
@@ -1218,6 +1224,40 @@ const fetchFolders = async () => {
   }
 };
 
+// 폴더 정보 불러올 때 권한 정보도 함께 가져오기
+const loadFolderInfo = async () => {
+  if (!currentGroupId.value) return;
+
+  try {
+    const folder = folders.value.find((f) => f.id === currentGroupId.value);
+    if (folder && folder.userRole) {
+      currentUserRole.value = folder.userRole;
+    }
+  } catch (error) {
+    console.error("폴더 정보 로드 실패:", error);
+  }
+};
+
+// 공유 모달 열기
+const openShareModal = () => {
+  showShareModal.value = true;
+};
+
+// 공유 모달 닫기
+const closeShareModal = () => {
+  showShareModal.value = false;
+};
+
+// 공유 성공 핸들러
+const handleShareSuccess = (message) => {
+  showToast(message, "success");
+};
+
+// 공유 에러 핸들러
+const handleShareError = (message) => {
+  showToast(message, "error");
+};
+
 const fetchByFolder = async () => {
   const id = currentGroupId.value;
   if (id == null) {
@@ -1226,6 +1266,23 @@ const fetchByFolder = async () => {
   }
   await loadSpots(); // 폴더별
 };
+
+onMounted(async () => {
+  // 스팟 목록 불러오기
+  // await loadSpots();
+  await fetchFolders();
+  await fetchByFolder();
+  await loadFolderInfo();
+
+  // 카카오 지도 초기화
+  if (window.kakao && window.kakao.maps) {
+    window.kakao.maps.load(() => {
+      initKakaoMap();
+    });
+  } else {
+    console.error("Kakao Maps SDK not loaded. Please add the script to index.html");
+  }
+});
 
 onUnmounted(() => {
   if (searchTimeout) {
@@ -1238,6 +1295,7 @@ watch(
   async () => {
     console.log("route changed:", route.fullPath, route.params);
     await fetchByFolder();
+    await loadFolderInfo();
   }
 );
 </script>
@@ -1544,7 +1602,7 @@ watch(
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   font-size: 14px;
   font-weight: 500;
-  z-index: 9999;
+  z-index: 100000;
   min-width: 300px;
   max-width: 500px;
 }
@@ -1912,10 +1970,12 @@ watch(
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
+  padding: 1rem;
 }
 
 /* 모달 컨텐츠 */

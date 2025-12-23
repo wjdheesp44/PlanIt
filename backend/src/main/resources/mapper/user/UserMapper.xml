@@ -5,6 +5,33 @@
 
 <mapper namespace="com.gt.planit.domain.user.model.mapper.UserMapper">
 
+    <resultMap id="SearchUserResultMap" type="com.gt.planit.domain.plan.model.dto.SearchUserResDto">
+        <id property="id" column="id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="email" column="email"/>
+    </resultMap>
+
+    <select id="searchUsers" resultMap="SearchUserResultMap">
+        SELECT id, nickname, email
+        FROM users
+        WHERE nickname LIKE CONCAT('%', #{nickname}, '%')
+        ORDER BY
+            CASE
+                WHEN nickname = #{nickname} THEN 1
+                WHEN nickname LIKE CONCAT(#{nickname}, '%') THEN 2
+                ELSE 3
+                END,
+            nickname
+            LIMIT 10
+    </select>
+
+    <select id="findById" resultType="com.gt.planit.domain.user.model.dto.UserReqDto">
+        SELECT
+        *
+        FROM users
+        WHERE id = #{id}
+    </select>
+
     <select id="findByEmail" resultType="com.gt.planit.domain.user.model.dto.UserReqDto">
         SELECT
         *

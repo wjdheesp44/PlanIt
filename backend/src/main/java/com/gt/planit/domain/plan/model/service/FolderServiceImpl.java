@@ -3,7 +3,10 @@ package com.gt.planit.domain.plan.model.service;
 import com.gt.planit.domain.plan.model.dto.FolderDto;
 import com.gt.planit.domain.plan.model.dto.FolderReqDto;
 import com.gt.planit.domain.plan.model.dto.FolderResDto;
+import com.gt.planit.domain.plan.model.entity.GroupRole;
+import com.gt.planit.domain.plan.model.entity.GroupUser;
 import com.gt.planit.domain.plan.model.mapper.FolderMapper;
+import com.gt.planit.domain.plan.model.mapper.GroupUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ import java.util.stream.Collectors;
 public class FolderServiceImpl implements FolderService {
 
     private final FolderMapper folderMapper;
+    private final GroupUserMapper groupUserMapper;
 
     @Override
     @Transactional
@@ -30,6 +34,17 @@ public class FolderServiceImpl implements FolderService {
 
         folderMapper.insert(folderDto);
         log.info("Folder created: id={}, userId={}, name={}", folderDto.getId(), userId, folderDto.getName());
+
+        // 폴더 소유자 등록
+        GroupUser groupUser = GroupUser.builder()
+                .groupId(folderDto.getId())
+                .userId(userId)
+                .role(GroupRole.OWNER)
+                .isDeleted("F")
+                .build();
+        groupUserMapper.insert(groupUser);
+        log.info("Group owner registered: groupId={}, userId={}", folderDto.getId(), userId);
+
 
         return FolderResDto.from(folderMapper.findById(folderDto.getId()).orElseThrow());
     }

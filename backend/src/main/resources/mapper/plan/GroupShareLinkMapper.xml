@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gt.planit.domain.plan.model.mapper.GroupShareLinkMapper">
+
+    <resultMap id="GroupShareLinkResultMap" type="com.gt.planit.domain.plan.model.entity.GroupShareLink">
+        <id property="id" column="id"/>
+        <result property="shareToken" column="share_token"/>
+        <result property="defaultRole" column="default_role" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="modifiedAt" column="modified_at"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="groupId" column="group_id"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO group_share_links (share_token, default_role, group_id, is_deleted, created_at, expires_at)
+        VALUES (#{shareToken}, #{defaultRole}, #{groupId}, 'F', NOW(), #{expiresAt})
+    </insert>
+
+    <select id="findByShareToken" resultMap="GroupShareLinkResultMap">
+        SELECT id, share_token, default_role, is_deleted, created_at, modified_at, expires_at, group_id
+        FROM group_share_links
+        WHERE share_token = #{shareToken}
+          AND is_deleted = 'F'
+          AND (expires_at IS NULL OR expires_at > NOW())
+    </select>
+
+    <select id="findActiveByGroupId" resultMap="GroupShareLinkResultMap">
+        SELECT id, share_token, default_role, is_deleted, created_at, modified_at, expires_at, group_id
+        FROM group_share_links
+        WHERE group_id = #{groupId}
+          AND is_deleted = 'F'
+          AND (expires_at IS NULL OR expires_at > NOW())
+        ORDER BY created_at DESC
+            LIMIT 1
+    </select>
+
+    <update id="deactivate">
+        UPDATE group_share_links
+        SET is_deleted = 'T',
+            modified_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="deactivateAllByGroupId">
+        UPDATE group_share_links
+        SET is_deleted = 'T',
+            modified_at = NOW()
+        WHERE group_id = #{groupId}
+    </update>
+
+</mapper>
