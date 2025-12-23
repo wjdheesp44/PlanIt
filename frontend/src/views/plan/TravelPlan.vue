@@ -555,6 +555,17 @@
                 </div>
                 <p class="comment-text">{{ comment.text }}</p>
               </div>
+              <button class="comment-delete" @click="deleteComment(comment.id)" title="삭제">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M12 4L4 12M4 4L12 12"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -637,6 +648,7 @@ import { searchSpots } from "@/api/plan/spotResearchApi";
 import { addSpotToGroup, getGroupSpots, updatePlan, deletePlan } from "@/api/plan/planApi";
 import ShareModal from "@/components/plan/ShareModal.vue";
 import { groupShareApi } from "@/api/plan/groupShareApi";
+import { commentApi } from "@/api/plan/commentApi";
 
 const router = useRouter();
 const route = useRoute();
@@ -877,24 +889,85 @@ const folders = ref([]);
 
 // 스팟 목록
 const spots = ref([]);
+const comments = ref([]);
 
-// 댓글 목록 (임시 데이터 - 추후 API 연동)
-const comments = ref([
-  {
-    id: 1,
-    author: "김철수",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user1",
-    time: "2시간 전",
-    text: "일정 잘 짰네요! 저도 참고하겠습니다",
-  },
-  {
-    id: 2,
-    author: "이영희",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user2",
-    time: "5시간 전",
-    text: "해운대는 주차가 어려우니 대중교통 이용을 추천해요",
-  },
-]);
+const loadComments = async () => {
+  if (!currentGroupId.value) return;
+
+  try {
+    const data = await commentApi.getComments(currentGroupId.value);
+
+    // API 응답을 컴포넌트 형식에 맞게 변환
+    comments.value = data.map((comment) => ({
+      id: comment.id,
+      author: comment.author,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author}`,
+      time: formatTime(comment.createdAt),
+      text: comment.content,
+    }));
+
+    console.log("댓글 목록 로드 완료:", comments.value);
+  } catch (error) {
+    console.error("댓글 목록 로드 실패:", error);
+    showToast("댓글을 불러오는데 실패했습니다", "error");
+  }
+};
+
+// ✅ 시간 포맷팅 함수
+const formatTime = (createdAt) => {
+  const now = new Date();
+  const commentDate = new Date(createdAt);
+  const diffMs = now - commentDate;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "방금";
+  if (diffMins < 60) return `${diffMins}분 전`;
+  if (diffHours < 24) return `${diffHours}시간 전`;
+  if (diffDays < 7) return `${diffDays}일 전`;
+
+  // 7일 이상이면 날짜 표시
+  return commentDate.toLocaleDateString("ko-KR", {
+    month: "long",
+    day: "numeric",
+  });
+};
+
+// ✅ 댓글 추가 (API 연동)
+const addComment = async () => {
+  if (!newComment.value.trim()) return;
+
+  try {
+    await commentApi.addComment(currentGroupId.value, newComment.value.trim());
+
+    // 댓글 목록 다시 불러오기
+    await loadComments();
+
+    newComment.value = "";
+    showToast("댓글이 추가되었습니다", "success");
+  } catch (error) {
+    console.error("댓글 추가 실패:", error);
+    showToast("댓글 추가에 실패했습니다", "error");
+  }
+};
+
+// ✅ 댓글 삭제 함수 추가
+const deleteComment = async (commentId) => {
+  if (!confirm("댓글을 삭제하시겠습니까?")) return;
+
+  try {
+    await commentApi.deleteComment(currentGroupId.value, commentId);
+
+    // 댓글 목록 다시 불러오기
+    await loadComments();
+
+    showToast("댓글이 삭제되었습니다", "success");
+  } catch (error) {
+    console.error("댓글 삭제 실패:", error);
+    showToast("댓글 삭제에 실패했습니다", "error");
+  }
+};
 
 // 스팟 목록 불러오기
 const loadSpots = async () => {
@@ -1049,19 +1122,19 @@ const deleteSpot = async (planId) => {
 };
 
 // 댓글 추가 (추후 API 연동)
-const addComment = () => {
-  if (newComment.value.trim()) {
-    comments.value.unshift({
-      id: Date.now(),
-      author: "나",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=me",
-      time: "방금",
-      text: newComment.value,
-    });
-    newComment.value = "";
-    // TODO: 댓글 추가 API 호출
-  }
-};
+// const addComment = () => {
+//   if (newComment.value.trim()) {
+//     comments.value.unshift({
+//       id: Date.now(),
+//       author: "나",
+//       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=me",
+//       time: "방금",
+//       text: newComment.value,
+//     });
+//     newComment.value = "";
+//     // TODO: 댓글 추가 API 호출
+//   }
+// };
 
 const initKakaoMap = () => {
   if (!window.kakao || !window.kakao.maps) {
@@ -1265,6 +1338,7 @@ const fetchByFolder = async () => {
     return;
   }
   await loadSpots(); // 폴더별
+  await loadComments();
 };
 
 onMounted(async () => {
@@ -2173,9 +2247,38 @@ watch(
   overflow-y: auto;
 }
 
+/* 댓글 아이템 수정 */
 .comment-item {
   display: flex;
   gap: 0.75rem;
+  position: relative; /* ✅ 추가 */
+}
+
+/* ✅ 댓글 삭제 버튼 */
+.comment-delete {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  display: none; /* 기본은 숨김 */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: all 0.2s;
+}
+
+.comment-item:hover .comment-delete {
+  display: flex; /* 호버 시 표시 */
+}
+
+.comment-delete:hover {
+  background: #fef2f2;
+  color: #ef4444;
 }
 
 .comment-avatar {

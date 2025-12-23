@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gt.planit.domain.plan.model.mapper.CommentMapper">
+
+    <select id="findAllByGroupId" resultType="com.gt.planit.domain.plan.model.dto.CommentResDto">
+        SELECT
+            c.id AS id,
+            u.nickname AS author,
+            c.created_at AS createdAt,
+            c.content AS content
+        FROM comments c
+                 JOIN users u ON u.id = c.user_id
+        WHERE c.group_id = #{groupId}
+          AND c.is_deleted = 'F'
+        ORDER BY c.created_at ASC
+    </select>
+
+    <insert id="insert" parameterType="com.gt.planit.domain.plan.model.entity.Comment">
+        INSERT INTO comments (
+            content,
+            is_deleted,
+            group_id,
+            user_id
+        ) VALUES (
+                     #{content},
+                     'F',
+                     #{groupId},
+                     #{userId}
+                 )
+    </insert>
+
+    <select id="findById"
+            resultType="com.gt.planit.domain.plan.model.entity.Comment">
+        SELECT
+            id,
+            content,
+            is_deleted   AS isDeleted,
+            created_at  AS createdAt,
+            modified_at AS modifiedAt,
+            group_id    AS groupId,
+            user_id     AS userId
+        FROM comments
+        WHERE id = #{commentId}
+          AND is_deleted = 'F'
+    </select>
+
+    <update id="softDelete">
+        UPDATE comments
+        SET is_deleted = 'T',
+            modified_at = NOW()
+        WHERE id = #{commentId}
+          AND is_deleted = 'F'
+    </update>
+
+</mapper>
