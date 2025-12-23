@@ -1,8 +1,7 @@
-<!-- src/components/plan/ShareModal.vue -->
 <template>
   <transition name="modal">
-    <div v-if="show" class="modal-overlay" @click="close">
-      <div class="modal-content share-modal" @click.stop>
+    <div v-if="show" class="modal-overlay" @click.self="close">
+      <div class="modal-content share-modal">
         <!-- 헤더 -->
         <div class="modal-header">
           <div class="header-content">
@@ -289,43 +288,154 @@
               </div>
               <div>
                 <h4 class="section-title">새 팀원 초대</h4>
-                <p class="section-subtitle">사용자 ID로 직접 초대할 수 있어요</p>
+                <p class="section-subtitle">닉네임으로 사용자를 검색하고 초대하세요</p>
               </div>
             </div>
 
             <div class="add-user-form">
-              <div class="form-row">
+              <!-- 닉네임 검색 입력 -->
+              <div class="search-input-wrapper">
                 <input
-                  type="number"
-                  v-model="newUserId"
-                  placeholder="사용자 ID (예: 12345)"
-                  class="modern-input"
-                  @keyup.enter="addUser"
+                  type="text"
+                  v-model="searchNickname"
+                  placeholder="닉네임 검색 (예: 홍길동)"
+                  class="modern-input search-input"
+                  @input="handleSearchInput"
+                  @focus="showSearchResults = true"
                 />
+
+                <!-- 검색 결과 드롭다운 -->
+                <div
+                  v-if="showSearchResults && searchNickname.trim()"
+                  class="search-results"
+                  v-click-outside="closeSearchResults"
+                >
+                  <!-- 로딩 -->
+                  <div v-if="isSearching" class="search-loading">
+                    <div class="spinner"></div>
+                    <span>검색 중...</span>
+                  </div>
+
+                  <!-- 결과 없음 -->
+                  <div v-else-if="searchedUsers.length === 0" class="search-empty">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                      <path
+                        d="M16 28C22.6274 28 28 22.6274 28 16C28 9.37258 22.6274 4 16 4C9.37258 4 4 9.37258 4 16C4 22.6274 9.37258 28 16 28Z"
+                        stroke="#D1D5DB"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M16 11V16"
+                        stroke="#D1D5DB"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M16 21H16.01"
+                        stroke="#D1D5DB"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    <p>검색 결과가 없습니다</p>
+                  </div>
+
+                  <!-- 검색 결과 목록 -->
+                  <div v-else class="search-results-list">
+                    <div
+                      v-for="user in searchedUsers"
+                      :key="user.id"
+                      class="search-result-item"
+                      @click="selectUser(user)"
+                    >
+                      <div class="result-avatar">
+                        <img
+                          :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`"
+                          :alt="user.nickname"
+                        />
+                      </div>
+                      <div class="result-info">
+                        <div class="result-name">{{ user.nickname }}</div>
+                        <div class="result-email">{{ user.email }}</div>
+                      </div>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M8 3.33334V12.6667"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M3.33301 8H12.6663"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 선택된 유저 표시 -->
+              <div v-if="selectedUser" class="selected-user">
+                <div class="selected-user-info">
+                  <div class="selected-avatar">
+                    <img
+                      :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedUser.email}`"
+                      :alt="selectedUser.nickname"
+                    />
+                  </div>
+                  <div>
+                    <div class="selected-name">{{ selectedUser.nickname }}</div>
+                    <div class="selected-email">{{ selectedUser.email }}</div>
+                  </div>
+                </div>
+                <button class="clear-selection" @click="clearSelection">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M12 4L4 12M4 4L12 12"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- 권한 선택 및 초대 버튼 -->
+              <div class="form-row">
                 <select v-model="newUserRole" class="role-select modern">
                   <option value="EDITOR">편집 가능</option>
                   <option value="VIEWER">보기 전용</option>
                 </select>
+                <button class="primary-button" @click="addUser" :disabled="!selectedUser">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path
+                      d="M9 3.75V14.25"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M3.75 9H14.25"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  초대하기
+                </button>
               </div>
-              <button class="primary-button" @click="addUser">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path
-                    d="M9 3.75V14.25"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M3.75 9H14.25"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                초대하기
-              </button>
             </div>
           </div>
         </div>
@@ -352,9 +462,36 @@ const emit = defineEmits(["close", "success", "error"]);
 const users = ref([]);
 const shareLink = ref(null);
 const copied = ref(false);
-const newUserId = ref("");
 const newUserRole = ref("EDITOR");
 const linkInput = ref(null);
+
+// 닉네임 검색 관련
+const searchNickname = ref("");
+const searchedUsers = ref([]);
+const selectedUser = ref(null);
+const showSearchResults = ref(false);
+const isSearching = ref(false);
+let searchTimeout = null;
+
+const vClickOutside = {
+  mounted(el, binding) {
+    el.clickOutsideEvent = (event) => {
+      // 검색 결과 영역인지 확인
+      const searchWrapper = el.closest(".search-input-wrapper");
+      if (searchWrapper && !searchWrapper.contains(event.target)) {
+        binding.value();
+      }
+    };
+    setTimeout(() => {
+      document.addEventListener("click", el.clickOutsideEvent);
+    }, 0);
+  },
+  unmounted(el) {
+    if (el.clickOutsideEvent) {
+      document.removeEventListener("click", el.clickOutsideEvent);
+    }
+  },
+};
 
 const getRoleLabel = (role) => {
   const labels = {
@@ -378,6 +515,62 @@ const loadData = async () => {
     console.error("데이터 로드 실패:", error);
     emit("error", "데이터를 불러오는데 실패했습니다");
   }
+};
+
+// 닉네임 검색 입력 핸들러 (디바운싱)
+const handleSearchInput = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+
+  if (!searchNickname.value.trim()) {
+    searchedUsers.value = [];
+    return;
+  }
+
+  searchTimeout = setTimeout(async () => {
+    await performSearch();
+  }, 300);
+};
+
+// 닉네임 검색 수행
+const performSearch = async () => {
+  if (!searchNickname.value.trim()) {
+    searchedUsers.value = [];
+    return;
+  }
+
+  try {
+    isSearching.value = true;
+    searchedUsers.value = await groupShareApi.searchUsersByNickname(searchNickname.value.trim());
+  } catch (error) {
+    console.error("검색 실패:", error);
+    searchedUsers.value = [];
+    emit("error", "사용자 검색에 실패했습니다");
+  } finally {
+    isSearching.value = false;
+  }
+};
+
+// 검색 결과에서 유저 선택
+const selectUser = (user) => {
+  selectedUser.value = user;
+  searchNickname.value = user.nickname;
+  showSearchResults.value = false;
+  searchedUsers.value = [];
+};
+
+// 선택 해제
+const clearSelection = () => {
+  selectedUser.value = null;
+  searchNickname.value = "";
+  searchedUsers.value = [];
+  showSearchResults.value = false;
+};
+
+// 검색 결과 닫기
+const closeSearchResults = () => {
+  showSearchResults.value = false;
 };
 
 const createLink = async () => {
@@ -415,15 +608,17 @@ const deactivateLink = async () => {
   }
 };
 
+// 유저 추가 (userId로)
 const addUser = async () => {
-  if (!newUserId.value) {
-    emit("error", "사용자 ID를 입력해주세요");
+  if (!selectedUser.value) {
+    emit("error", "사용자를 선택해주세요");
     return;
   }
+
   try {
-    await groupShareApi.addUserToGroup(props.groupId, Number(newUserId.value), newUserRole.value);
+    await groupShareApi.addUserToGroup(props.groupId, selectedUser.value.id, newUserRole.value);
     await loadData();
-    newUserId.value = "";
+    clearSelection();
     newUserRole.value = "EDITOR";
     emit("success", "사용자가 추가되었습니다");
   } catch (error) {
@@ -452,12 +647,19 @@ const removeUser = async (userId) => {
   }
 };
 
-const close = () => emit("close");
+const close = () => {
+  clearSelection();
+  emit("close");
+};
 
 watch(
   () => props.show,
   (newValue) => {
-    if (newValue) loadData();
+    if (newValue) {
+      loadData();
+    } else {
+      clearSelection();
+    }
   }
 );
 </script>
@@ -469,14 +671,20 @@ watch(
   font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5); /* ← 배경 추가 */
-  backdrop-filter: blur(4px); /* ← 블러 효과 (선택) */
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -709,6 +917,16 @@ watch(
   transform: translateY(0);
 }
 
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
 .text-button {
   padding: 0.625rem;
   background: transparent;
@@ -922,6 +1140,196 @@ watch(
 
 .modern-input::placeholder {
   color: #adb5bd;
+}
+
+/* 검색 입력 관련 */
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+}
+
+/* 검색 결과 드롭다운 */
+.search-results {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+/* 검색 로딩 */
+.search-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 0.75rem;
+  color: #868e96;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #f1f3f5;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 검색 결과 없음 */
+.search-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 0.75rem;
+  color: #adb5bd;
+}
+
+.search-empty p {
+  font-size: 13px;
+}
+
+/* 검색 결과 리스트 */
+.search-results-list {
+  padding: 0.5rem;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-result-item:hover {
+  background: #f8f9fa;
+}
+
+.result-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.result-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.result-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 0.125rem;
+}
+
+.result-email {
+  font-size: 12px;
+  color: #868e96;
+}
+
+.search-result-item svg {
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+/* 선택된 유저 표시 */
+.selected-user {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border: 1px solid #667eea30;
+  border-radius: 10px;
+}
+
+.selected-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.selected-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
+}
+
+.selected-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selected-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 0.125rem;
+}
+
+.selected-email {
+  font-size: 12px;
+  color: #667eea;
+}
+
+.clear-selection {
+  width: 28px;
+  height: 28px;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #868e96;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.clear-selection:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+  color: #495057;
 }
 
 /* 스크롤바 */

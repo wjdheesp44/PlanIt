@@ -26,7 +26,7 @@ public interface FolderService {
      * @param id 폴더 ID
      * @return 폴더 정보
      */
-    FolderResDto getFolderById(Long id);
+    FolderResDto getFolderById(Long id, Long userId);
 
     /**
      * 폴더 수정
