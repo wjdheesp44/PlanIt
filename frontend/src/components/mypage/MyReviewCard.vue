@@ -1,7 +1,7 @@
 <template>
   <div class="review-card">
     <!-- 이미지 -->
-    <img :src="review.image" :alt="review.title" class="review-image" />
+    <img :src="review.image || placeholderImage" :alt="review.title" class="review-image" />
     <!-- 콘텐츠 -->
     <div class="review-content">
       <!-- 헤더 -->
@@ -9,8 +9,8 @@
         <div class="title-section">
           <div class="title-row">
             <h3 class="review-title">{{ review.title }}</h3>
-            <span class="category-badge" :class="categoryClass">
-              {{ review.category }}
+            <span class="category-badge" :class="badgeClass">
+              {{ review.badge }}
             </span>
           </div>
           <div class="meta-row">
@@ -89,6 +89,9 @@
 <script setup>
 import { computed } from "vue";
 
+const placeholderImage =
+  "https://img.freepik.com/premium-vector/default-image-icon-vector-missing-picture-page-website-design-mobile-app-no-photo-available_87543-11093.jpg";
+
 const props = defineProps({
   review: {
     type: Object,
@@ -98,13 +101,13 @@ const props = defineProps({
 
 const emit = defineEmits(["edit", "delete"]);
 
-const categoryClass = computed(() => {
-  const categoryMap = {
+const badgeClass = computed(() => {
+  const badgeMap = {
     관광지: "category-tourist",
     팝업스토어: "category-popup",
     축제: "category-festival",
   };
-  return categoryMap[props.review.category] || "";
+  return badgeMap[props.review.badge] || "";
 });
 
 const handleEdit = () => {

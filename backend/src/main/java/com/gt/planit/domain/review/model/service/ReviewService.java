@@ -38,6 +38,8 @@ public class ReviewService {
                 req.getRating(),
                 req.getContent()
         );
+
+        reviewMapper.increaseRating(spotId, req.getRating());
     }
 
     @Transactional
@@ -51,6 +53,14 @@ public class ReviewService {
 
         if (!review.getUserId().equals(userId)) {
             throw new RuntimeException("수정 권한이 없습니다.");
+        }
+
+        if (review.getRating() != req.getRating()) {
+            reviewMapper.updateRating(
+                    review.getSpotId(),
+                    review.getRating(),
+                    req.getRating()
+            );
         }
 
         reviewMapper.updateReview(reviewId, req.getRating(), req.getContent());
@@ -68,6 +78,8 @@ public class ReviewService {
         }
 
         reviewMapper.softDeleteReview(reviewId);
+
+        reviewMapper.decreaseRating(review.getSpotId(), review.getRating());
     }
 
     private void validate(Integer rating, String content) {
