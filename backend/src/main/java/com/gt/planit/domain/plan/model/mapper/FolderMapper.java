@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface FolderMapper {
     void insert(FolderDto folderDto);
 
-    Optional<FolderDto> findById(@Param("id") Long id);
+    Optional<FolderDto> findById(@Param("id") Long id, @Param("userId") Long userId);
 
     List<FolderDto> findByUserId(@Param("userId") Long userId);
 

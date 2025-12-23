@@ -46,7 +46,7 @@ public class FolderServiceImpl implements FolderService {
         log.info("Group owner registered: groupId={}, userId={}", folderDto.getId(), userId);
 
 
-        return FolderResDto.from(folderMapper.findById(folderDto.getId()).orElseThrow());
+        return FolderResDto.from(folderMapper.findById(folderDto.getId(), userId).orElseThrow());
     }
 
     @Override
@@ -61,8 +61,8 @@ public class FolderServiceImpl implements FolderService {
 
     @Override
     @Transactional(readOnly = true)
-    public FolderResDto getFolderById(Long id) {
-        FolderDto folderDto = folderMapper.findById(id)
+    public FolderResDto getFolderById(Long id, Long userId) {
+        FolderDto folderDto = folderMapper.findById(id, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Folder not found: " + id));
         return FolderResDto.from(folderDto);
     }
@@ -70,7 +70,7 @@ public class FolderServiceImpl implements FolderService {
     @Override
     @Transactional
     public FolderResDto updateFolder(Long id, Long userId, String name, String thumbnailPath) {
-        FolderDto folderDto = folderMapper.findById(id)
+        FolderDto folderDto = folderMapper.findById(id, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Folder not found: " + id));
 
         // 권한 확인
@@ -88,13 +88,13 @@ public class FolderServiceImpl implements FolderService {
         folderMapper.update(updatedFolder);
         log.info("Folder updated: id={}, name={}", id, name);
 
-        return FolderResDto.from(folderMapper.findById(id).orElseThrow());
+        return FolderResDto.from(folderMapper.findById(id, userId).orElseThrow());
     }
 
     @Override
     @Transactional
     public void deleteFolder(Long id, Long userId) {
-        FolderDto folderDto = folderMapper.findById(id)
+        FolderDto folderDto = folderMapper.findById(id, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Folder not found: " + id));
 
         // 권한 확인

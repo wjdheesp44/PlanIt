@@ -8,26 +8,27 @@ const spotApi = {
    */
   getSpots: async (params = {}) => {
     try {
-      const response = await api.get(`/api/v1/spots`, {
+      const config = {
         params: {
           type: params.type || [],
           "start-date": params.startDate || undefined,
           "end-date": params.endDate || undefined,
-          weather: params.weather || undefined,
-          rating: params.rating || undefined,
+          weather: params.weather ?? undefined,
+          rating: params.rating ?? undefined,
           "likes-count": params.likesCount || undefined,
           search: params.search || undefined,
-          tag: params.tag || undefined,
-          region: params.region || undefined,
+          tag: params.tag ?? undefined,
+          region: params.region ?? undefined,
           sort: params.sort || "LATEST",
-          page: params.page !== undefined ? params.page : 1,
+          page: params.page ?? 1,
           size: params.size || 18,
         },
-        // axios는 undefined 값을 자동으로 제거함
         paramsSerializer: {
-          indexes: null, // 배열을 ?type=FESTIVAL&type=POPUP 형식으로 직렬화
+          indexes: null,
         },
-      });
+      };
+
+      const response = await api.get("/api/v1/spots", config);
       return response.data;
     } catch (error) {
       console.error("Failed to fetch spots:", error);
@@ -42,7 +43,7 @@ const spotApi = {
    */
   toggleFavorite: async (spotId) => {
     try {
-      const response = await api.post(`/api/v1/spots/${spotId}/favorite`);
+      const response = await api.post(`/api/v1/spots/${spotId}/likes`);
       return response.data;
     } catch (error) {
       console.error("Failed to toggle favorite:", error);

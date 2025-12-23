@@ -63,8 +63,11 @@ public class FolderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FolderResDto> getFolderById(@PathVariable Long id) {
-        FolderResDto folder = folderService.getFolderById(id);
+    public ResponseEntity<FolderResDto> getFolderById(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable Long id) {
+        Long userId = user.getId();
+        FolderResDto folder = folderService.getFolderById(id, userId);
         return ResponseEntity.ok(folder);
     }
 

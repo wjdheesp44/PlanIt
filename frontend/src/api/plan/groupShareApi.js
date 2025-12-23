@@ -7,12 +7,20 @@ export const groupShareApi = {
     return response.data;
   },
 
+  searchUsersByNickname: async (nickname) => {
+    const response = await api.get("/api/v1/users", {
+      params: { nickname },
+    });
+    return response.data;
+  },
+
   // 유저를 그룹에 추가
   addUserToGroup: async (groupId, userId, role) => {
     const response = await api.post(`/api/v1/groups/${groupId}/share/users`, {
       userId,
       role, // 'EDITOR' 또는 'VIEWER'
     });
+    console.log("userid: ", userId);
     return response.data;
   },
 

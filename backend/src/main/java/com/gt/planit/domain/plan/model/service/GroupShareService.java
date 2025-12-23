@@ -58,9 +58,9 @@ public class GroupShareService {
     public GroupUserResDto addUserToGroup(Long groupId, GroupShareReqDto request, Long currentUserId) {
         validateOwnerPermission(groupId, currentUserId);
 
-        folderMapper.findById(groupId)
+        folderMapper.findById(groupId, currentUserId)
                 .orElseThrow(() -> new IllegalArgumentException("그룹을 찾을 수 없습니다"));
-
+        log.info("???: {} {}", request.getUserId(), request.getRole());
         var user = userMapper.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
 
@@ -119,7 +119,7 @@ public class GroupShareService {
     public GroupShareLinkResDto createShareLink(Long groupId, Long currentUserId) {
         validateOwnerPermission(groupId, currentUserId);
 
-        folderMapper.findById(groupId)
+        folderMapper.findById(groupId, currentUserId)
                 .orElseThrow(() -> new IllegalArgumentException("그룹을 찾을 수 없습니다"));
 
         return groupShareLinkMapper.findActiveByGroupId(groupId)
