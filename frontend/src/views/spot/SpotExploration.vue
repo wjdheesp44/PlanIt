@@ -55,16 +55,41 @@
 
         <!-- Pagination -->
         <div v-if="!loading && spots.length > 0" class="pagination">
+          <!-- 맨 처음으로 -->
+          <button class="page-btn" :disabled="currentPage === 1" @click="changePage(1)">
+            &laquo;
+          </button>
+
+          <!-- 이전 -->
           <button
             class="page-btn"
             :disabled="currentPage === 1"
             @click="changePage(currentPage - 1)"
           >
-            이전
+            &lt;
           </button>
-          <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+
+          <!-- 페이지 번호들 -->
+          <div class="page-numbers">
+            <button
+              v-for="page in pageNumbers"
+              :key="page"
+              class="page-num-btn"
+              :class="{ active: page === currentPage }"
+              @click="changePage(page)"
+            >
+              {{ page }}
+            </button>
+          </div>
+
+          <!-- 다음 -->
           <button class="page-btn" :disabled="isLastPage" @click="changePage(currentPage + 1)">
-            다음
+            &gt;
+          </button>
+
+          <!-- 맨 끝으로 -->
+          <button class="page-btn" :disabled="isLastPage" @click="changePage(totalPages)">
+            &raquo;
           </button>
         </div>
       </main>
@@ -73,7 +98,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 import FilterSidebar from "@/components/spot/FilterSidebar.vue";
 import SpotCard from "@/components/SpotCard.vue";
@@ -92,6 +117,25 @@ const pageSize = ref(18);
 const totalCount = ref(0);
 const totalPages = ref(0);
 const isLastPage = ref(false);
+const pageRange = 5; // 한 번에 보여줄 페이지 번호 개수
+
+const startPage = computed(() => {
+  const start = Math.floor((currentPage.value - 1) / pageRange) * pageRange + 1;
+  return start;
+});
+
+const endPage = computed(() => {
+  const end = Math.min(startPage.value + pageRange - 1, totalPages.value);
+  return end;
+});
+
+const pageNumbers = computed(() => {
+  const pages = [];
+  for (let i = startPage.value; i <= endPage.value; i++) {
+    pages.push(i);
+  }
+  return pages;
+});
 
 // 탭 변경
 const changeTab = (tab) => {
@@ -405,39 +449,62 @@ onMounted(() => {
 /* Pagination */
 .pagination {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 3rem;
-  padding: 1rem 0;
+  align-items: center;
+  gap: 4px;
+  margin-top: 40px;
+  padding: 20px 0;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 4px;
 }
 
 .page-btn {
-  padding: 0.5rem 1.25rem;
-  background: #ffffff;
-  border: 1px solid #d4d4d4;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
+  min-width: 36px;
+  height: 36px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 16px;
+  color: #333;
 }
 
 .page-btn:hover:not(:disabled) {
   background: #f5f5f5;
-  border-color: #a3a3a3;
+  border-color: #999;
 }
 
 .page-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
-.page-info {
+.page-num-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
   font-size: 14px;
-  color: #52525b;
-  min-width: 80px;
-  text-align: center;
+  color: #333;
+}
+
+.page-num-btn:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+.page-num-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+  font-weight: 600;
 }
 
 /* Responsive Design */
