@@ -57,7 +57,7 @@
             stroke-linejoin="round"
           />
         </svg>
-        도움이 돼요 {{ review.helpfulCount }}
+        도움이 돼요 <span v-if="review.helpfulCount > 0">{{ review.helpfulCount }}</span>
       </button>
     </div>
   </div>

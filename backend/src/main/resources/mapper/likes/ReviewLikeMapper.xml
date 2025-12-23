@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gt.planit.domain.likes.model.mapper.ReviewLikeMapper">
+    <select id="findByUserAndReview" resultType="ReviewLike">
+        SELECT * FROM reviews_likes
+        WHERE user_id = #{userId} AND review_id = #{reviewId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO reviews_likes (user_id, review_id)
+        VALUES (#{userId}, #{reviewId})
+    </insert>
+
+    <update id="updateIsDeleted">
+        UPDATE reviews_likes
+        SET is_deleted = #{isDeleted}
+        WHERE id = #{id}
+    </update>
+
+    <select id="countByReview" resultType="int">
+        SELECT COUNT(*)
+        FROM reviews_likes
+        WHERE review_id = #{reviewId}
+        AND is_deleted = 'F'
+    </select>
+</mapper>

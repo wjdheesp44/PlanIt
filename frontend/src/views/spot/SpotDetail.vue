@@ -176,6 +176,7 @@ import ReviewCard from "@/components/spot/ReviewCard.vue";
 import spotApi from "@/api/spot/spotApi";
 import reviewApi from "@/api/review/reviewApi";
 import LikeButton from "@/components/likes/LikeButton.vue";
+import { toggleReviewHelpful } from "@/api/likes/likesApi";
 
 const route = useRoute();
 const router = useRouter();
@@ -416,10 +417,17 @@ const goToSpot = (relatedSpot) => {
 };
 
 // 도움이 돼요 처리
-const handleHelpful = (reviewId) => {
-  const review = reviews.value.find((r) => r.id === reviewId);
-  if (review) {
-    review.helpfulCount += 1;
+const handleHelpful = async (reviewId) => {
+  try {
+    const res = await toggleReviewHelpful(reviewId);
+
+    const target = reviews.value.find(r => r.id === reviewId);
+    if (target) {
+      target.helpfulCount = res.data.helpfulCount;
+    }
+  } catch (e) {
+    console.error(e);
+    alert("로그인 후에 이용해주세요");
   }
 };
 

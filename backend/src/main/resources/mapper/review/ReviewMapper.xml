@@ -8,19 +8,34 @@
     <!-- 후기 목록 (삭제 안 된 것만) -->
     <select id="selectReviewsBySpotId" resultType="com.gt.planit.domain.review.model.dto.ReviewDto">
         SELECT
-        r.id,
-        r.rating,
-        r.content,
-        r.is_deleted AS isDeleted,
-        r.user_id AS userId,
-        u.nickname AS nickname,
-        r.spot_id AS spotId,
-        DATE_FORMAT(r.created_at, '%Y-%m-%d') AS createdAt,
-        r.modified_at AS modifiedAt
+            r.id,
+            r.rating,
+            r.content,
+            r.is_deleted AS isDeleted,
+            r.user_id AS userId,
+            u.nickname AS nickname,
+            r.spot_id AS spotId,
+            DATE_FORMAT(r.created_at, '%Y-%m-%d') AS createdAt,
+            r.modified_at AS modifiedAt,
+            COUNT(rl.id) AS helpful_count
         FROM reviews r
-        JOIN users u ON r.user_id = u.id
+                 JOIN users u
+                      ON r.user_id = u.id
+                 LEFT JOIN reviews_likes rl
+                           ON r.id = rl.review_id
+                               AND rl.is_deleted = 'F'
         WHERE r.spot_id = #{spotId}
-        AND r.is_deleted = 'F'
+          AND r.is_deleted = 'F'
+        GROUP BY
+            r.id,
+            r.rating,
+            r.content,
+            r.is_deleted,
+            r.user_id,
+            u.nickname,
+            r.spot_id,
+            r.created_at,
+            r.modified_at
         ORDER BY r.created_at DESC
     </select>
 
