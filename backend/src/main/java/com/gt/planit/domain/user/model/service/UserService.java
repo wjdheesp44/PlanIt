@@ -59,15 +59,8 @@ public class UserService {
     }
 
     public List<SearchUserResDto> getByNickname(String nickname) {
-        UserReqDto user = userMapper.findByNickname(nickname);
-
-        SearchUserResDto dto = new SearchUserResDto(
-                user.getId(),
-                user.getNickname(),
-                user.getEmail()
-        );
-
-        return List.of(dto);
+        List<SearchUserResDto> dtos = userMapper.searchUsers(nickname);
+        return dtos;
     }
 
     public boolean updateMyInfo(UserReqDto dto) {
