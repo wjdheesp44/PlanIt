@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class MyReviewResDto {
     private Long id;
     private String title;
-    private String category;
+    private String badge;
     private String date;
     private String location;
     private int rating;

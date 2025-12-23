@@ -41,7 +41,11 @@
         select
             r.id as review_id,
             s.title,
-            s.content_type as category,
+            CASE s.content_type
+                WHEN 'ATTRACTION' THEN '관광지'
+                WHEN 'FESTIVAL'  THEN '축제'
+                WHEN 'POPUP'     THEN '팝업'
+                END AS badge,
             date(r.created_at) as date,
             s.doro_addr as location,
             r.rating,
@@ -100,6 +104,44 @@
         SET is_deleted = 'T'
         WHERE id = #{id}
         AND is_deleted = 'F'
+    </update>
+
+    <update id="increaseRating">
+        UPDATE spots
+        SET
+            avg_rating =
+                ROUND(
+                        ((IFNULL(avg_rating, 0) * IFNULL(rating_count, 0)) + #{rating})
+                            / (IFNULL(rating_count, 0) + 1),
+                        1
+                ),
+            rating_count = IFNULL(rating_count, 0) + 1
+        WHERE id = #{spotId}
+    </update>
+
+    <update id="decreaseRating">
+        UPDATE spots
+        SET
+            rating_count = rating_count - 1,
+            avg_rating = CASE
+                             WHEN rating_count - 1 = 0 THEN NULL
+                             ELSE ROUND(
+                                     ((avg_rating * rating_count) - #{rating})
+                                         / (rating_count - 1),
+                                     1
+                                  )
+                END
+        WHERE id = #{spotId}
+    </update>
+
+    <update id="updateRating">
+        UPDATE spots
+        SET
+            avg_rating = ROUND(
+                    avg_rating + ((#{newRating} - #{oldRating}) / rating_count),
+                    1
+                         )
+        WHERE id = #{spotId}
     </update>
 
 </mapper>

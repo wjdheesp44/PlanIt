@@ -30,4 +30,15 @@ public interface ReviewMapper {
     );
 
     int softDeleteReview(@Param("id") Long id);
+
+    void increaseRating(@Param("spotId") Long spotId,
+                        @Param("rating") int rating);
+
+    void decreaseRating(@Param("spotId") Long spotId,
+                        @Param("rating") int rating);
+
+    void updateRating(@Param("spotId") Long spotId,
+                      @Param("oldRating") int oldRating,
+                      @Param("newRating") int newRating);
+
 }

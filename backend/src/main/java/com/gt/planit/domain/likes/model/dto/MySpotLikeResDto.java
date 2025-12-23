@@ -19,8 +19,8 @@ public class MySpotLikeResDto {
     /** 스팟 제목 */
     private String title;
 
-    /** 콘텐츠 타입 (ATTRACTION / FESTIVAL / POPUP) */
-    private String contentType;
+    /** 콘텐츠 타입 */
+    private String badge;
 
     /** 대표 이미지 */
     private String image1;

@@ -18,7 +18,11 @@
         SELECT
         s.id,
         s.title,
-        s.content_type,
+        CASE s.content_type
+        WHEN 'ATTRACTION' THEN '관광지'
+        WHEN 'FESTIVAL'  THEN '축제'
+        WHEN 'POPUP'     THEN '팝업'
+        END AS badge,
         s.image1,
         s.avg_rating,
         s.rating_count,

@@ -56,7 +56,7 @@ onMounted(async () => {
       id: item.id,
       name: item.title,                 // 백엔드 title → 프론트 name
       image: item.image1,
-      badge: item.contentType,           // ATTRACTION / FESTIVAL / POPUP
+      badge: item.badge,
       rating: item.avgRating,
       ratingCount: item.ratingCount,
       time:
