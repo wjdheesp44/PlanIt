@@ -8,11 +8,7 @@
     <main class="main-content" :class="{ 'is-loading': isLoading }">
       <!-- 메인 이미지 -->
       <div class="main-image-section">
-        <img
-          :src="spot.image1 || 'https://placehold.co/1020x1389'"
-          :alt="spot.title"
-          class="main-image"
-        />
+        <img v-if="spot.image1" :src="spot.image1" :alt="spot.title" class="main-image" />
       </div>
 
       <!-- 스팟 정보 -->
