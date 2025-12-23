@@ -21,10 +21,7 @@
           <div class="title-section">
             <h1 class="spot-title">{{ spot.title }}</h1>
             <div class="like-wrapper">
-              <LikeButton
-                :spotId="spot.id"
-                :initialLiked="spot.isFavorite"
-              />
+              <LikeButton :spotId="spot.id" :initialLiked="spot.isFavorite" />
             </div>
           </div>
 
@@ -134,37 +131,33 @@
     </main>
 
     <!-- 후기 작성 모달 -->
-      <div v-if="isReviewModalOpen" class="modal-overlay" @click.self="closeReviewModal">
-        <div class="modal">
-          <h3 class="modal-title">후기 작성</h3>
+    <div v-if="isReviewModalOpen" class="modal-overlay" @click.self="closeReviewModal">
+      <div class="modal">
+        <h3 class="modal-title">후기 작성</h3>
 
-          <!-- 별점 -->
-          <div class="rating-input">
-            <span
-              v-for="n in 5"
-              :key="n"
-              class="star"
-              :class="{ active: n <= newReview.rating }"
-              @click="newReview.rating = n"
-            >
-              ★
-            </span>
-          </div>
+        <!-- 별점 -->
+        <div class="rating-input">
+          <span
+            v-for="n in 5"
+            :key="n"
+            class="star"
+            :class="{ active: n <= newReview.rating }"
+            @click="newReview.rating = n"
+          >
+            ★
+          </span>
+        </div>
 
-          <!-- 후기 내용 -->
-          <textarea
-            v-model="newReview.content"
-            placeholder="후기를 작성해 주세요"
-            rows="5"
-          />
+        <!-- 후기 내용 -->
+        <textarea v-model="newReview.content" placeholder="후기를 작성해 주세요" rows="5" />
 
-          <!-- 버튼 -->
-          <div class="modal-actions">
-            <button class="cancel-btn" @click="closeReviewModal">취소</button>
-            <button class="submit-btn" @click="submitReview">등록</button>
-          </div>
+        <!-- 버튼 -->
+        <div class="modal-actions">
+          <button class="cancel-btn" @click="closeReviewModal">취소</button>
+          <button class="submit-btn" @click="submitReview">등록</button>
         </div>
       </div>
+    </div>
   </div>
 </template>
 
@@ -453,7 +446,7 @@ const isReviewModalOpen = ref(false);
 
 const newReview = ref({
   rating: 5,
-  content: ""
+  content: "",
 });
 
 const openReviewModal = () => {
@@ -811,7 +804,6 @@ const loadReviews = async () => {
   padding: 0.5rem 1rem;
   border-radius: 6px;
 }
-
 
 /* 로딩 오버레이 */
 .loading-overlay {

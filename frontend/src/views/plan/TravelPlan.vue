@@ -466,7 +466,7 @@
                   <button
                     class="action-button favorite"
                     :class="{ active: spot.isFavorite }"
-                    @click="toggleFavorite(spot)"
+                    @click.stop="toggleFavorite(spot)"
                   >
                     <svg
                       width="20"
@@ -649,6 +649,7 @@ import { addSpotToGroup, getGroupSpots, updatePlan, deletePlan } from "@/api/pla
 import ShareModal from "@/components/plan/ShareModal.vue";
 import { groupShareApi } from "@/api/plan/groupShareApi";
 import { commentApi } from "@/api/plan/commentApi";
+import spotApi from "@/api/spot/spotApi";
 
 const router = useRouter();
 const route = useRoute();
@@ -913,7 +914,7 @@ const loadComments = async () => {
   }
 };
 
-// ✅ 시간 포맷팅 함수
+// 시간 포맷팅 함수
 const formatTime = (createdAt) => {
   const now = new Date();
   const commentDate = new Date(createdAt);
@@ -934,7 +935,7 @@ const formatTime = (createdAt) => {
   });
 };
 
-// ✅ 댓글 추가 (API 연동)
+// 댓글 추가
 const addComment = async () => {
   if (!newComment.value.trim()) return;
 
@@ -952,7 +953,7 @@ const addComment = async () => {
   }
 };
 
-// ✅ 댓글 삭제 함수 추가
+// 댓글 삭제 함수 추가
 const deleteComment = async (commentId) => {
   if (!confirm("댓글을 삭제하시겠습니까?")) return;
 
@@ -1098,10 +1099,17 @@ const saveMemo = async () => {
 };
 
 // 좋아요 토글 (추후 API 연동)
-const toggleFavorite = (spot) => {
-  spot.isFavorite = !spot.isFavorite;
-  // TODO: 좋아요 API 호출
-  showToast(spot.isFavorite ? "좋아요에 추가되었습니다." : "좋아요가 취소되었습니다.", "success");
+const toggleFavorite = async (spot) => {
+  try {
+    await spotApi.toggleFavorite(spot.spotId);
+    spot.isFavorite = !spot.isFavorite;
+    showToast(spot.isFavorite ? "좋아요에 추가되었습니다." : "좋아요가 취소되었습니다.", "success");
+  } catch (error) {
+    console.error("Failed to toggle related spot favorite:", error);
+    if (error.response?.status === 401) {
+      router.push("/login");
+    }
+  }
 };
 
 // 스팟 삭제

@@ -43,7 +43,7 @@ const spotApi = {
    */
   toggleFavorite: async (spotId) => {
     try {
-      const response = await api.post(`/api/v1/spots/${spotId}/favorite`);
+      const response = await api.post(`/api/v1/spots/${spotId}/likes`);
       return response.data;
     } catch (error) {
       console.error("Failed to toggle favorite:", error);
