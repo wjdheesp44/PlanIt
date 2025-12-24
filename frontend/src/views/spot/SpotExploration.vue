@@ -182,11 +182,13 @@ const buildApiParams = () => {
   // }
   const weathers = [];
   if (filters.value.weather?.clear) weathers.push("CLEAR");
+  if (filters.value.weather?.partlyCloudy) weathers.push("PARTLY_CLOUDY");
   if (filters.value.weather?.cloudy) weathers.push("CLOUDY");
   if (filters.value.weather?.rain) weathers.push("RAIN");
   if (filters.value.weather?.snow) weathers.push("SNOW");
+  if (filters.value.weather?.rainSnow) weathers.push("RAIN_SNOW");
   if (weathers.length > 0) {
-    params.weathers = weathers; // ⭐ weather → weathers
+    params.weather = weathers; // ⭐ weather → weathers
   }
 
   // 별점

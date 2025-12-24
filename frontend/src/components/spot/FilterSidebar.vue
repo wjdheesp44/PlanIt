@@ -58,6 +58,19 @@
         >
           <input
             type="checkbox"
+            v-model="filters.weather.partlyCloudy"
+            @change="handleFilterChange"
+            :disabled="!isWeatherFilterAvailable"
+          />
+          <span>구름많음</span>
+        </label>
+        <label
+          class="checkbox-item"
+          :class="{ disabled: !isWeatherFilterAvailable }"
+          :title="!isWeatherFilterAvailable ? '여행 기간을 먼저 선택해주세요 (오늘 ~ 9일 후)' : ''"
+        >
+          <input
+            type="checkbox"
             v-model="filters.weather.cloudy"
             @change="handleFilterChange"
             :disabled="!isWeatherFilterAvailable"
@@ -89,6 +102,19 @@
             :disabled="!isWeatherFilterAvailable"
           />
           <span>눈</span>
+        </label>
+        <label
+          class="checkbox-item"
+          :class="{ disabled: !isWeatherFilterAvailable }"
+          :title="!isWeatherFilterAvailable ? '여행 기간을 먼저 선택해주세요 (오늘 ~ 9일 후)' : ''"
+        >
+          <input
+            type="checkbox"
+            v-model="filters.weather.rainSnow"
+            @change="handleFilterChange"
+            :disabled="!isWeatherFilterAvailable"
+          />
+          <span>비/눈</span>
         </label>
       </div>
       <p v-if="!isWeatherFilterAvailable" class="filter-hint">
@@ -283,9 +309,11 @@ const filters = reactive({
   dateTo: null,
   weather: {
     clear: false, // 맑음
+    partlyCloudy: false,
     cloudy: false, // 흐림
     rain: false, // 비
     snow: false, // 눈
+    rainSnow: false
   },
   selectedRegions: [], // 선택된 지역들
   stars: {
@@ -334,9 +362,11 @@ const handleDateRangeChange = ({ startDate, endDate }) => {
   // 날씨 필터가 비활성화되면 선택 초기화
   if (!isWeatherFilterAvailable.value) {
     filters.weather.clear = false;
+    filters.weather.partlyCloudy = false;
     filters.weather.cloudy = false;
     filters.weather.rain = false;
     filters.weather.snow = false;
+    filters.weather.rainSnow = false;
   }
 
   handleFilterChange();

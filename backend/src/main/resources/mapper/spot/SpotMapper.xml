@@ -68,23 +68,43 @@
             AND (s.start_time &gt;= #{cond.startDate} OR s.start_time IS NULL)
         </if>
         <if test="cond.endDate != null">
-            AND (s.end_time &lt;= DATE_ADD(#{cond.endDate}, INTERVAL 1 DAY) OR s.end_time IS NULL)
+            AND (s.end_time &lt;= #{cond.endDate} OR s.end_time IS NULL)
         </if>
 
         <if test="cond.weathers != null and cond.weathers.size() > 0 and cond.startDate != null and cond.endDate != null">
-            AND EXISTS (
+            AND NOT EXISTS (
             SELECT 1
-            FROM weather_forecasts wf
-            WHERE wf.gugun_id = s.si_gun_gu_id
-            AND wf.forecast_date BETWEEN #{cond.startDate} AND #{cond.endDate}
-            AND wf.weather_condition IN
+            FROM (
+            SELECT
+            d.forecast_date,
+            COALESCE(w1200.weather_condition, w1400.weather_condition) AS rep_condition
+            FROM (
+            SELECT DISTINCT forecast_date
+            FROM weather_forecasts
+            WHERE gugun_id = s.si_gun_gu_id
+            AND forecast_type = 'SHORT_TERM'
+            AND forecast_date BETWEEN #{cond.startDate} AND #{cond.endDate}
+            ) d
+            LEFT JOIN weather_forecasts w1200
+            ON w1200.gugun_id = s.si_gun_gu_id
+            AND w1200.forecast_type = 'SHORT_TERM'
+            AND w1200.forecast_date = d.forecast_date
+            AND w1200.forecast_time = '1200'
+            LEFT JOIN weather_forecasts w1400
+            ON w1400.gugun_id = s.si_gun_gu_id
+            AND w1400.forecast_type = 'SHORT_TERM'
+            AND w1400.forecast_date = d.forecast_date
+            AND w1400.forecast_time = '1400'
+            ) rep
+            WHERE rep.rep_condition IS NULL
+            OR rep.rep_condition NOT IN
             <foreach collection="cond.weathers" item="w" open="(" separator="," close=")">
                 #{w}
             </foreach>
-            GROUP BY wf.gugun_id
-            HAVING COUNT(DISTINCT wf.forecast_date) = DATEDIFF(#{cond.endDate}, #{cond.startDate}) + 1
             )
         </if>
+
+
 
         <!-- 평점 다중 선택 -->
         <if test="cond.ratings != null and cond.ratings.size() &gt; 0">
