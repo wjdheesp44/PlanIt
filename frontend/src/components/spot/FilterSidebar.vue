@@ -5,6 +5,29 @@
       <h3 class="filter-title">총 {{ totalCount }}건 검색됨</h3>
     </div>
 
+    <!-- 검색 및 태그 -->
+    <div class="filter-section">
+      <h4 class="filter-label">검색</h4>
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="#태그 또는 검색어를 입력해주세요"
+          class="search-input"
+          v-model="searchInput"
+          @keyup.enter="addTag"
+        />
+      </div>
+
+      <!-- 태그 (#으로 시작) -->
+      <div class="tags" v-if="filters.tags.length > 0">
+        <div class="tag-label">태그</div>
+        <span class="tag tag-type" v-for="(tag, index) in filters.tags" :key="`tag-${index}`">
+          {{ tag }}
+          <button class="tag-close" @click="removeTag(index)">×</button>
+        </span>
+      </div>
+    </div>
+
     <!-- 여행 기간 -->
     <!-- <div class="filter-section">
       <h4 class="filter-label">여행 기간</h4>
@@ -209,7 +232,7 @@
     <div class="filter-section">
       <h4 class="filter-label">정렬</h4>
       <div class="radio-group">
-        <label class="radio-item">
+        <!-- <label class="radio-item">
           <input
             type="radio"
             name="sort"
@@ -218,7 +241,7 @@
             @change="handleFilterChange"
           />
           <span>인기순</span>
-        </label>
+        </label> -->
         <label class="radio-item">
           <input
             type="radio"
@@ -251,38 +274,6 @@
         </label>
       </div>
     </div>
-
-    <!-- 검색 및 태그 -->
-    <div class="filter-section">
-      <h4 class="filter-label">검색</h4>
-      <div class="search-box">
-        <input
-          type="text"
-          placeholder="#태그 또는 검색어를 입력해주세요"
-          class="search-input"
-          v-model="searchInput"
-          @keyup.enter="addTag"
-        />
-      </div>
-
-      <!-- 태그 (#으로 시작) -->
-      <div class="tags" v-if="filters.tags.length > 0">
-        <div class="tag-label">태그</div>
-        <span class="tag tag-type" v-for="(tag, index) in filters.tags" :key="`tag-${index}`">
-          {{ tag }}
-          <button class="tag-close" @click="removeTag(index)">×</button>
-        </span>
-      </div>
-
-      <!-- 검색어 (일반 텍스트, 하나만) -->
-      <div class="tags" v-if="filters.searchTerm">
-        <div class="tag-label">검색어</div>
-        <span class="tag search-type">
-          {{ filters.searchTerm }}
-          <button class="tag-close" @click="clearSearchTerm">×</button>
-        </span>
-      </div>
-    </div>
   </aside>
 </template>
 
@@ -313,7 +304,7 @@ const filters = reactive({
     cloudy: false, // 흐림
     rain: false, // 비
     snow: false, // 눈
-    rainSnow: false
+    rainSnow: false,
   },
   selectedRegions: [], // 선택된 지역들
   stars: {
@@ -371,7 +362,6 @@ const handleDateRangeChange = ({ startDate, endDate }) => {
 
   handleFilterChange();
 };
-
 
 // 현재 선택된 시도의 구군 목록
 const currentGuguns = computed(() => {

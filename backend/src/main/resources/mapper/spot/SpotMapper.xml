@@ -71,13 +71,14 @@
             AND (s.end_time &lt;= #{cond.endDate} OR s.end_time IS NULL)
         </if>
 
-        <if test="cond.weathers != null and cond.weathers.size() > 0 and cond.startDate != null and cond.endDate != null">
+        <if test="cond.weathers != null and cond.weathers.size() > 0
+       and cond.startDate != null and cond.endDate != null">
             AND NOT EXISTS (
             SELECT 1
             FROM (
             SELECT
             d.forecast_date,
-            COALESCE(w1200.weather_condition, w1400.weather_condition) AS rep_condition
+            COALESCE(w1200.weather_condition, w1800.weather_condition) AS rep_condition
             FROM (
             SELECT DISTINCT forecast_date
             FROM weather_forecasts
@@ -90,11 +91,11 @@
             AND w1200.forecast_type = 'SHORT_TERM'
             AND w1200.forecast_date = d.forecast_date
             AND w1200.forecast_time = '1200'
-            LEFT JOIN weather_forecasts w1400
-            ON w1400.gugun_id = s.si_gun_gu_id
-            AND w1400.forecast_type = 'SHORT_TERM'
-            AND w1400.forecast_date = d.forecast_date
-            AND w1400.forecast_time = '1400'
+            LEFT JOIN weather_forecasts w1800
+            ON w1800.gugun_id = s.si_gun_gu_id
+            AND w1800.forecast_type = 'SHORT_TERM'
+            AND w1800.forecast_date = d.forecast_date
+            AND w1800.forecast_time = '1800'
             ) rep
             WHERE rep.rep_condition IS NULL
             OR rep.rep_condition NOT IN
@@ -103,6 +104,7 @@
             </foreach>
             )
         </if>
+
 
 
 
