@@ -52,6 +52,11 @@
         </div>
       </section>
 
+      <!-- 날씨 캘린더 섹션 추가 -->
+      <section class="weather-section" v-if="spot.gugunId">
+        <WeatherCalendar :gugunId="spot.gugunId" />
+      </section>
+
       <!-- 함께 많이 본 여행지 -->
       <section class="related-spots" v-if="spot.hotSpots && spot.hotSpots.length > 0">
         <h2 class="section-title">함께 많이 본 여행지</h2>
@@ -162,6 +167,7 @@ import { ref, watch, onMounted, onUnmounted, nextTick, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SpotCard from "@/components/SpotCard.vue";
 import ReviewCard from "@/components/spot/ReviewCard.vue";
+import WeatherCalendar from "@/components/weather/WeatherCalendar.vue";
 import spotApi from "@/api/spot/spotApi";
 import reviewApi from "@/api/review/reviewApi";
 import LikeButton from "@/components/likes/LikeButton.vue";
@@ -196,6 +202,7 @@ const spot = ref({
   image4: null,
   image5: null,
   description: "",
+  gugunId: null,
   isFavorite: false,
   hotSpots: [],
 });
@@ -410,7 +417,7 @@ const handleHelpful = async (reviewId) => {
   try {
     const res = await toggleReviewHelpful(reviewId);
 
-    const target = reviews.value.find(r => r.id === reviewId);
+    const target = reviews.value.find((r) => r.id === reviewId);
     if (target) {
       target.helpfulCount = res.data.helpfulCount;
     }
@@ -845,6 +852,10 @@ const loadReviews = async () => {
 .map-image {
   width: 100%;
   height: 100%;
+}
+
+.weather-section {
+  margin-bottom: 3rem;
 }
 
 /* 카카오맵 컨트롤 숨기기 (선택사항) */

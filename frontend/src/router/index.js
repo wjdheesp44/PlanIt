@@ -42,11 +42,13 @@ const router = createRouter({
       path: "/plans",
       name: "TravelPlanner",
       component: () => import("@/views/plan/TravelPlanner.vue"),
+      meta: { requiresAuth: true },
     },
     {
       path: "/plans/:id",
       name: "TravelPlan",
       component: () => import("@/views/plan/TravelPlan.vue"),
+      meta: { requiresAuth: true },
     },
     {
       path: "/mypage",
@@ -77,7 +79,7 @@ const router = createRouter({
           path: "profile/edit",
           name: "MemberInfo",
           component: () => import("@/views/mypage/MemberInfo.vue"),
-        }
+        },
       ],
     },
   ],
@@ -86,7 +88,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const isLogin = !!localStorage.getItem("accessToken");
 
-  if (to.matched.some(record => record.meta.requiresAuth) && !isLogin) {
+  if (to.matched.some((record) => record.meta.requiresAuth) && !isLogin) {
     next("/login");
   } else {
     next();

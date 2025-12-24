@@ -19,4 +19,5 @@ public class SpotRes {
 
     @JsonProperty("isFavorite")
     private boolean favorite;
+    private Long likesCount;
 }
