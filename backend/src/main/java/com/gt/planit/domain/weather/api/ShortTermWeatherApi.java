@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -27,8 +28,9 @@ public class ShortTermWeatherApi {
         String baseDate = today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String baseTime = "0500";
 
-        String url = UriComponentsBuilder.fromHttpUrl(apiUrl)
-                .queryParam("serviceKey", serviceKey)
+        // UriComponentsBuilder에서 encode(false) 사용
+        URI uri = UriComponentsBuilder.fromHttpUrl(apiUrl)
+                .queryParam("serviceKey", serviceKey)  // 인코딩된 키 그대로 사용
                 .queryParam("pageNo", 1)
                 .queryParam("numOfRows", 1000)
                 .queryParam("dataType", "JSON")
@@ -36,10 +38,11 @@ public class ShortTermWeatherApi {
                 .queryParam("base_time", baseTime)
                 .queryParam("nx", gridX)
                 .queryParam("ny", gridY)
-                .toUriString();
+                .build(true)  // false = 인코딩 하지 않음
+                .toUri();
 
-        log.debug("단기예보 API 호출: {}", url);
+        log.debug("단기예보 API 호출: {}", uri);
 
-        return restTemplate.getForObject(url, ShortTermApiResDto.class);
+        return restTemplate.getForObject(uri, ShortTermApiResDto.class);
     }
 }

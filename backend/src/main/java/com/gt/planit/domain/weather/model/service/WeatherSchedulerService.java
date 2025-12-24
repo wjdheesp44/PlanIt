@@ -17,7 +17,7 @@ public class WeatherSchedulerService {
     private final WeatherApiService weatherApiService;
     private final WeatherMapper weatherMapper;
 
-    @Scheduled(cron = "0 0 5 * * *")
+//    @Scheduled(cron = "0 0 5 * * *")
     public void updateShortTermForecasts() {
         log.info("단기예보 갱신 시작");
 
@@ -28,7 +28,7 @@ public class WeatherSchedulerService {
                 Long gugunId = (Long) gugun.get("id");
                 Integer gridX = (Integer) gugun.get("grid_x");
                 Integer gridY = (Integer) gugun.get("grid_y");
-
+                log.info("{} {} {}", gridX, gridY, gugunId);
                 if (gridX != null && gridY != null) {
                     weatherApiService.fetchAndSaveShortTermForecast(gugunId, gridX, gridY);
                     Thread.sleep(100);
@@ -42,7 +42,7 @@ public class WeatherSchedulerService {
         }
     }
 
-    @Scheduled(cron = "0 0 6,18 * * *")
+//    @Scheduled(cron = "0 0 6,18 * * *")
     public void updateMidTermForecasts() {
         log.info("중기예보 갱신 시작");
 
@@ -63,6 +63,35 @@ public class WeatherSchedulerService {
 
         } catch (Exception e) {
             log.error("중기예보 갱신 실패", e);
+        }
+    }
+
+    public void updateShortTermForecastsTest() {
+        log.info("단기예보 테스트 시작 (1개만)");
+
+        try {
+            List<Map<String, Object>> guguns = weatherMapper.selectAllGugunsWithGrid();
+
+            if (!guguns.isEmpty()) {
+                Map<String, Object> gugun = guguns.get(0); // 첫 번째 구군만
+                Long gugunId = (Long) gugun.get("id");
+                Integer gridX = (Integer) gugun.get("grid_x");
+                Integer gridY = (Integer) gugun.get("grid_y");
+
+                log.info("테스트 대상: gugunId={}, gridX={}, gridY={}", gugunId, gridX, gridY);
+
+                if (gridX != null && gridY != null) {
+                    weatherApiService.fetchAndSaveShortTermForecast(gugunId, gridX, gridY);
+                    log.info("단기예보 테스트 완료");
+                } else {
+                    log.warn("격자 좌표가 없습니다");
+                }
+            } else {
+                log.warn("구군 데이터가 없습니다");
+            }
+
+        } catch (Exception e) {
+            log.error("단기예보 테스트 실패", e);
         }
     }
 }

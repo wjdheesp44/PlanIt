@@ -174,11 +174,19 @@ const buildApiParams = () => {
   }
 
   // 날씨
-  const weatherConditions = [];
-  if (filters.value.weather?.clear) weatherConditions.push("맑음");
-  if (filters.value.weather?.goodAir) weatherConditions.push("좋음");
-  if (weatherConditions.length > 0) {
-    params.weather = weatherConditions;
+  // const weatherConditions = [];
+  // if (filters.value.weather?.clear) weatherConditions.push("맑음");
+  // if (filters.value.weather?.goodAir) weatherConditions.push("좋음");
+  // if (weatherConditions.length > 0) {
+  //   params.weather = weatherConditions;
+  // }
+  const weathers = [];
+  if (filters.value.weather?.clear) weathers.push("CLEAR");
+  if (filters.value.weather?.cloudy) weathers.push("CLOUDY");
+  if (filters.value.weather?.rain) weathers.push("RAIN");
+  if (filters.value.weather?.snow) weathers.push("SNOW");
+  if (weathers.length > 0) {
+    params.weathers = weathers; // ⭐ weather → weathers
   }
 
   // 별점

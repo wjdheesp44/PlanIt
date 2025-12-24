@@ -29,6 +29,7 @@ const spotApi = {
       };
 
       const response = await api.get("/api/v1/spots", config);
+      console.log(config);
       return response.data;
     } catch (error) {
       console.error("Failed to fetch spots:", error);

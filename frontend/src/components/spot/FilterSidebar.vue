@@ -6,7 +6,7 @@
     </div>
 
     <!-- 여행 기간 -->
-    <div class="filter-section">
+    <!-- <div class="filter-section">
       <h4 class="filter-label">여행 기간</h4>
       <div class="date-inputs">
         <input
@@ -23,21 +23,77 @@
           @change="handleFilterChange"
         />
       </div>
+    </div> -->
+    <!-- 여행 기간 -->
+    <div class="filter-section">
+      <h4 class="filter-label">여행 기간</h4>
+      <DateRangePicker
+        v-model:startDate="filters.dateFrom"
+        v-model:endDate="filters.dateTo"
+        @change="handleDateRangeChange"
+      />
     </div>
 
     <!-- 날씨 -->
     <div class="filter-section">
       <h4 class="filter-label">날씨</h4>
       <div class="checkbox-group">
-        <label class="checkbox-item">
-          <input type="checkbox" v-model="filters.weather.clear" @change="handleFilterChange" />
-          <span>맑음 or 흐림</span>
+        <label
+          class="checkbox-item"
+          :class="{ disabled: !isWeatherFilterAvailable }"
+          :title="!isWeatherFilterAvailable ? '여행 기간을 먼저 선택해주세요 (오늘 ~ 9일 후)' : ''"
+        >
+          <input
+            type="checkbox"
+            v-model="filters.weather.clear"
+            @change="handleFilterChange"
+            :disabled="!isWeatherFilterAvailable"
+          />
+          <span>맑음</span>
         </label>
-        <label class="checkbox-item">
-          <input type="checkbox" v-model="filters.weather.goodAir" @change="handleFilterChange" />
-          <span>미세먼지 좋음</span>
+        <label
+          class="checkbox-item"
+          :class="{ disabled: !isWeatherFilterAvailable }"
+          :title="!isWeatherFilterAvailable ? '여행 기간을 먼저 선택해주세요 (오늘 ~ 9일 후)' : ''"
+        >
+          <input
+            type="checkbox"
+            v-model="filters.weather.cloudy"
+            @change="handleFilterChange"
+            :disabled="!isWeatherFilterAvailable"
+          />
+          <span>흐림</span>
+        </label>
+        <label
+          class="checkbox-item"
+          :class="{ disabled: !isWeatherFilterAvailable }"
+          :title="!isWeatherFilterAvailable ? '여행 기간을 먼저 선택해주세요 (오늘 ~ 9일 후)' : ''"
+        >
+          <input
+            type="checkbox"
+            v-model="filters.weather.rain"
+            @change="handleFilterChange"
+            :disabled="!isWeatherFilterAvailable"
+          />
+          <span>비</span>
+        </label>
+        <label
+          class="checkbox-item"
+          :class="{ disabled: !isWeatherFilterAvailable }"
+          :title="!isWeatherFilterAvailable ? '여행 기간을 먼저 선택해주세요 (오늘 ~ 9일 후)' : ''"
+        >
+          <input
+            type="checkbox"
+            v-model="filters.weather.snow"
+            @change="handleFilterChange"
+            :disabled="!isWeatherFilterAvailable"
+          />
+          <span>눈</span>
         </label>
       </div>
+      <p v-if="!isWeatherFilterAvailable" class="filter-hint">
+        * 날씨 필터는 오늘부터 9일 이내의 여행 기간에만 사용 가능합니다
+      </p>
     </div>
 
     <!-- 지역 -->
@@ -206,6 +262,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue";
+import DateRangePicker from "@/components/spot/DateRangePicker.vue";
 
 const props = defineProps({
   totalCount: {
@@ -222,11 +279,13 @@ const selectedSido = ref("");
 const selectedGugun = ref("");
 
 const filters = reactive({
-  dateFrom: "",
-  dateTo: "",
+  dateFrom: null,
+  dateTo: null,
   weather: {
-    clear: true,
-    goodAir: true,
+    clear: false, // 맑음
+    cloudy: false, // 흐림
+    rain: false, // 비
+    snow: false, // 눈
   },
   selectedRegions: [], // 선택된 지역들
   stars: {
@@ -241,6 +300,48 @@ const filters = reactive({
   tags: [], // 태그 (#으로 시작)
   searchTerm: "", // 일반 검색어 (하나만)
 });
+
+// 날씨 필터 사용 가능 여부 계산
+const isWeatherFilterAvailable = computed(() => {
+  if (!filters.dateFrom || !filters.dateTo) {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const nineDaysLater = new Date();
+  nineDaysLater.setDate(today.getDate() + 9);
+  nineDaysLater.setHours(23, 59, 59, 999);
+
+  const startDate = new Date(filters.dateFrom);
+  const endDate = new Date(filters.dateTo);
+
+  // 여행 시작일이 오늘 ~ 9일 후 사이에 있는지 확인
+  // 또는 여행 기간이 오늘 ~ 9일 후 범위와 겹치는지 확인
+  const isStartInRange = startDate >= today && startDate <= nineDaysLater;
+  const isEndInRange = endDate >= today && endDate <= nineDaysLater;
+  const isOverlapping = startDate <= nineDaysLater && endDate >= today;
+
+  return isStartInRange || isEndInRange || isOverlapping;
+});
+
+const handleDateRangeChange = ({ startDate, endDate }) => {
+  console.log("날짜 범위 변경:", { startDate, endDate });
+  filters.dateFrom = startDate;
+  filters.dateTo = endDate;
+
+  // 날씨 필터가 비활성화되면 선택 초기화
+  if (!isWeatherFilterAvailable.value) {
+    filters.weather.clear = false;
+    filters.weather.cloudy = false;
+    filters.weather.rain = false;
+    filters.weather.snow = false;
+  }
+
+  handleFilterChange();
+};
+
 
 // 현재 선택된 시도의 구군 목록
 const currentGuguns = computed(() => {
@@ -429,12 +530,14 @@ onMounted(() => {
   border: 1px solid #e5e5e5;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+  z-index: 101;
 }
 
 .filter-section {
   margin-bottom: 1.75rem;
   padding-bottom: 1.75rem;
   border-bottom: 1px solid #f0f0f0;
+  position: relative;
 }
 
 .filter-section:last-child {
@@ -670,6 +773,26 @@ onMounted(() => {
 
 .tag-close:hover {
   color: #ef4444;
+}
+
+.checkbox-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkbox-item.disabled input {
+  cursor: not-allowed;
+}
+
+.checkbox-item.disabled span {
+  color: #9ca3af;
+}
+
+.filter-hint {
+  margin-top: 0.5rem;
+  font-size: 11px;
+  color: #ef4444;
+  line-height: 1.4;
 }
 
 /* 반응형 */

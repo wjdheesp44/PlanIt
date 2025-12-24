@@ -84,6 +84,7 @@ public class SecurityConfig {
                 .requestMatchers("/v1/auth/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/files/**").permitAll()
+                .requestMatchers("/v1/weather/**").permitAll()
                 .anyRequest().authenticated()
         ).formLogin(form -> form.disable());
       

@@ -29,7 +29,7 @@
             )
         )                                                   AS tags,
         s.image1                                            AS image,
-        -- 로그인 안 붙인 상태이므로 항상 false
+        COALESCE(sl.likes_count, 0)                         AS likesCount,
         0                                                   AS favorite
     </sql>
 
@@ -71,7 +71,20 @@
             AND (s.end_time &lt;= DATE_ADD(#{cond.endDate}, INTERVAL 1 DAY) OR s.end_time IS NULL)
         </if>
 
-        <!-- weather는 컬럼이 없어서 DB 필터 없이 서비스 레벨 후처리 -->
+        <if test="cond.weathers != null and cond.weathers.size() > 0 and cond.startDate != null and cond.endDate != null">
+            AND EXISTS (
+            SELECT 1
+            FROM weather_forecasts wf
+            WHERE wf.gugun_id = s.si_gun_gu_id
+            AND wf.forecast_date BETWEEN #{cond.startDate} AND #{cond.endDate}
+            AND wf.weather_condition IN
+            <foreach collection="cond.weathers" item="w" open="(" separator="," close=")">
+                #{w}
+            </foreach>
+            GROUP BY wf.gugun_id
+            HAVING COUNT(DISTINCT wf.forecast_date) = DATEDIFF(#{cond.endDate}, #{cond.startDate}) + 1
+            )
+        </if>
 
         <!-- 평점 다중 선택 -->
         <if test="cond.ratings != null and cond.ratings.size() &gt; 0">
@@ -169,24 +182,25 @@
 
 
     <!-- 여기부터 스팟 상세 조회 -->
+    <!-- 여기부터 스팟 상세 조회 -->
     <select id="selectSpotDetailById" resultType="com.gt.planit.domain.spot.model.dto.SpotDetailResDto">
         SELECT
         s.id,
         s.title,
         CASE s.content_type
-            WHEN 'ATTRACTION' THEN '관광지'
-            WHEN 'FESTIVAL'  THEN '축제'
-            WHEN 'POPUP'     THEN '팝업'
-        END                                                 AS badge,
+        WHEN 'ATTRACTION' THEN '관광지'
+        WHEN 'FESTIVAL'  THEN '축제'
+        WHEN 'POPUP'     THEN '팝업'
+        END AS badge,
         s.avg_rating as avgRating,
         COALESCE(s.rating_count, 0) as reviewCount,
         CASE
-            WHEN s.start_time IS NOT NULL AND s.end_time IS NOT NULL THEN '상시운영'
-            ELSE CONCAT(
-                DATE_FORMAT(s.start_time, '%Y년 %c월 %e일'),
-                ' ~ ',
-                DATE_FORMAT(s.end_time, '%Y년 %c월 %e일')
-            )
+        WHEN s.start_time IS NOT NULL AND s.end_time IS NOT NULL THEN '상시운영'
+        ELSE CONCAT(
+        DATE_FORMAT(s.start_time, '%Y년 %c월 %e일'),
+        ' ~ ',
+        DATE_FORMAT(s.end_time, '%Y년 %c월 %e일')
+        )
         END as date,
         s.doro_addr as doroAddr,
         s.jibun_addr as jibunAddr,
@@ -200,8 +214,16 @@
         s.image4,
         s.image5,
         s.overview as description,
-        s.sido_id as sidoId
+        s.sido_id as sidoId,
+        s.si_gun_gu_id as gugunId,
+        COALESCE(sl.likes_count, 0) AS likesCount
         FROM spots s
+        LEFT JOIN (
+        SELECT spot_id, COUNT(*) AS likes_count
+        FROM spot_likes
+        WHERE is_deleted = 'F'
+        GROUP BY spot_id
+        ) sl ON sl.spot_id = s.id
         WHERE s.id = #{spotId}
         AND s.is_deleted = 'F'
     </select>

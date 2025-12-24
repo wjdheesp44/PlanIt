@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -60,14 +61,45 @@ public class GroupShareService {
 
         folderMapper.findById(groupId, currentUserId)
                 .orElseThrow(() -> new IllegalArgumentException("그룹을 찾을 수 없습니다"));
-        log.info("???: {} {}", request.getUserId(), request.getRole());
+
+        log.info("Adding user to group: groupId={}, userId={}, role={}", groupId, request.getUserId(), request.getRole());
+
         var user = userMapper.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
 
-        groupUserMapper.findByGroupIdAndUserId(groupId, request.getUserId())
-                .ifPresent(gu -> {
-                    throw new IllegalStateException("이미 그룹에 참여 중입니다");
-                });
+        // ✅ 기존 참여 기록 확인 (삭제된 것 포함) - 로그 추가
+        log.debug("Checking existing user: groupId={}, userId={}", groupId, request.getUserId());
+        Optional<GroupUser> existingUser = groupUserMapper.findByGroupIdAndUserIdIncludingDeleted(
+                groupId,
+                request.getUserId()
+        );
+        log.debug("Existing user found: {}", existingUser.isPresent());
+
+        if (existingUser.isPresent()) {
+            GroupUser existing = existingUser.get();
+            log.debug("Existing user status: id={}, isDeleted={}, role={}",
+                    existing.getId(), existing.getIsDeleted(), existing.getRole());
+
+            // 이미 활성 상태면 에러
+            if ("F".equals(existing.getIsDeleted())) {
+                log.warn("User already active in group: groupId={}, userId={}", groupId, request.getUserId());
+                throw new IllegalStateException("이미 그룹에 참여 중입니다");
+            }
+
+            // ✅ 삭제된 상태면 재활성화
+            log.info("Reactivating user: id={}, newRole={}", existing.getId(), request.getRole());
+            existing.setRole(request.getRole());
+            existing.setIsDeleted("F");
+            groupUserMapper.update(existing);
+
+            log.info("User reactivated in group: groupId={}, userId={}, role={}",
+                    groupId, request.getUserId(), request.getRole());
+
+            return GroupUserResDto.of(existing, user.getNickname(), user.getEmail());
+        }
+
+        // ✅ 새로 추가
+        log.debug("No existing record found, inserting new user");
 
         if (request.getRole() == GroupRole.OWNER) {
             throw new IllegalArgumentException("OWNER 권한은 직접 부여할 수 없습니다");
@@ -81,7 +113,8 @@ public class GroupShareService {
                 .build();
 
         groupUserMapper.insert(groupUser);
-        log.info("User added to group: groupId={}, userId={}, role={}", groupId, request.getUserId(), request.getRole());
+        log.info("User added to group: groupId={}, userId={}, role={}",
+                groupId, request.getUserId(), request.getRole());
 
         return GroupUserResDto.of(groupUser, user.getNickname(), user.getEmail());
     }

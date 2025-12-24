@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -34,17 +35,19 @@ public class MidTermWeatherApi {
             tmFc = today.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "1800";
         }
 
-        String url = UriComponentsBuilder.fromHttpUrl(apiUrl)
+        // build(false) 사용
+        URI uri = UriComponentsBuilder.fromHttpUrl(apiUrl)
                 .queryParam("serviceKey", serviceKey)
                 .queryParam("pageNo", 1)
                 .queryParam("numOfRows", 10)
                 .queryParam("dataType", "JSON")
                 .queryParam("regId", regId)
                 .queryParam("tmFc", tmFc)
-                .toUriString();
+                .build(true)  // false = 인코딩 하지 않음
+                .toUri();
 
-        log.debug("중기예보 API 호출: {}", url);
+        log.debug("중기예보 API 호출: {}", uri);
 
-        return restTemplate.getForObject(url, MidTermApiResDto.class);
+        return restTemplate.getForObject(uri, MidTermApiResDto.class);
     }
 }

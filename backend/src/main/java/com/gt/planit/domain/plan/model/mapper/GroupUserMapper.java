@@ -14,6 +14,15 @@ public interface GroupUserMapper {
 
     List<GroupUser> findAllByGroupId(@Param("groupId") Long groupId);
 
+    // ✅ 삭제된 것도 포함해서 조회
+    Optional<GroupUser> findByGroupIdAndUserIdIncludingDeleted(
+            @Param("groupId") Long groupId,
+            @Param("userId") Long userId
+    );
+
+    // ✅ update 메서드
+    void update(GroupUser groupUser);
+
     List<GroupUser> findAllByUserId(@Param("userId") Long userId);
 
     void insert(GroupUser groupUser);
