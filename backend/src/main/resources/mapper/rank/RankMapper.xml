@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gt.planit.domain.rank.model.mapper.RankMapper">
+    <select id="selectRankedSpots" resultType="SpotRankDto">
+        SELECT
+            s.id,
+            s.title,
+            s.content_type,
+            s.image1,
+            CASE
+                WHEN s.start_time IS NULL OR s.end_time IS NULL THEN '상시운영'
+                ELSE CONCAT(
+                        DATE_FORMAT(s.start_time, '%Y년 %c월 %e일'),
+                        ' ~ ',
+                        DATE_FORMAT(s.end_time, '%Y년 %c월 %e일')
+                     )
+                END AS time,
+    COUNT(DISTINCT sl.id)                 AS likeCount,
+    IFNULL(ROUND(AVG(r.rating), 1), 0)    AS avgRating,
+    COUNT(DISTINCT r.id)                  AS reviewCount,
+    s.doro_addr                           AS location,
+    CASE
+        WHEN MAX(
+            CASE
+                WHEN my_sl.user_id IS NOT NULL THEN 1
+                ELSE 0
+            END
+        ) = 1 THEN 1
+        ELSE 0
+        END AS favorite
+FROM spots s
+LEFT JOIN spot_likes sl
+       ON s.id = sl.spot_id
+      AND sl.is_deleted = 'F'
+LEFT JOIN reviews r
+       ON s.id = r.spot_id
+      AND r.is_deleted = 'F'
+LEFT JOIN spot_likes my_sl
+       ON s.id = my_sl.spot_id
+      AND my_sl.is_deleted = 'F'
+      AND my_sl.user_id = #{userId}
+        WHERE s.is_deleted = 'F'
+        AND s.content_type IN ('FESTIVAL', 'ATTRACTION')
+GROUP BY s.id
+ORDER BY
+    likeCount DESC,
+    avgRating DESC,
+    reviewCount DESC
+LIMIT #{limit};
+    </select>
+
+    <select id="selectRankedPopup" resultType="SpotRankDto">
+        SELECT
+            s.id,
+            s.title,
+            s.content_type,
+            s.image1,
+            CASE
+                WHEN s.start_time IS NULL OR s.end_time IS NULL THEN '상시운영'
+                ELSE CONCAT(
+                        DATE_FORMAT(s.start_time, '%Y년 %c월 %e일'),
+                        ' ~ ',
+                        DATE_FORMAT(s.end_time, '%Y년 %c월 %e일')
+                     )
+                END AS time,
+    COUNT(DISTINCT sl.id)                 AS likeCount,
+    IFNULL(ROUND(AVG(r.rating), 1), 0)    AS avgRating,
+    COUNT(DISTINCT r.id)                  AS reviewCount,
+    s.doro_addr                           AS location,
+    CASE
+        WHEN MAX(
+            CASE
+                WHEN my_sl.user_id IS NOT NULL THEN 1
+                ELSE 0
+            END
+        ) = 1 THEN 1
+        ELSE 0
+        END AS favorite
+FROM spots s
+LEFT JOIN spot_likes sl
+       ON s.id = sl.spot_id
+      AND sl.is_deleted = 'F'
+LEFT JOIN reviews r
+       ON s.id = r.spot_id
+      AND r.is_deleted = 'F'
+LEFT JOIN spot_likes my_sl
+       ON s.id = my_sl.spot_id
+      AND my_sl.is_deleted = 'F'
+      AND my_sl.user_id = #{userId}
+        WHERE s.is_deleted = 'F'
+        AND s.content_type = 'POPUP'
+GROUP BY s.id
+ORDER BY
+    likeCount DESC,
+    avgRating DESC,
+    reviewCount DESC
+LIMIT #{limit};
+    </select>
+</mapper>

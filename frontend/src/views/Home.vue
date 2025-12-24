@@ -10,28 +10,98 @@
       <!-- 지금 뜨는 축제 -->
       <section class="content-section">
         <h2 class="section-title">지금 뜨는 축제</h2>
-        <div class="spots-grid">
-          <SpotCard
-            v-for="(festival, i) in festivals"
-            :key="`festival-${i}`"
-            :spot="festival"
-            @click="handleSpotClick"
-            @favorite="handleFavorite"
-          />
+        <div class="spots-carousel">
+          <!-- prev -->
+          <button
+            class="carousel-btn prev"
+            @click="scrollCarousel('prev', 'festival')"
+            v-if="festivals.length > 3"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M15 18L9 12L15 6"
+                stroke="#4A5565"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <!-- cards -->
+          <div class="spots-grid horizontal" ref="festivalCarouselRef">
+            <SpotCard
+              v-for="(festival, i) in festivals"
+              :key="`festival-${i}`"
+              :spot="festival"
+              @click="handleSpotClick"
+              @favorite="handleFavorite"
+            />
+          </div>
+          <!-- next -->
+          <button
+            class="carousel-btn next"
+            @click="scrollCarousel('next', 'festival')"
+            v-if="festivals.length > 3"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M9 18L15 12L9 6"
+                stroke="#4A5565"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
         </div>
       </section>
 
       <!-- 지금 뜨는 팝업 -->
       <section class="content-section">
         <h2 class="section-title">지금 뜨는 팝업스토어</h2>
-        <div class="spots-grid">
-          <SpotCard
-            v-for="(popup, i) in popups"
-            :key="`popup-${i}`"
-            :spot="popup"
-            @click="handleSpotClick"
-            @favorite="handleFavorite"
-          />
+        <div class="spots-carousel">
+          <!-- prev -->
+          <button
+            class="carousel-btn prev"
+            @click="scrollCarousel('prev', 'popup')"
+            v-if="festivals.length > 3"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M15 18L9 12L15 6"
+                stroke="#4A5565"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <!-- cards -->
+          <div class="spots-grid horizontal" ref="popupCarouselRef">
+            <SpotCard
+              v-for="(popup, i) in popups"
+              :key="`popup-${i}`"
+              :spot="popup"
+              @click="handleSpotClick"
+              @favorite="handleFavorite"
+            />
+          </div>
+          <!-- next -->
+          <button
+            class="carousel-btn next"
+            @click="scrollCarousel('next', 'popup')"
+            v-if="festivals.length > 3"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M9 18L15 12L9 6"
+                stroke="#4A5565"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
         </div>
       </section>
 
@@ -50,105 +120,68 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import SearchBar from "@/components/SearchBar.vue";
 import SpotCard from "@/components/SpotCard.vue";
 import NewsCard from "@/components/NewsCard.vue";
+import {
+  getSpotRanking,
+  getPopupRanking,
+} from "@/api/rank/rankApi";
 
 const router = useRouter();
+
+// 캐러셀 ref
+const festivalCarouselRef = ref(null);
+const popupCarouselRef = ref(null);
 
 // ------------------------------
 // festivals
 // ------------------------------
-const festivals = ref([
-  {
-    id: 1,
-    name: "벚꽃축제",
-    image: "https://images.unsplash.com/photo-1679991811922-6470a50deca4?w=400",
-    badge: "축제",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 여의도 한강공원 203",
-    tags: "#벚꽃 #축제",
-  },
-  {
-    id: 2,
-    name: "벚꽃축제",
-    image: "https://images.unsplash.com/photo-1527344035985-fff54ecf3119?w=400",
-    badge: "축제",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 여의도 한강공원 203",
-    tags: "#벚꽃 #축제",
-  },
-  {
-    id: 3,
-    name: "벚꽃축제",
-    image: "https://images.unsplash.com/photo-1679991811922-6470a50deca4?w=400",
-    badge: "축제",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 여의도 한강공원 203",
-    tags: "#벚꽃 #축제",
-  },
-  {
-    id: 4,
-    name: "벚꽃축제",
-    image: "https://images.unsplash.com/photo-1527344035985-fff54ecf3119?w=400",
-    badge: "축제",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 여의도 한강공원 203",
-    tags: "#벚꽃 #축제",
-  },
-]);
+const festivals = ref([]);
 
 // ------------------------------
 // popups
 // ------------------------------
-const popups = ref([
-  {
-    id: 5,
-    name: "강남 팝업스토어",
-    image: "https://images.unsplash.com/photo-1762732470480-235ba455ecc2?w=400",
-    badge: "팝업스토어",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 강남구 테헤란로 203",
-    tags: "#강남 #팝업",
-  },
-  {
-    id: 6,
-    name: "강남 팝업스토어",
-    image: "https://images.unsplash.com/photo-1762732470480-235ba455ecc2?w=400",
-    badge: "팝업스토어",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 강남구 테헤란로 203",
-    tags: "#강남 #팝업",
-  },
-  {
-    id: 7,
-    name: "강남 팝업스토어",
-    image: "https://images.unsplash.com/photo-1762732470480-235ba455ecc2?w=400",
-    badge: "팝업스토어",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 강남구 테헤란로 203",
-    tags: "#강남 #팝업",
-  },
-  {
-    id: 8,
-    name: "강남 팝업스토어",
-    image: "https://images.unsplash.com/photo-1762732470480-235ba455ecc2?w=400",
-    badge: "팝업스토어",
-    rating: 4.5,
-    time: "AM 9:00 - PM 6:00",
-    location: "서울특별시 강남구 테헤란로 203",
-    tags: "#강남 #팝업",
-  },
-]);
+const popups = ref([]);
+const isLoading = ref(false)
+
+// ------------------------------
+// fetch data
+// ------------------------------
+const fetchRankings = async () => {
+  try {
+    isLoading.value = true;
+
+    const [mainRes, popupRes] = await Promise.all([
+      getSpotRanking(10),
+      getPopupRanking(10),
+    ]);
+
+    festivals.value = mainRes.data.map(mapSpotCard);
+    popups.value = popupRes.data.map(mapSpotCard);
+  } catch (e) {
+    console.error("랭킹 조회 실패", e);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// ------------------------------
+// mapper (API → SpotCard)
+// ------------------------------
+const mapSpotCard = (spot) => ({
+  id: spot.id,
+  name: spot.title,
+  image: spot.image1,
+  badge: spot.contentType === "POPUP" ? "팝업스토어" : "축제",
+  rating: spot.avgRating,
+  time: spot.time,          // 필요 시 start~end 가공
+  location: spot.location,      // 나중에 주소 필드 추가 가능
+  tags: "",          // 확장 포인트
+  isFavorite: spot.isFavorite,
+});
 
 // ------------------------------
 // news
@@ -181,6 +214,22 @@ const news = [
   },
 ];
 
+// 공통 스크롤 함수
+const scrollCarousel = (direction, target) => {
+  const el =
+    target === "festival"
+      ? festivalCarouselRef.value
+      : popupCarouselRef.value;
+
+  if (!el) return;
+
+  const scrollAmount = el.clientWidth; // 한 화면씩 이동
+  el.scrollBy({
+    left: direction === "next" ? scrollAmount : -scrollAmount,
+    behavior: "smooth",
+  });
+};
+
 // ------------------------------
 // event handlers
 // ------------------------------
@@ -204,6 +253,11 @@ const handleFavorite = (spot) => {
   }
   // 좋아요 상태 토글 API 호출 등
 };
+
+// ------------------------------
+// lifecycle
+// ------------------------------
+onMounted(fetchRankings);
 </script>
 
 <style scoped>
@@ -336,4 +390,115 @@ const handleFavorite = (spot) => {
     padding: 1.25rem;
   }
 }
+
+/* =========================
+   홈 캐러셀 공통
+========================= */
+.spots-carousel {
+  position: relative;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+/* 카드 가로 스크롤 영역 */
+.spots-carousel .spots-grid {
+  display: flex;
+  gap: 16px;
+  overflow-x: hidden;      /* 버튼으로만 이동 */
+  scroll-behavior: smooth;
+}
+
+/* 카드 고정 폭 (SpotCard 기준) */
+.spots-carousel .spots-grid > * {
+  flex: 0 0 280px;
+}
+
+/* =========================
+   좌 / 우 버튼
+========================= */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all 0.2s ease;
+}
+
+.carousel-btn:hover {
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* 버튼 위치 */
+.carousel-btn.prev {
+  left: -16px;
+}
+
+.carousel-btn.next {
+  right: -16px;
+}
+
+/* =========================
+   반응형
+========================= */
+@media (max-width: 1024px) {
+  .spots-carousel .spots-grid > * {
+    flex: 0 0 250px;
+  }
+
+  .carousel-btn.prev {
+    left: 0;
+  }
+
+  .carousel-btn.next {
+    right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .spots-carousel .spots-grid > * {
+    flex: 0 0 220px;
+  }
+
+  .carousel-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .spots-carousel .spots-grid {
+    gap: 12px;
+  }
+
+  .spots-carousel .spots-grid > * {
+    flex: 0 0 200px;
+  }
+
+  .carousel-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .carousel-btn.prev {
+    left: -8px;
+  }
+
+  .carousel-btn.next {
+    right: -8px;
+  }
+}
+
 </style>
