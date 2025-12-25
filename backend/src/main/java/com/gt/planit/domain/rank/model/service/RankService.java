@@ -11,13 +11,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RankService {
 
-    private final RankMapper spotMapper;
+    private final RankMapper rankMapper;
 
     public List<SpotRankDto> getRankedSpots(int limit, Long userId) {
-        return spotMapper.selectRankedSpots(limit, userId);
+        return rankMapper.selectRankedSpots(limit, userId);
     }
 
     public List<SpotRankDto> getRankedPopup(int limit, Long userId) {
-        return spotMapper.selectRankedPopup(limit, userId);
+        return rankMapper.selectRankedPopup(limit, userId);
     }
 }

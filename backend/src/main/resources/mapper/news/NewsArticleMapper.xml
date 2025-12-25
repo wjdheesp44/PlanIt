@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gt.planit.domain.news.model.mapper.NewsArticleMapper">
+
+    <resultMap id="NewsArticleDtoMap" type="com.gt.planit.domain.news.model.dto.NewsArticleDto">
+        <id property="articleId" column="article_id"/>
+        <result property="title" column="title"/>
+        <result property="spotId" column="spot_id"/>
+        <result property="summary" column="summary"/>
+        <result property="sourceUrl" column="source_url"/>
+        <result property="publishedAt" column="published_at"/>
+    </resultMap>
+
+    <select id="findBySpotId" resultMap="NewsArticleDtoMap">
+        SELECT
+        article_id,
+        title,
+        spot_id,
+        summary,
+        source_url,
+        published_at
+        FROM news_article
+        WHERE spot_id = #{spotId}
+        AND is_deleted = 'F'
+        ORDER BY published_at DESC
+        LIMIT 5
+    </select>
+
+    <select id="existsBySpotId" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1
+        FROM news_article
+        WHERE spot_id = #{spotId}
+        AND is_deleted = 'F'
+        )
+    </select>
+
+    <insert id="insert" parameterType="com.gt.planit.domain.news.model.dto.NewsArticleCreateDto">
+        INSERT INTO news_article (
+        title,
+        spot_id,
+        summary,
+        source_url,
+        published_at
+        ) VALUES (
+        #{title},
+        #{spotId},
+        #{summary},
+        #{sourceUrl},
+        #{publishedAt}
+        )
+    </insert>
+
+    <update id="softDelete">
+        UPDATE news_article
+        SET is_deleted = 'T'
+        WHERE article_id = #{articleId}
+    </update>
+
+</mapper>

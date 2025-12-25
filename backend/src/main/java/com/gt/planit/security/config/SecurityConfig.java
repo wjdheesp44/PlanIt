@@ -84,6 +84,7 @@ public class SecurityConfig {
                 .requestMatchers("/v1/auth/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/files/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/v1/news/**").permitAll()
                 .anyRequest().authenticated()
         ).formLogin(form -> form.disable());
       

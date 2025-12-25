@@ -4,14 +4,39 @@
       <span class="news-source">{{ source }}</span>
       <span class="news-time">{{ time }}</span>
     </div>
-    <span class="news-category">#{{ category }}</span>
+
     <h3 class="news-title">{{ title }}</h3>
-    <p class="news-summary">{{ summary }}</p>
-    <button v-if="showMore" class="news-more">더보기</button>
+    <p class="news-summary"
+       :class="{ expanded: isExpanded }"
+    >
+      {{ summary }}
+    </p>
+    <div class="keywords">
+      <span
+        v-for="(k, i) in keywords"
+        :key="i"
+        class="keyword"
+      >
+        #{{ k }}
+      </span>
+    </div>
+    <button v-if="showMore" class="news-more"
+            @click.stop="toggleExpand"
+    >
+      {{ isExpanded ? "접기" : "더보기" }}
+    </button>
   </article>
 </template>
 
 <script setup>
+  import { ref } from "vue";
+
+const isExpanded = ref(false);
+
+const toggleExpand = () => {
+  isExpanded.value = !isExpanded.value;
+};
+
 const props = defineProps({
   source: String,
   time: String,
@@ -19,6 +44,10 @@ const props = defineProps({
   title: String,
   summary: String,
   showMore: Boolean,
+  keywords: {
+    type: Array,
+    default: () => [],
+  },
 });
 </script>
 
@@ -80,7 +109,12 @@ const props = defineProps({
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.news-summary.expanded {
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  display: block;
 }
 
 .news-more {
