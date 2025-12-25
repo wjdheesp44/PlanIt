@@ -99,7 +99,7 @@
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-              />
+              />1
             </svg>
           </button>
         </div>
@@ -108,11 +108,52 @@
       <!-- 뉴스 섹션 -->
       <section class="content-section">
         <div class="news-header">
-          <h2 class="section-title">스팟 뉴스</h2>
+          <h2 class="section-title">스팟 블로그 후기 모음</h2>
           <span class="ai-badge">AI 요약</span>
         </div>
-        <div class="news-grid">
-          <NewsCard v-for="(item, i) in news" :key="`news-${i}`" v-bind="item" />
+        <div class="spots-carousel">
+          <!-- prev -->
+          <button
+            class="carousel-btn prev"
+            @click="scrollCarousel('prev', 'news')"
+            v-if="newsList.length > 3"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M15 18L9 12L15 6"
+                stroke="#4A5565"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <div class="news-grid horizontal" ref="newsCarouselRef">
+            <NewsCard
+              v-for="news in newsList"
+              :key="news.spotId"
+              :title="news.title"
+              :keywords="news.keywords"
+              :summary="news.category"
+              :showMore="true"
+            />
+          </div>
+          <!-- next -->
+          <button
+            class="carousel-btn next"
+            @click="scrollCarousel('next', 'news')"
+            v-if="newsList.length > 3"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M9 18L15 12L9 6"
+                stroke="#4A5565"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />1
+            </svg>
+          </button>
         </div>
       </section>
     </main>
@@ -120,7 +161,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import SearchBar from "@/components/SearchBar.vue";
 import SpotCard from "@/components/SpotCard.vue";
@@ -129,12 +170,14 @@ import {
   getSpotRanking,
   getPopupRanking,
 } from "@/api/rank/rankApi";
+import { getSpotKeywords } from "@/api/news/newsApi";
 
 const router = useRouter();
 
 // 캐러셀 ref
 const festivalCarouselRef = ref(null);
 const popupCarouselRef = ref(null);
+const newsCarouselRef = ref(null);
 
 // ------------------------------
 // festivals
@@ -146,6 +189,10 @@ const festivals = ref([]);
 // ------------------------------
 const popups = ref([]);
 const isLoading = ref(false)
+
+// news
+const keywordMap = ref({});
+// { 1: ["데이트", "야간산책"], 2: [...] }
 
 // ------------------------------
 // fetch data
@@ -161,12 +208,38 @@ const fetchRankings = async () => {
 
     festivals.value = mainRes.data.map(mapSpotCard);
     popups.value = popupRes.data.map(mapSpotCard);
+
+    // festivals 기준으로 키워드 조회
+    fetchKeywordsForFestivals();
   } catch (e) {
     console.error("랭킹 조회 실패", e);
   } finally {
     isLoading.value = false;
   }
 };
+
+const fetchKeywordsForFestivals = async () => {
+  for (const festival of festivals.value) {
+    try {
+      const res = await getSpotKeywords(festival.id, festival.name);
+
+      keywordMap.value[festival.id] = res.data.map(
+        article => article.summary
+      );
+
+    } catch (e) {
+      console.error("키워드 조회 실패:", festival.name, e);
+    }
+  }
+};
+
+const newsList = computed(() =>
+  festivals.value.map((f) => ({
+    spotId: f.id,
+    title: f.name,
+    category: (keywordMap.value[f.id] || []).join(" "),
+  }))
+);
 
 // ------------------------------
 // mapper (API → SpotCard)
@@ -175,7 +248,7 @@ const mapSpotCard = (spot) => ({
   id: spot.id,
   name: spot.title,
   image: spot.image1,
-  badge: spot.contentType === "POPUP" ? "팝업스토어" : "축제",
+  badge: spot.contentType === "POPUP" ? "팝업스토어" : spot.contentType === "ATTRACTION" ? "관광지" : "축제",
   rating: spot.avgRating,
   time: spot.time,          // 필요 시 start~end 가공
   location: spot.location,      // 나중에 주소 필드 추가 가능
@@ -186,40 +259,14 @@ const mapSpotCard = (spot) => ({
 // ------------------------------
 // news
 // ------------------------------
-const news = [
-  {
-    source: "서울일보",
-    time: "2시간 전",
-    category: "벚꽃축제",
-    title: "여의도 벚꽃축제 100만 명 방문... 역대 최다 관람객 기록",
-    summary:
-      "올해 여의도 벚꽃축제가 역대 최다 관람객을 기록하며 성황리에 마무리되었습니다. 완벽한 개화 시기와 다양한 문화 프로그램이 큰 호응...",
-    showMore: true,
-  },
-  {
-    source: "연합뉴스",
-    time: "5시간 전",
-    category: "벚꽃축제",
-    title: "벚꽃축제 주차장 혼잡... 대중교통 이용 권장",
-    summary: "벚꽃축제 기간 동안 주변 주차장이 만차 상태를 보이며 대중교통 이용이 권장됩니다...",
-    showMore: true,
-  },
-  {
-    source: "매일경제",
-    time: "1일 전",
-    category: "강남 팝업스토어",
-    title: "강남 팝업스토어, MZ세대 핫플레이스로 급부상",
-    summary: "강남 팝업스토어가 MZ세대 사이에서 필수 방문 코스로 자리잡고 있습니다...",
-    showMore: true,
-  },
-];
 
 // 공통 스크롤 함수
 const scrollCarousel = (direction, target) => {
   const el =
     target === "festival"
       ? festivalCarouselRef.value
-      : popupCarouselRef.value;
+      : target === "popup" ? popupCarouselRef.value
+      : newsCarouselRef.value;
 
   if (!el) return;
 
@@ -248,7 +295,6 @@ const handleFavorite = (spot) => {
   // 찾았으면 토글
   if (targetSpot) {
     targetSpot.isFavorite = !targetSpot.isFavorite;
-    console.log("Favorite toggled:", targetSpot);
     // API 호출
   }
   // 좋아요 상태 토글 API 호출 등
@@ -331,6 +377,20 @@ onMounted(fetchRankings);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
+}
+
+/* =========================
+   뉴스 캐러셀 전용
+========================= */
+.spots-carousel .news-grid {
+  display: flex;
+  gap: 16px;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+.spots-carousel .news-grid > * {
+  flex: 0 0 340px;   /* 뉴스 카드 폭 (SpotCard보다 넓게) */
 }
 
 /* 반응형 - 태블릿 */
