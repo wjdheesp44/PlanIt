@@ -275,7 +275,7 @@
                     </div>
                     <p class="result-address">{{ result.address }}</p>
                     <div class="result-meta">
-                      <span class="result-likes">
+                      <!-- <span class="result-likes">
                         <svg
                           width="30"
                           height="30"
@@ -289,7 +289,7 @@
                           />
                         </svg>
                         {{ result.likes || 0 }}
-                      </span>
+                      </span> -->
                       <span class="result-rating" v-if="result.rating">
                         ⭐ {{ result.rating }}
                       </span>
@@ -326,7 +326,7 @@
 
           <!-- 폴더 정보 -->
           <div class="folder-header">
-            <h1 class="folder-title">부산 여행</h1>
+            <h1 class="folder-title">{{ currentFolder?.title || "폴더" }}</h1>
             <div class="folder-meta">
               <span v-if="totalSharedUsers >= 2">공유 중</span>
               <span v-if="totalSharedUsers >= 2" class="separator">·</span>
@@ -714,6 +714,7 @@ const isResizing = ref(false);
 let map = null;
 const markers = ref([]);
 
+const currentFolder = ref(null);
 const currentGroupId = computed(() => {
   const id = Number(route.params.id);
   return Number.isFinite(id) ? id : null;
@@ -1025,7 +1026,20 @@ const loadSpots = async () => {
     console.log("스팟 목록 응답:", response);
 
     // API 응답 구조에 맞게 데이터 매핑
-    const spotsData = response.data || [];
+    const responseData = response.data || response;
+    const data = responseData.data || responseData;
+
+    // ✅ 폴더 정보 업데이트
+    if (data.title) {
+      currentFolder.value = {
+        id: data.groupId,
+        title: data.title,
+        imageUrl: data.imageUrl,
+      };
+    }
+
+    // 스팟 목록 매핑
+    const spotsData = data.spots || [];
 
     spots.value = spotsData.map((spot) => ({
       id: spot.id, // plan ID
@@ -1044,6 +1058,7 @@ const loadSpots = async () => {
     // 지도 마커 업데이트
     updateMarkers();
 
+    console.log("폴더 정보:", currentFolder.value);
     console.log("스팟 목록 로드 완료:", spots.value);
   } catch (error) {
     console.error("스팟 목록 로드 실패:", error);

@@ -1,12 +1,15 @@
 package com.gt.planit.domain.plan.controller;
 
 import com.gt.planit.domain.plan.model.dto.CreatePlanReqDto;
+import com.gt.planit.domain.plan.model.dto.FolderDto;
 import com.gt.planit.domain.plan.model.dto.PlanSpotResDto;
 import com.gt.planit.domain.plan.model.dto.UpdatePlanReqDto;
+import com.gt.planit.domain.plan.model.mapper.FolderMapper;
 import com.gt.planit.domain.plan.model.service.PlanService;
 import com.gt.planit.security.service.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -21,7 +25,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PlanController {
     private final PlanService planService;
-
+    private final FolderMapper folderMapper;
     /**
      * 그룹에 스팟 추가
      * POST /api/v1/groups/{groupId}/spots/{spotId}
@@ -58,12 +62,20 @@ public class PlanController {
         Long userId = user.getId();
         log.info("GET /api/v1/groups/{}/plans", groupId);
 
+        FolderDto group = folderMapper.findById(groupId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("그룹을 찾을 수 없습니다."));
+
         List<PlanSpotResDto> spots = planService.getGroupSpots(groupId, userId);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "스팟 목록 조회 성공",
-                "data", spots
+                "data", Map.of(
+                        "groupId", group.getId(),
+                        "title", group.getName(),
+                        "imageUrl", group.getThumbnailPath(),
+                        "spots", spots
+                )
         ));
     }
 
