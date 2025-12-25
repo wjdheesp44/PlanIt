@@ -315,7 +315,7 @@ const filters = reactive({
     5: true,
   },
   likes: 0,
-  sort: "popular",
+  sort: "latest",
   tags: [], // 태그 (#으로 시작)
   searchTerm: "", // 일반 검색어 (하나만)
 });
