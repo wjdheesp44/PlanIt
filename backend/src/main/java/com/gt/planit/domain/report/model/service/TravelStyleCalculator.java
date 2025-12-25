@@ -7,10 +7,7 @@ import com.gt.planit.domain.report.model.entity.UserStats;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -149,26 +146,48 @@ public class TravelStyleCalculator {
     }
 
     private int calculateBalance(UserStats stats) {
-        if (stats.getContentTypes() == null || stats.getContentTypes().isEmpty()) return 0;
+
+        // 전체 콘텐츠 타입 수 (고정값 or enum 기준)
+        final int TOTAL_CONTENT_TYPES = 4; // FESTIVAL, POPUP, EXHIBITION, SHOW
+
+        if (stats.getContentTypes() == null || stats.getContentTypes().isEmpty()) {
+            return 0;
+        }
 
         List<Double> percentages = stats.getContentTypes().stream()
                 .map(ContentTypeCount::getPercentage)
                 .toList();
 
-        // 표준편차 계산 (낮을수록 균형잡힘)
-        double avg = percentages.stream()
-                .mapToDouble(d -> d)
+        // ✅ 1. 전체 타입 기준으로 보정 (없는 타입은 0%)
+        List<Double> normalized = new ArrayList<>(percentages);
+        while (normalized.size() < TOTAL_CONTENT_TYPES) {
+            normalized.add(0.0);
+        }
+
+        // ✅ 2. 평균
+        double avg = normalized.stream()
+                .mapToDouble(Double::doubleValue)
                 .average()
                 .orElse(0);
 
-        double variance = percentages.stream()
+        // ✅ 3. 분산
+        double variance = normalized.stream()
                 .mapToDouble(p -> Math.pow(p - avg, 2))
                 .average()
                 .orElse(0);
 
         double stdDev = Math.sqrt(variance);
 
-        // 표준편차가 낮을수록 높은 점수
-        return (int) Math.max(0, 100 - (stdDev * 2));
+        // ✅ 4. 기본 점수
+        int score = (int) Math.max(0, 100 - (stdDev * 2));
+
+        // ✅ 5. 타입 수 보정 (중요)
+        int typeCount = stats.getContentTypes().size();
+
+        if (typeCount <= 1) score -= 40;
+        else if (typeCount == 2) score -= 20;
+
+        return Math.max(0, score);
     }
+
 }
