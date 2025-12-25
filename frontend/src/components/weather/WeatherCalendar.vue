@@ -88,7 +88,7 @@
             <span class="modal-emoji">{{ selectedDay.weatherEmoji }}</span>
             <div class="modal-info">
               <p class="modal-condition">{{ selectedDay.weatherCondition }}</p>
-              <p class="modal-temp">
+              <p v-if="selectedDay.minTemperature && selectedDay.maxTemperature" class="modal-temp">
                 {{ selectedDay.minTemperature }} ~ {{ selectedDay.maxTemperature }}
               </p>
             </div>
@@ -107,7 +107,7 @@
               >
                 <span class="hourly-time">{{ formatTime(hour.forecastTime) }}</span>
                 <span class="hourly-emoji">{{ hour.weatherEmoji }}</span>
-                <span class="hourly-temp">{{ hour.temperature }}°C</span>
+                <span class="hourly-temp">{{ hour.temperature ?? "- " }}°C</span>
                 <span class="hourly-precip">{{ hour.precipitationProbability }}%</span>
               </div>
             </div>
@@ -164,7 +164,7 @@ const loadWeatherData = async () => {
     isLoading.value = true;
     const today = new Date();
     const endDate = new Date();
-    endDate.setDate(today.getDate() + 9); // 10일치
+    endDate.setDate(today.getDate() + 10); // 10일치
 
     const response = await weatherApi.getWeatherCalendar(
       props.gugunId,

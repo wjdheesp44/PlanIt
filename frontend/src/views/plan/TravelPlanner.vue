@@ -79,86 +79,111 @@
           <div class="plan-info">
             <div class="plan-header-row">
               <h2 class="plan-title">{{ folder.name }}</h2>
-              <button class="menu-button" @click.stop="toggleMenu(index)">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M9.99984 10.8332C10.4601 10.8332 10.8332 10.4601 10.8332 9.99984C10.8332 9.5396 10.4601 9.1665 9.99984 9.1665C9.5396 9.1665 9.1665 9.5396 9.1665 9.99984C9.1665 10.4601 9.5396 10.8332 9.99984 10.8332Z"
-                    stroke="#6A7282"
-                    stroke-width="1.66667"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M9.99984 5.00016C10.4601 5.00016 10.8332 4.62707 10.8332 4.16683C10.8332 3.70659 10.4601 3.3335 9.99984 3.3335C9.5396 3.3335 9.1665 3.70659 9.1665 4.16683C9.1665 4.62707 9.5396 5.00016 9.99984 5.00016Z"
-                    stroke="#6A7282"
-                    stroke-width="1.66667"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M9.99984 16.6667C10.4601 16.6667 10.8332 16.2936 10.8332 15.8333C10.8332 15.3731 10.4601 15 9.99984 15C9.5396 15 9.1665 15.3731 9.1665 15.8333C9.1665 16.2936 9.5396 16.6667 9.99984 16.6667Z"
-                    stroke="#6A7282"
-                    stroke-width="1.66667"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </button>
 
-              <!-- 삭제 버튼 (메뉴 클릭시 표시) -->
-              <div v-if="folder.showDelete" class="delete-dropdown">
-                <button class="delete-button" @click.stop="deleteFolder(folder.id, index)">
+              <!-- 메뉴 버튼 영역 -->
+              <div class="menu-wrapper">
+                <button class="menu-button" @click.stop="toggleMenu(index)">
                   <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
-                      d="M6.6665 7.3335V11.3335"
-                      stroke="#E7000B"
-                      stroke-width="1.33333"
+                      d="M9.99984 10.8332C10.4601 10.8332 10.8332 10.4601 10.8332 9.99984C10.8332 9.5396 10.4601 9.1665 9.99984 9.1665C9.5396 9.1665 9.1665 9.5396 9.1665 9.99984C9.1665 10.4601 9.5396 10.8332 9.99984 10.8332Z"
+                      stroke="#6A7282"
+                      stroke-width="1.66667"
                       stroke-linecap="round"
                       stroke-linejoin="round"
                     />
                     <path
-                      d="M9.3335 7.3335V11.3335"
-                      stroke="#E7000B"
-                      stroke-width="1.33333"
+                      d="M9.99984 5.00016C10.4601 5.00016 10.8332 4.62707 10.8332 4.16683C10.8332 3.70659 10.4601 3.3335 9.99984 3.3335C9.5396 3.3335 9.1665 3.70659 9.1665 4.16683C9.1665 4.62707 9.5396 5.00016 9.99984 5.00016Z"
+                      stroke="#6A7282"
+                      stroke-width="1.66667"
                       stroke-linecap="round"
                       stroke-linejoin="round"
                     />
                     <path
-                      d="M12.6668 4V13.3333C12.6668 13.687 12.5264 14.0261 12.2763 14.2761C12.0263 14.5262 11.6871 14.6667 11.3335 14.6667H4.66683C4.31321 14.6667 3.97407 14.5262 3.72402 14.2761C3.47397 14.0261 3.3335 13.687 3.3335 13.3333V4"
-                      stroke="#E7000B"
-                      stroke-width="1.33333"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M2 4H14"
-                      stroke="#E7000B"
-                      stroke-width="1.33333"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M5.3335 4.00016V2.66683C5.3335 2.31321 5.47397 1.97407 5.72402 1.72402C5.97407 1.47397 6.31321 1.3335 6.66683 1.3335H9.3335C9.68712 1.3335 10.0263 1.47397 10.2763 1.72402C10.5264 1.97407 10.6668 2.31321 10.6668 2.66683V4.00016"
-                      stroke="#E7000B"
-                      stroke-width="1.33333"
+                      d="M9.99984 16.6667C10.4601 16.6667 10.8332 16.2936 10.8332 15.8333C10.8332 15.3731 10.4601 15 9.99984 15C9.5396 15 9.1665 15.3731 9.1665 15.8333C9.1665 16.2936 9.5396 16.6667 9.99984 16.6667Z"
+                      stroke="#6A7282"
+                      stroke-width="1.66667"
                       stroke-linecap="round"
                       stroke-linejoin="round"
                     />
                   </svg>
-                  <span>삭제</span>
                 </button>
+
+                <!-- 삭제 버튼 (메뉴 클릭시 표시) -->
+                <div v-if="folder.showDelete" class="delete-dropdown">
+                  <button class="menu-item edit-button" @click.stop="editFolder(folder, index)">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M11.3332 2.00004C11.5083 1.82494 11.7162 1.68605 11.9451 1.59129C12.1739 1.49653 12.4191 1.44775 12.6665 1.44775C12.9139 1.44775 13.1591 1.49653 13.3879 1.59129C13.6168 1.68605 13.8247 1.82494 13.9998 2.00004C14.1749 2.17513 14.3138 2.383 14.4086 2.61186C14.5033 2.84072 14.5521 3.08591 14.5521 3.33337C14.5521 3.58084 14.5033 3.82603 14.4086 4.05489C14.3138 4.28375 14.1749 4.49162 13.9998 4.66671L4.99984 13.6667L1.33317 14.6667L2.33317 11L11.3332 2.00004Z"
+                        stroke="#4A5568"
+                        stroke-width="1.33333"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    <span>수정</span>
+                  </button>
+                  <button
+                    class="menu-item delete-button"
+                    @click.stop="deleteFolder(folder.id, index)"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M6.6665 7.3335V11.3335"
+                        stroke="#E7000B"
+                        stroke-width="1.33333"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M9.3335 7.3335V11.3335"
+                        stroke="#E7000B"
+                        stroke-width="1.33333"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M12.6668 4V13.3333C12.6668 13.687 12.5264 14.0261 12.2763 14.2761C12.0263 14.5262 11.6871 14.6667 11.3335 14.6667H4.66683C4.31321 14.6667 3.97407 14.5262 3.72402 14.2761C3.47397 14.0261 3.3335 13.687 3.3335 13.3333V4"
+                        stroke="#E7000B"
+                        stroke-width="1.33333"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M2 4H14"
+                        stroke="#E7000B"
+                        stroke-width="1.33333"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M5.3335 4.00016V2.66683C5.3335 2.31321 5.47397 1.97407 5.72402 1.72402C5.97407 1.47397 6.31321 1.3335 6.66683 1.3335H9.3335C9.68712 1.3335 10.0263 1.47397 10.2763 1.72402C10.5264 1.97407 10.6668 2.31321 10.6668 2.66683V4.00016"
+                        stroke="#E7000B"
+                        stroke-width="1.33333"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    <span>삭제</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -170,8 +195,15 @@
     </template>
   </div>
 
-  <!-- 새 일정 만들기 모달 -->
-  <CreatePlanModal :is-open="isModalOpen" @close="closeModal" @create="handleCreatePlan" />
+  <!-- 일정 만들기/수정 모달 -->
+  <CreatePlanModal
+    :is-open="isModalOpen"
+    :is-edit-mode="isEditMode"
+    :initial-data="editData"
+    @close="closeModal"
+    @create="handleCreatePlan"
+    @update="handleUpdatePlan"
+  />
 </template>
 
 <script setup>
@@ -180,16 +212,15 @@ import { useRouter } from "vue-router";
 import CreatePlanModal from "@/components/plan/CreatePlanModal.vue";
 import { folderApi } from "@/api/plan/folderApi";
 
-
 const router = useRouter();
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 const isModalOpen = ref(false);
+const isEditMode = ref(false);
+const editData = ref(null);
 const folders = ref([]);
 const loading = ref(true);
 const error = ref(null);
-
-
 
 // 컴포넌트 마운트 시 폴더 목록 조회
 onMounted(() => {
@@ -242,12 +273,30 @@ const formatDate = (dateString) => {
 
 // 새 일정 만들기
 const createNewPlan = () => {
+  isEditMode.value = false;
+  editData.value = null;
   isModalOpen.value = true;
+};
+
+// 폴더 수정
+const editFolder = (folder, index) => {
+  isEditMode.value = true;
+  editData.value = {
+    id: folder.id,
+    name: folder.name,
+    thumbnailUrl: folder.thumbnailUrl,
+    index: index,
+  };
+  isModalOpen.value = true;
+  // 메뉴 닫기
+  folders.value[index].showDelete = false;
 };
 
 // 모달 닫기
 const closeModal = () => {
   isModalOpen.value = false;
+  isEditMode.value = false;
+  editData.value = null;
 };
 
 // 새 일정 생성
@@ -265,12 +314,35 @@ const handleCreatePlan = async (newPlanData) => {
     });
 
     closeModal();
-
-    // 선택적: 생성된 일정으로 바로 이동
-    // router.push(`/plans/${createdFolder.id}`);
   } catch (err) {
     console.error("폴더 생성 실패:", err);
     alert("폴더 생성에 실패했습니다.");
+  }
+};
+
+// 일정 수정
+const handleUpdatePlan = async (updatedPlanData) => {
+  try {
+    const updatedFolder = await folderApi.updateFolder(
+      updatedPlanData.folderId,
+      updatedPlanData.folderName,
+      updatedPlanData.thumbnailFile
+    );
+
+    // 목록에서 해당 폴더 업데이트
+    const index = folders.value.findIndex((f) => f.id === updatedPlanData.folderId);
+    if (index !== -1) {
+      folders.value[index] = {
+        ...folders.value[index],
+        ...updatedFolder,
+        showDelete: false,
+      };
+    }
+
+    closeModal();
+  } catch (err) {
+    console.error("폴더 수정 실패:", err);
+    alert("폴더 수정에 실패했습니다.");
   }
 };
 
@@ -401,7 +473,7 @@ const goToPlanDetail = (planId) => {
 }
 
 .plan-card.has-delete {
-  padding-right: 160px;
+  /* padding-right: 160px; */
 }
 
 /* 썸네일 */
@@ -451,6 +523,11 @@ const goToPlanDetail = (planId) => {
   flex: 1;
 }
 
+.menu-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .menu-button {
   background: none;
   border: none;
@@ -468,31 +545,46 @@ const goToPlanDetail = (planId) => {
   background: #f3f4f6;
 }
 
-/* 삭제 드롭다운 */
+/* 삭제/수정 드롭다운 */
 .delete-dropdown {
   position: absolute;
   right: 0;
-  top: 2.5rem;
+  top: calc(100% + 0.25rem);
   background: #ffffff;
   border: 0.8px solid #e5e7eb;
   border-radius: 10px;
   box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   z-index: 10;
+  overflow: hidden;
+  min-width: 120px;
 }
 
-.delete-button {
+.menu-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   background: none;
   border: none;
-  color: #e7000b;
   font-size: 16px;
   cursor: pointer;
   width: 100%;
   transition: background 0.2s ease;
   white-space: nowrap;
+  text-align: left;
+}
+
+.edit-button {
+  color: #4a5568;
+}
+
+.edit-button:hover {
+  background: #f9fafb;
+}
+
+.delete-button {
+  color: #e7000b;
+  border-top: 0.8px solid #e5e7eb;
 }
 
 .delete-button:hover {

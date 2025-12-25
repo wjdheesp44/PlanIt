@@ -41,5 +41,5 @@ public interface SpotMapper {
             @Param("limit") int limit
     );
 
-    void insertSpotView(Long spotId);
+    void insertSpotView(Long spotId, Long userId);
 }

@@ -157,13 +157,13 @@
                 ORDER BY COALESCE(sl.likes_count, 0) DESC, s.id ASC
             </when>
             <when test="cond.sort == 'RATING_DESC'">
-                ORDER BY s.avg_rating DESC, s.id DESC
+                ORDER BY s.avg_rating DESC, s.id ASC
             </when>
             <when test="cond.sort == 'LATEST'">
-                ORDER BY s.end_time DESC, s.id DESC
+                ORDER BY s.end_time DESC, s.id ASC
             </when>
             <otherwise>
-                ORDER BY s.created_at DESC
+                ORDER BY s.id ASC
             </otherwise>
         </choose>
     </sql>
@@ -201,9 +201,6 @@
         </foreach>
     </select>
 
-
-
-    <!-- 여기부터 스팟 상세 조회 -->
     <!-- 여기부터 스팟 상세 조회 -->
     <select id="selectSpotDetailById" resultType="com.gt.planit.domain.spot.model.dto.SpotDetailResDto">
         SELECT
@@ -217,13 +214,13 @@
         s.avg_rating as avgRating,
         COALESCE(s.rating_count, 0) as reviewCount,
         CASE
-        WHEN s.start_time IS NOT NULL AND s.end_time IS NOT NULL THEN '상시운영'
+        WHEN s.start_time IS NULL OR s.end_time IS NULL THEN '상시운영'
         ELSE CONCAT(
         DATE_FORMAT(s.start_time, '%Y년 %c월 %e일'),
         ' ~ ',
         DATE_FORMAT(s.end_time, '%Y년 %c월 %e일')
         )
-        END as date,
+        END                                                  AS date,
         s.doro_addr as doroAddr,
         s.jibun_addr as jibunAddr,
         s.latitude,
@@ -286,6 +283,8 @@
         FALSE AS favorite
         FROM spots s
         WHERE s.sido_id = #{sidoId}
+        AND s.image1 IS NOT NULL
+        AND s.image1 != ''
         AND s.id != #{excludeSpotId}
         AND s.is_deleted = 'F'
         ORDER BY RAND()
@@ -294,9 +293,7 @@
 
     <!-- 조회수 기록 -->
     <insert id="insertSpotView">
-        INSERT INTO spot_views (spot_id, created_at)
-        VALUES (#{spotId}, NOW())
+        INSERT INTO spot_views (spot_id, created_at, user_id)
+        VALUES (#{spotId}, NOW(), #{userId})
     </insert>
-
-
 </mapper>

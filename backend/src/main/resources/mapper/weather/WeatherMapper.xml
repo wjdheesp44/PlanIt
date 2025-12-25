@@ -65,17 +65,46 @@
 
     <select id="selectWeatherForecastsByDateRange" resultMap="weatherForecastResultMap">
         SELECT *
-        FROM weather_forecasts
-        WHERE gugun_id = #{gugunId}
-          AND forecast_date BETWEEN #{startDate} AND #{endDate}
+        FROM (
+                 SELECT
+                     wf.*,
+                     ROW_NUMBER() OVER (
+                PARTITION BY wf.forecast_date, wf.forecast_time
+                ORDER BY
+                    CASE
+                        WHEN wf.forecast_type = 'SHORT_TERM' THEN 1
+                        WHEN wf.forecast_type = 'MID_TERM' THEN 2
+                        ELSE 3
+                    END
+            ) as rn
+                 FROM weather_forecasts wf
+                 WHERE wf.gugun_id = #{gugunId}
+                   AND wf.forecast_date BETWEEN #{startDate} AND #{endDate}
+             ) ranked
+        WHERE rn = 1
         ORDER BY forecast_date, forecast_time
     </select>
 
+    <!-- 특정 날짜의 시간별 예보 조회 (단기예보 우선) -->
     <select id="selectWeatherForecastsByDate" resultMap="weatherForecastResultMap">
         SELECT *
-        FROM weather_forecasts
-        WHERE gugun_id = #{gugunId}
-          AND forecast_date = #{date}
+        FROM (
+                 SELECT
+                     wf.*,
+                     ROW_NUMBER() OVER (
+                PARTITION BY wf.forecast_time
+                ORDER BY
+                    CASE
+                        WHEN wf.forecast_type = 'SHORT_TERM' THEN 1
+                        WHEN wf.forecast_type = 'MID_TERM' THEN 2
+                        ELSE 3
+                    END
+            ) as rn
+                 FROM weather_forecasts wf
+                 WHERE wf.gugun_id = #{gugunId}
+                   AND wf.forecast_date = #{date}
+             ) ranked
+        WHERE rn = 1
         ORDER BY forecast_time
     </select>
 

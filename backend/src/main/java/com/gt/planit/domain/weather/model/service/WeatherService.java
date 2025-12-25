@@ -22,7 +22,7 @@ public class WeatherService {
     private final WeatherMapper weatherMapper;
 
     /**
-     * 캘린더용 날씨 예보 조회 (일별 요약)
+     * 캘린더용 날씨 예보 조회 (일별 요약, 단기예보 우선)
      */
     public List<WeatherCalendarResDto> getWeatherCalendar(WeatherSearchReqDto request) {
         List<WeatherForecast> forecasts = weatherMapper.selectWeatherForecastsByDateRange(
@@ -31,24 +31,54 @@ public class WeatherService {
                 request.getEndDate()
         );
 
-        // 날짜별로 그룹화
+        // ⭐ 날짜별로 그룹화하면서 단기예보 우선
         Map<LocalDate, List<WeatherForecast>> forecastsByDate = forecasts.stream()
                 .collect(Collectors.groupingBy(WeatherForecast::getForecastDate));
 
         return forecastsByDate.entrySet().stream()
-                .map(entry -> buildCalendarResponse(entry.getKey(), entry.getValue()))
+                .map(entry -> {
+                    List<WeatherForecast> dailyForecasts = entry.getValue();
+
+                    // ⭐ 단기예보가 있으면 단기예보만 사용
+                    boolean hasShortTerm = dailyForecasts.stream()
+                            .anyMatch(f -> "SHORT_TERM".equals(f.getForecastType()));
+
+                    if (hasShortTerm) {
+                        dailyForecasts = dailyForecasts.stream()
+                                .filter(f -> "SHORT_TERM".equals(f.getForecastType()))
+                                .collect(Collectors.toList());
+                    }
+
+                    return buildCalendarResponse(entry.getKey(), dailyForecasts);
+                })
                 .sorted((a, b) -> a.getDate().compareTo(b.getDate()))
                 .collect(Collectors.toList());
     }
 
     /**
-     * 특정 날짜의 시간별 상세 예보
+     * 특정 날짜의 시간별 상세 예보 (단기예보 우선)
      */
     public List<WeatherForecastResDto> getWeatherDetail(Long gugunId, LocalDate date) {
         List<WeatherForecast> forecasts = weatherMapper.selectWeatherForecastsByDate(gugunId, date);
 
+        // ⭐ 단기예보가 있으면 단기예보만 반환
+        boolean hasShortTerm = forecasts.stream()
+                .anyMatch(f -> "SHORT_TERM".equals(f.getForecastType()));
+
+        if (hasShortTerm) {
+            forecasts = forecasts.stream()
+                    .filter(f -> "SHORT_TERM".equals(f.getForecastType()))
+                    .collect(Collectors.toList());
+        }
+
         return forecasts.stream()
                 .map(WeatherForecastResDto::from)
+                .sorted((a, b) -> {
+                    // 시간순 정렬
+                    String timeA = a.getForecastTime() != null ? a.getForecastTime() : "0000";
+                    String timeB = b.getForecastTime() != null ? b.getForecastTime() : "0000";
+                    return timeA.compareTo(timeB);
+                })
                 .collect(Collectors.toList());
     }
 

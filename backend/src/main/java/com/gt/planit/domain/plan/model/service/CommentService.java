@@ -24,7 +24,7 @@ public class CommentService {
      */
     public List<CommentResDto> getComments(Long groupId, Long currentUserId) {
         validateViewPermission(groupId, currentUserId);
-        return commentMapper.findAllByGroupId(groupId);
+        return commentMapper.findAllByGroupId(groupId, currentUserId);
     }
 
     /**

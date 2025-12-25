@@ -80,7 +80,7 @@ public class WeatherController {
 
     @PostMapping("/update/short-term")
     public ResponseEntity<String> updateShortTerm() {
-        schedulerService.updateShortTermForecasts();
+        schedulerService.updateShortTermForecastsByGugunId();
         return ResponseEntity.ok("단기예보 업데이트 시작");
     }
 

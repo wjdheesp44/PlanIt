@@ -11,7 +11,7 @@
       <div class="search-box">
         <input
           type="text"
-          placeholder="#태그 또는 검색어를 입력해주세요"
+          placeholder="검색어를 입력해주세요"
           class="search-input"
           v-model="searchInput"
           @keyup.enter="addTag"
@@ -315,7 +315,7 @@ const filters = reactive({
     5: true,
   },
   likes: 0,
-  sort: "popular",
+  sort: "latest",
   tags: [], // 태그 (#으로 시작)
   searchTerm: "", // 일반 검색어 (하나만)
 });

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -79,9 +80,9 @@ public class WeatherApiService {
      * 중기예보 데이터 수집 및 저장
      */
     @Transactional
-    public void fetchAndSaveMidTermForecast(String midLandRegId, String midTempRegId) {
+    public void fetchAndSaveMidTermForecast(String midLandRegId, int startDay, int endDay) {
         try {
-            log.info("중기예보 수집 시작 - regId: {}", midLandRegId);
+            log.info("중기예보 수집 시작 - regId: {}, 범위: D+{} ~ D+{}", midLandRegId, startDay, endDay);
 
             MidTermApiResDto response = midTermApi.getMidTermForecast(midLandRegId);
 
@@ -93,17 +94,26 @@ public class WeatherApiService {
             MidTermApiResDto.Item item = response.getResponse().getBody().getItems().getItem().get(0);
 
             LocalDate baseDate = LocalDate.now();
-            String baseTime = "0600";
+            LocalDateTime now = LocalDateTime.now();
+            int hour = now.getHour();
 
+            // ⭐ 발표 시간 결정
+            String baseTime = (hour >= 6 && hour < 18) ? "0600" : "1800";
+
+            // ⭐ 해당 지역코드의 모든 구군 조회
             List<Long> gugunIds = weatherMapper.selectGugunIdsByMidLandRegId(midLandRegId);
 
-            for (int day = 3; day <= 10; day++) {
+            // ⭐ startDay부터 endDay까지만 저장
+            for (int day = startDay; day <= endDay; day++) {
                 LocalDate forecastDate = baseDate.plusDays(day);
 
                 for (Long gugunId : gugunIds) {
+                    // 오전 (06시 기준)
                     WeatherForecast amForecast = buildMidTermForecast(
                             gugunId, forecastDate, "0600", day, true, item, baseDate, baseTime, midLandRegId
                     );
+
+                    // 오후 (18시 기준)
                     WeatherForecast pmForecast = buildMidTermForecast(
                             gugunId, forecastDate, "1800", day, false, item, baseDate, baseTime, midLandRegId
                     );
@@ -113,10 +123,12 @@ public class WeatherApiService {
                 }
             }
 
-            log.info("중기예보 저장 완료 - regId: {}, 구군 수: {}", midLandRegId, gugunIds.size());
+            log.info("중기예보 저장 완료 - regId: {}, 구군 수: {}, 저장 일수: {}",
+                    midLandRegId, gugunIds.size(), (endDay - startDay + 1));
 
         } catch (Exception e) {
             log.error("중기예보 수집 실패 - regId: {}", midLandRegId, e);
+            throw new RuntimeException("중기예보 수집 실패", e);
         }
     }
 

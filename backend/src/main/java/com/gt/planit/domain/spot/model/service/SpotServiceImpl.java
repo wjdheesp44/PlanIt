@@ -75,7 +75,7 @@ public class SpotServiceImpl implements SpotService {
         spotDetail.setHotSpots(hotSpots);
 
         // 4. 조회수 증가
-        spotMapper.insertSpotView(spotId);
+        spotMapper.insertSpotView(spotId, userId);
 
         return spotDetail;
     }
