@@ -64,11 +64,15 @@
         </if>
 
         <!-- 기간 -->
-        <if test="cond.startDate != null">
-            AND (s.start_time &gt;= #{cond.startDate} OR s.start_time IS NULL)
-        </if>
-        <if test="cond.endDate != null">
-            AND (s.end_time &lt;= #{cond.endDate} OR s.end_time IS NULL)
+        <if test="cond.startDate != null and cond.endDate != null">
+            AND (
+            (s.start_time IS NULL AND s.end_time IS NULL)  <!-- 상시 운영 -->
+            OR (
+            s.start_time &lt;= #{cond.endDate}  <!-- 이벤트 시작이 여행 종료 이전 -->
+            AND
+            (s.end_time IS NULL OR s.end_time &gt;= #{cond.startDate})  <!-- 이벤트 종료가 여행 시작 이후 -->
+            )
+            )
         </if>
 
         <!-- 날씨 필터 (WeatherService와 동일한 대표 날씨 로직) -->
