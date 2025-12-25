@@ -19,6 +19,34 @@
       <!-- 후기 내용 -->
       <textarea v-model="text" />
 
+      <!-- 이미지 업로드 -->
+      <div class="image-upload-area">
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          @change="handleImageUpload"
+          hidden
+          ref="fileInput"
+        />
+
+        <div class="upload-placeholder" @click="triggerFileInput">
+
+        </div>
+
+        <div class="preview-list">
+          <div
+            v-for="(img, i) in previewImages"
+            :key="i"
+            class="preview-item"
+          >
+            <img :src="img" />
+            <button @click="removeImage(i)">✕</button>
+          </div>
+        </div>
+      </div>
+
+
       <div class="buttons">
         <button class="close-btn" @click="emit('close')">취소</button>
         <button class="confirm-btn" @click="onConfirm">확인</button>
@@ -51,8 +79,6 @@ watch(
   { immediate: true }
 );
 
-console.log(props.review);
-
 const onConfirm = () => {
   emit("confirm", {
     ...props.review,
@@ -60,6 +86,53 @@ const onConfirm = () => {
     text: text.value,
   });
 };
+
+
+
+const previewImages = ref([]);
+const reviewImages = ref([]);
+const fileInput = ref(null);
+
+const triggerFileInput = () => {
+  fileInput.value.click();
+};
+
+const handleImageUpload = (e) => {
+  const files = Array.from(e.target.files);
+
+  if (previewImages.value.length + files.length > 10) {
+    alert("이미지는 최대 10장까지 가능합니다.");
+    return;
+  }
+
+  files.forEach((file) => {
+    reviewImages.value.push(file);
+    previewImages.value.push(URL.createObjectURL(file));
+  });
+};
+
+const removeImage = (index) => {
+  reviewImages.value.splice(index, 1);
+  previewImages.value.splice(index, 1);
+};
+const submit = () => {
+  const formData = new FormData();
+
+  formData.append(
+    "req",
+    new Blob(
+      [JSON.stringify({ rating: form.rating, content: form.content })],
+      { type: "application/json" }
+    )
+  );
+
+  reviewImages.value.forEach((file) => {
+    formData.append("images", file);
+  });
+
+  emit("confirm", { id: review.id, formData });
+};
+
 </script>
 <style scoped>
 .modal-overlay {

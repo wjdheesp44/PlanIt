@@ -5,6 +5,7 @@
       <!-- 헤더 -->
       <div class="page-header">
         <h1 class="page-title">회원정보</h1>
+        <div class="button-group">
         <button class="cancel-button" @click="cancel">
           <svg
             width="16"
@@ -42,7 +43,7 @@
                   저장
                 </button>
       </div>
-
+      </div>
       <!-- 프로필 카드 -->
       <div class="profile-card">
         <!-- 프로필 헤더 -->
@@ -281,9 +282,6 @@ const cancel = () => {
 
 const save = async () => {
   /* 빈 값 체크 */
-  console.log(form.name)
-  console.log(form.nickname)
-  console.log(form.password)
   if (!form.name || !form.nickname || !form.password ) {
     alert("값을 모두 입력해주세요.");
     return;
@@ -304,11 +302,6 @@ const save = async () => {
       return;
     }
   }
-
-console.log(userInfo.value.email)
-console.log(form.name)
-console.log(form.nickname)
-console.log(form.password)
 
   /* 실제 저장 API 호출 */
   await updateMyInfo({
@@ -406,6 +399,11 @@ const handleMenuChange = (menu) => {
   border: 0.83px solid #e5e7eb;
   border-radius: 16px;
   overflow: hidden;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.75rem; /* 취소 ↔ 저장 간격 */
 }
 
 /* 프로필 헤더 */

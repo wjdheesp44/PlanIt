@@ -6,8 +6,10 @@ import com.gt.planit.domain.review.model.service.ReviewService;
 import com.gt.planit.security.service.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -24,13 +26,16 @@ public class ReviewController {
         return reviewService.getReviews(spotId);
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public void create(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long spotId,
-            @RequestBody ReviewReqDto req
+            @RequestPart(value="req") ReviewReqDto req,
+            @RequestPart(value = "images", required = false)
+            List<MultipartFile> images
     ) {
-        reviewService.createReview(user.getId(), spotId, req);
+
+        reviewService.createReview(user.getId(), spotId, req, images);
     }
 
     @PutMapping("/{reviewId}")

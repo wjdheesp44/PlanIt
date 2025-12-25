@@ -23,6 +23,16 @@ public interface ReviewMapper {
             @Param("content") String content
     );
 
+    Long findLastInsertId();
+
+    List<String> selectReviewImages(@Param("reviewId") Long reviewId);
+
+    void insertReviewImage(
+            @Param("reviewId") Long reviewId,
+            @Param("imageUrl") String imageUrl,
+            @Param("sortOrder") int sortOrder
+    );
+
     int updateReview(
             @Param("id") Long id,
             @Param("rating") Integer rating,

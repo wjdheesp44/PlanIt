@@ -1,7 +1,9 @@
 <template>
   <div class="review-card">
     <!-- 이미지 -->
-    <img :src="review.image || placeholderImage" :alt="review.title" class="review-image" />
+    <div class="poster-wrapper">
+      <img :src="review.image || placeholderImage" :alt="review.title" class="review-image" />
+    </div>
     <!-- 콘텐츠 -->
     <div class="review-content">
       <!-- 헤더 -->
@@ -64,6 +66,8 @@
             </svg>
           </button>
         </div>
+
+
       </div>
 
       <!-- 별점 -->
@@ -82,6 +86,20 @@
 
       <!-- 후기 내용 -->
       <p class="review-text">{{ review.text }}</p>
+
+      <!-- 후기 이미지 -->
+      <div
+        v-if="review.images && review.images.length"
+        class="review-images"
+      >
+        <div
+          v-for="(img, i) in review.images"
+          :key="i"
+          class="review-image"
+        >
+          <img :src="`/api${img}`" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -332,4 +350,31 @@ const handleDelete = () => {
     font-size: 14px;
   }
 }
+
+.poster-wrapper {
+  margin: 16px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+  .review-images {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.review-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.review-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 </style>
