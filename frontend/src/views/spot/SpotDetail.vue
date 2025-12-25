@@ -152,6 +152,50 @@
         <!-- 후기 내용 -->
         <textarea v-model="newReview.content" placeholder="후기를 작성해 주세요" rows="5" />
 
+        <!-- 이미지 개수 표시 -->
+        <div class="image-count">
+          사진 {{ previewImages.length }} / 10
+        </div>
+
+        <!-- 이미지 업로드 (가로 스크롤) -->
+        <div class="image-upload-area">
+          <input
+            type="file"
+            ref="fileInput"
+            accept="image/*"
+            multiple
+            @change="handleImageUpload"
+            hidden
+          />
+
+          <!-- 가로 스크롤 영역 -->
+          <div class="preview-scroll">
+            <!-- 이미지 미리보기 -->
+            <div
+              v-for="(img, i) in previewImages"
+              :key="i"
+              class="preview-item"
+            >
+              <img :src="img" />
+              <button
+                class="remove-image-button"
+                @click.stop="removeImage(i)"
+              >
+                ✕
+              </button>
+            </div>
+
+            <!-- + 버튼 -->
+            <div
+              v-if="previewImages.length < 10"
+              class="preview-item add-more"
+              @click="triggerFileInput"
+            >
+              +
+            </div>
+          </div>
+        </div>
+
         <!-- 버튼 -->
         <div class="modal-actions">
           <button class="cancel-btn" @click="closeReviewModal">취소</button>
@@ -177,6 +221,11 @@ const route = useRoute();
 const router = useRouter();
 const carouselRef = ref(null);
 const isLoading = ref(false);
+
+// 후기 작성용 이미지
+const reviewImages = ref([]);       // File[]
+const previewImages = ref([]);      // string[]
+const fileInput = ref(null);
 
 let mapInstance = null;
 let markerOverlay = null;
@@ -475,9 +524,27 @@ const submitReview = async () => {
     return;
   }
 
-  await reviewApi.createReview(route.params.id, newReview.value);
+  const formData = new FormData();
+
+  // req는 반드시 JSON Blob으로
+formData.append(
+  "req",
+  new Blob(
+    [JSON.stringify({ rating: newReview.value.rating, content: newReview.value.content })],
+    { type: "application/json" }
+  )
+);
+
+  reviewImages.value.forEach(file => {
+  formData.append("images", file);
+});
+
+  await reviewApi.createReview(route.params.id, formData);
   await loadReviews();
   closeReviewModal();
+
+  reviewImages.value = [];
+  previewImages.value = [];
 };
 
 const loadReviews = async () => {
@@ -487,6 +554,32 @@ const loadReviews = async () => {
 
   spot.value.reviewCount = reviews.value.length;
 };
+
+  const triggerFileInput = () => {
+  fileInput.value.click();
+};
+
+const handleImageUpload = (e) => {
+  const files = Array.from(e.target.files);
+
+  if (reviewImages.value.length + files.length > 10) {
+    alert("이미지는 최대 10장까지 업로드할 수 있습니다.");
+    return;
+  }
+
+  files.forEach((file) => {
+    reviewImages.value.push(file);
+    previewImages.value.push(URL.createObjectURL(file));
+  });
+
+  e.target.value = "";
+};
+
+const removeImage = (index) => {
+  reviewImages.value.splice(index, 1);
+  previewImages.value.splice(index, 1);
+};
+
 </script>
 
 <style scoped>
@@ -762,6 +855,48 @@ const loadReviews = async () => {
   padding: 1.5rem;
 }
 
+.preview-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+}
+
+.preview-item {
+  position: relative;
+  flex: 0 0 96px;
+  height: 96px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-item.add-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #e5e7eb;
+  font-size: 32px;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.preview-item.add-more:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.image-count {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
 /* 제목 */
 .modal-title {
   font-size: 1.25rem;
@@ -799,6 +934,7 @@ const loadReviews = async () => {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+  margin-top: 10px;
 }
 
 .cancel-btn {
@@ -861,6 +997,20 @@ const loadReviews = async () => {
 /* 카카오맵 컨트롤 숨기기 (선택사항) */
 #map .custom_zoomcontrol {
   display: none;
+}
+
+.upload-placeholder {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.upload-placeholder:hover {
+  background: #f9fafb;
 }
 
 @keyframes spin {

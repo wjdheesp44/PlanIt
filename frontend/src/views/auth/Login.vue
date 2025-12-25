@@ -34,7 +34,6 @@
           <!-- 링크 -->
           <div class="links">
             <a href="/signup" class="/signup">회원가입</a>
-            <a href="/forgot-password-email" class="/forgot-password">비밀번호 찾기</a>
           </div>
         </form>
       </div>

@@ -23,6 +23,23 @@
 
     <h3 class="review-title">{{ review.title }}</h3>
     <p class="review-content">{{ review.content }}</p>
+    <div
+      v-if="review.images && review.images.length"
+      class="review-images"
+    >
+      <div
+        v-for="(img, i) in review.images"
+        :key="i"
+        class="review-image"
+      >
+        <img
+          :src="`/api${img}`"
+          @error="() => console.error('image error', `/api${img}`)"
+          @load="() => console.log('image load', `/api${img}`)"
+          :alt="`Review image ${i + 1}`"
+        />
+      </div>
+    </div>
 
     <div class="review-tags">
       <span v-for="(tag, index) in review.tags" :key="index" class="review-tag">
@@ -30,21 +47,7 @@
       </span>
     </div>
 
-    <div v-if="review.images && review.images.length > 0" class="review-images">
-      <div v-for="(image, index) in review.images" :key="index" class="review-image">
-        <img :src="image" :alt="`Review image ${index + 1}`" />
-        <div class="play-overlay">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M5 5C5 4.648 5.093 4.302 5.269 3.998C5.445 3.693 5.699 3.441 6.004 3.265C6.309 3.09 6.655 2.998 7.007 3C7.359 3.001 7.704 3.095 8.008 3.272L20.005 10.27C20.308 10.446 20.559 10.698 20.734 11.001C20.909 11.304 21.001 11.648 21.001 11.998C21.002 12.348 20.91 12.692 20.736 12.996C20.561 13.299 20.311 13.552 20.008 13.728L8.008 20.728C7.704 20.906 7.359 21 7.007 21.001C6.655 21.002 6.309 20.91 6.004 20.735C5.699 20.56 5.445 20.307 5.269 20.002C5.093 19.698 5 19.352 5 19V5Z"
-              fill="#1E2939"
-              stroke="#1E2939"
-              stroke-width="2"
-            />
-          </svg>
-        </div>
-      </div>
-    </div>
+
 
     <div class="review-actions">
       <button class="helpful-btn" @click="handleHelpful">

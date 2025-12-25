@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,4 +19,9 @@ public class MyReviewResDto {
     private int rating;
     private String text;
     private String image;
+    private String reviewImages;
+    public List<String> getImages() {
+        if (reviewImages == null) return List.of();
+        return Arrays.asList(reviewImages.split(","));
+    }
 }

@@ -13,6 +13,11 @@ api.interceptors.request.use(config => {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
 
+  // multipart 요청이면 Content-Type 건들지 않음
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
+
   return config;
 });
 

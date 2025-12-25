@@ -54,22 +54,29 @@
     <!-- 내가 쓴 후기 -->
     <select id="selectReviewsByEmail" resultMap="myReviewMap">
         select
-            r.id as review_id,
-            s.title,
-            CASE s.content_type
-                WHEN 'ATTRACTION' THEN '관광지'
-                WHEN 'FESTIVAL'  THEN '축제'
-                WHEN 'POPUP'     THEN '팝업'
-                END AS badge,
-            date(r.created_at) as date,
-            s.doro_addr as location,
-            r.rating,
-            r.content as text,
-            s.image1 as image
+        r.id as review_id,
+        s.title,
+        CASE s.content_type
+        WHEN 'ATTRACTION' THEN '관광지'
+        WHEN 'FESTIVAL'  THEN '축제'
+        WHEN 'POPUP'     THEN '팝업'
+        END AS badge,
+        date(r.created_at) as date,
+        s.doro_addr as location,
+        r.rating,
+        r.content as text,
+        s.image1 as image,
+
+        GROUP_CONCAT(ri.image_url ORDER BY ri.id) as review_images
+
         from reviews r
-            join spots s on r.spot_id = s.id
-            join users u on r.user_id = u.id
+        join spots s on r.spot_id = s.id
+        join users u on r.user_id = u.id
+        left join review_images ri on ri.review_id = r.id
+
         where u.email = #{username}
+        group by r.id;
+
     </select>
 
     <!-- 후기 단건 조회 -->
@@ -121,6 +128,13 @@
         AND is_deleted = 'F'
     </update>
 
+    <select id="selectReviewImages" resultType="string">
+        SELECT image_url
+        FROM review_images
+        WHERE review_id = #{reviewId}
+        ORDER BY sort_order ASC
+    </select>
+
     <update id="increaseRating">
         UPDATE spots
         SET
@@ -158,5 +172,14 @@
                          )
         WHERE id = #{spotId}
     </update>
+
+    <select id="findLastInsertId" resultType="long">
+        SELECT LAST_INSERT_ID()
+    </select>
+
+    <insert id="insertReviewImage">
+        INSERT INTO review_images (review_id, image_url, sort_order)
+        VALUES (#{reviewId}, #{imageUrl}, #{sortOrder})
+    </insert>
 
 </mapper>
