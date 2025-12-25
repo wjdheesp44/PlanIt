@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gt.planit.domain.report.model.mapper.UserInsightReportMapper">
+
+    <!-- 사용자 리포트 조회 -->
+    <select id="getReportByUserId" resultType="com.gt.planit.domain.report.model.entity.UserInsightReport">
+        SELECT report_id, user_id, travel_style, summary_text,
+               ai_analysis, ai_recommendation, created_at, modified_at
+        FROM user_insight_report
+        WHERE user_id = #{userId}
+        ORDER BY report_id DESC
+            LIMIT 1
+    </select>
+    
+    <!-- 리포트 저장 (insert or update) -->
+    <insert id="upsertReport" parameterType="com.gt.planit.domain.report.model.entity.UserInsightReport">
+        INSERT INTO user_insight_report (
+            user_id, travel_style, ai_analysis, ai_recommendation
+        ) VALUES (
+                     #{userId}, #{travelStyle}, #{aiAnalysis}, #{aiRecommendation}
+                 )
+            ON DUPLICATE KEY UPDATE
+                                 travel_style = #{travelStyle},
+                                 ai_analysis = #{aiAnalysis},
+                                 ai_recommendation = #{aiRecommendation},
+                                 modified_at = CURRENT_TIMESTAMP
+    </insert>
+
+</mapper>

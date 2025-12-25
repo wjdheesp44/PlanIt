@@ -294,9 +294,7 @@
 
     <!-- 조회수 기록 -->
     <insert id="insertSpotView">
-        INSERT INTO spot_views (spot_id, created_at)
-        VALUES (#{spotId}, NOW())
+        INSERT INTO spot_views (spot_id, created_at, user_id)
+        VALUES (#{spotId}, NOW(), #{userId})
     </insert>
-
-
 </mapper>
