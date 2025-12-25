@@ -11,7 +11,7 @@
       <div class="search-box">
         <input
           type="text"
-          placeholder="#태그 또는 검색어를 입력해주세요"
+          placeholder="검색어를 입력해주세요"
           class="search-input"
           v-model="searchInput"
           @keyup.enter="addTag"
