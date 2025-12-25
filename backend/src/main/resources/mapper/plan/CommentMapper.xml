@@ -10,7 +10,8 @@
             c.id AS id,
             u.nickname AS author,
             c.created_at AS createdAt,
-            c.content AS content
+            c.content AS content,
+            CASE WHEN c.user_id = #{userId} THEN TRUE ELSE FALSE END AS isAuthor  -- ✅ 본인 여부
         FROM comments c
                  JOIN users u ON u.id = c.user_id
         WHERE c.group_id = #{groupId}

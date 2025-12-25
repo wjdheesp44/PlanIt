@@ -9,7 +9,7 @@ import java.util.List;
 
 @Mapper
 public interface CommentMapper {
-    List<CommentResDto> findAllByGroupId(@Param("groupId") Long groupId);
+    List<CommentResDto> findAllByGroupId(@Param("groupId") Long groupId, @Param("userId") Long userId);
 
     int insert(Comment comment);
 

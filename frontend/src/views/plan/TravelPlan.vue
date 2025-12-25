@@ -386,7 +386,7 @@
             <!-- 공유 버튼 클릭 이벤트 연결 -->
 
             <!-- <button class="share-button">
-              
+
             </button> -->
           </div>
 
@@ -577,7 +577,12 @@
                 </div>
                 <p class="comment-text">{{ comment.text }}</p>
               </div>
-              <button class="comment-delete" @click="deleteComment(comment.id)" title="삭제">
+              <button
+                v-if="canDeleteComment(comment)"
+                class="comment-delete"
+                @click="deleteComment(comment.id)"
+                title="삭제"
+              >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path
                     d="M12 4L4 12M4 4L12 12"
@@ -939,6 +944,7 @@ const loadComments = async () => {
     comments.value = data.map((comment) => ({
       id: comment.id,
       author: comment.author,
+      isAuthor: comment.isAuthor,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author}`,
       time: formatTime(comment.createdAt),
       text: comment.content,
@@ -949,6 +955,10 @@ const loadComments = async () => {
     console.error("댓글 목록 로드 실패:", error);
     showToast("댓글을 불러오는데 실패했습니다", "error");
   }
+};
+
+const canDeleteComment = (comment) => {
+  return currentUserRole.value === "OWNER" || comment.isAuthor;
 };
 
 // 시간 포맷팅 함수
