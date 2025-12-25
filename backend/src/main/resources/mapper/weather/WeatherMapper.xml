@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gt.planit.domain.weather.model.mapper.WeatherMapper">
+
+    <resultMap id="weatherForecastResultMap" type="com.gt.planit.domain.weather.model.entity.WeatherForecast">
+        <id property="id" column="id"/>
+        <result property="forecastDate" column="forecast_date"/>
+        <result property="forecastTime" column="forecast_time"/>
+        <result property="forecastType" column="forecast_type"/>
+        <result property="weatherCondition" column="weather_condition"/>
+        <result property="skyCode" column="sky_code"/>
+        <result property="precipitationType" column="precipitation_type"/>
+        <result property="temperature" column="temperature"/>
+        <result property="minTemperature" column="min_temperature"/>
+        <result property="maxTemperature" column="max_temperature"/>
+        <result property="precipitationProbability" column="precipitation_probability"/>
+        <result property="precipitationAmount" column="precipitation_amount"/>
+        <result property="snowAmount" column="snow_amount"/>
+        <result property="humidity" column="humidity"/>
+        <result property="windSpeed" column="wind_speed"/>
+        <result property="travelRecommendation" column="travel_recommendation"/>
+        <result property="baseDate" column="base_date"/>
+        <result property="baseTime" column="base_time"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="modifiedAt" column="modified_at"/>
+        <result property="gugunId" column="gugun_id"/>
+        <result property="midLandRegId" column="mid_land_reg_id"/>
+    </resultMap>
+
+    <insert id="insertOrUpdateWeatherForecast" parameterType="com.gt.planit.domain.weather.model.entity.WeatherForecast">
+        INSERT INTO weather_forecasts (
+            forecast_date, forecast_time, forecast_type,
+            weather_condition, sky_code, precipitation_type,
+            temperature, min_temperature, max_temperature,
+            precipitation_probability, precipitation_amount, snow_amount,
+            humidity, wind_speed, travel_recommendation,
+            base_date, base_time, gugun_id, mid_land_reg_id
+        ) VALUES (
+                     #{forecastDate}, #{forecastTime}, #{forecastType},
+                     #{weatherCondition}, #{skyCode}, #{precipitationType},
+                     #{temperature}, #{minTemperature}, #{maxTemperature},
+                     #{precipitationProbability}, #{precipitationAmount}, #{snowAmount},
+                     #{humidity}, #{windSpeed}, #{travelRecommendation},
+                     #{baseDate}, #{baseTime}, #{gugunId}, #{midLandRegId}
+                 )
+            ON DUPLICATE KEY UPDATE
+                                 weather_condition = VALUES(weather_condition),
+                                 sky_code = VALUES(sky_code),
+                                 precipitation_type = VALUES(precipitation_type),
+                                 temperature = VALUES(temperature),
+                                 min_temperature = VALUES(min_temperature),
+                                 max_temperature = VALUES(max_temperature),
+                                 precipitation_probability = VALUES(precipitation_probability),
+                                 precipitation_amount = VALUES(precipitation_amount),
+                                 snow_amount = VALUES(snow_amount),
+                                 humidity = VALUES(humidity),
+                                 wind_speed = VALUES(wind_speed),
+                                 travel_recommendation = VALUES(travel_recommendation),
+                                 base_date = VALUES(base_date),
+                                 base_time = VALUES(base_time),
+                                 modified_at = CURRENT_TIMESTAMP
+    </insert>
+
+    <select id="selectWeatherForecastsByDateRange" resultMap="weatherForecastResultMap">
+        SELECT *
+        FROM weather_forecasts
+        WHERE gugun_id = #{gugunId}
+          AND forecast_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY forecast_date, forecast_time
+    </select>
+
+    <select id="selectWeatherForecastsByDate" resultMap="weatherForecastResultMap">
+        SELECT *
+        FROM weather_forecasts
+        WHERE gugun_id = #{gugunId}
+          AND forecast_date = #{date}
+        ORDER BY forecast_time
+    </select>
+
+    <select id="selectAllGugunsWithGrid" resultType="map">
+        SELECT id, grid_x, grid_y
+        FROM guguns
+        WHERE grid_x IS NOT NULL
+          AND grid_y IS NOT NULL
+    </select>
+
+    <select id="selectGugunIdsByMidLandRegId" resultType="long">
+        SELECT id
+        FROM guguns
+        WHERE mid_land_reg_id = #{midLandRegId}
+    </select>
+
+    <select id="selectDistinctMidRegIds" resultType="map">
+        SELECT DISTINCT mid_land_reg_id, mid_temp_reg_id
+        FROM guguns
+        WHERE mid_land_reg_id IS NOT NULL
+    </select>
+
+</mapper>

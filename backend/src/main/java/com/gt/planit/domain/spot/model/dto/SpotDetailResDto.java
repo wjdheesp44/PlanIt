@@ -29,7 +29,9 @@ public class SpotDetailResDto {
     private String image4;
     private String image5;
     private String description;
+    private Long likesCount;
     private Long sidoId;
+    private Long gugunId;
 
     @JsonProperty("isFavorite")
     private boolean favorite;
