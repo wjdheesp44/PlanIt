@@ -43,9 +43,9 @@ public class AiSummaryClient {
             HttpResponse<String> response =
                     HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println("===== GMS AI RAW RESPONSE =====");
-            System.out.println(response.body());
-            System.out.println("================================");
+//            System.out.println("===== GMS AI RAW RESPONSE =====");
+//            System.out.println(response.body());
+//            System.out.println("================================");
 
             JSONObject json = new JSONObject(response.body());
 
