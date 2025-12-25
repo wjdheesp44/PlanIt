@@ -164,7 +164,7 @@ const loadWeatherData = async () => {
     isLoading.value = true;
     const today = new Date();
     const endDate = new Date();
-    endDate.setDate(today.getDate() + 9); // 10일치
+    endDate.setDate(today.getDate() + 10); // 10일치
 
     const response = await weatherApi.getWeatherCalendar(
       props.gugunId,
