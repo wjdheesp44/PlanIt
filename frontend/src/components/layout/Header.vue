@@ -78,7 +78,9 @@ const handleUserIconClick = () => {
   localStorage.removeItem("refreshToken"); // 있다면 같이 삭제
 
   alert("로그아웃 되었습니다.");
-  router.push("/"); // 또는 /login
+  router.push("/").then(() => {
+    window.location.reload();
+  }); // 또는 /login
 };
 </script>
 

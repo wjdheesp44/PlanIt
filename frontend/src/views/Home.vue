@@ -3,13 +3,13 @@
     <!-- 메인 컨테이너 -->
     <main class="main-container">
       <!-- 검색 섹션 -->
-      <section class="search-section">
+      <!-- <section class="search-section">
         <SearchBar />
-      </section>
+      </section> -->
 
       <!-- 지금 뜨는 축제 -->
       <section class="content-section">
-        <h2 class="section-title">지금 뜨는 축제</h2>
+        <h2 class="section-title">지금 뜨는 축제 & 관광지</h2>
         <div class="spots-carousel">
           <!-- prev -->
           <button
@@ -99,7 +99,8 @@
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-              />1
+              />
+              1
             </svg>
           </button>
         </div>
@@ -151,7 +152,8 @@
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-              />1
+              />
+              1
             </svg>
           </button>
         </div>
@@ -166,10 +168,7 @@ import { useRouter } from "vue-router";
 import SearchBar from "@/components/SearchBar.vue";
 import SpotCard from "@/components/SpotCard.vue";
 import NewsCard from "@/components/NewsCard.vue";
-import {
-  getSpotRanking,
-  getPopupRanking,
-} from "@/api/rank/rankApi";
+import { getSpotRanking, getPopupRanking } from "@/api/rank/rankApi";
 import { getSpotKeywords } from "@/api/news/newsApi";
 
 const router = useRouter();
@@ -188,7 +187,7 @@ const festivals = ref([]);
 // popups
 // ------------------------------
 const popups = ref([]);
-const isLoading = ref(false)
+const isLoading = ref(false);
 
 // news
 const keywordMap = ref({});
@@ -201,10 +200,7 @@ const fetchRankings = async () => {
   try {
     isLoading.value = true;
 
-    const [mainRes, popupRes] = await Promise.all([
-      getSpotRanking(10),
-      getPopupRanking(10),
-    ]);
+    const [mainRes, popupRes] = await Promise.all([getSpotRanking(10), getPopupRanking(10)]);
 
     festivals.value = mainRes.data.map(mapSpotCard);
     popups.value = popupRes.data.map(mapSpotCard);
@@ -223,10 +219,7 @@ const fetchKeywordsForFestivals = async () => {
     try {
       const res = await getSpotKeywords(festival.id, festival.name);
 
-      keywordMap.value[festival.id] = res.data.map(
-        article => article.summary
-      );
-
+      keywordMap.value[festival.id] = res.data.map((article) => article.summary);
     } catch (e) {
       console.error("키워드 조회 실패:", festival.name, e);
     }
@@ -248,11 +241,16 @@ const mapSpotCard = (spot) => ({
   id: spot.id,
   name: spot.title,
   image: spot.image1,
-  badge: spot.contentType === "POPUP" ? "팝업스토어" : spot.contentType === "ATTRACTION" ? "관광지" : "축제",
+  badge:
+    spot.contentType === "POPUP"
+      ? "팝업스토어"
+      : spot.contentType === "ATTRACTION"
+      ? "관광지"
+      : "축제",
   rating: spot.avgRating,
-  time: spot.time,          // 필요 시 start~end 가공
-  location: spot.location,      // 나중에 주소 필드 추가 가능
-  tags: "",          // 확장 포인트
+  time: spot.time, // 필요 시 start~end 가공
+  location: spot.location, // 나중에 주소 필드 추가 가능
+  tags: "", // 확장 포인트
   isFavorite: spot.isFavorite,
 });
 
@@ -265,7 +263,8 @@ const scrollCarousel = (direction, target) => {
   const el =
     target === "festival"
       ? festivalCarouselRef.value
-      : target === "popup" ? popupCarouselRef.value
+      : target === "popup"
+      ? popupCarouselRef.value
       : newsCarouselRef.value;
 
   if (!el) return;
@@ -390,7 +389,7 @@ onMounted(fetchRankings);
 }
 
 .spots-carousel .news-grid > * {
-  flex: 0 0 340px;   /* 뉴스 카드 폭 (SpotCard보다 넓게) */
+  flex: 0 0 340px; /* 뉴스 카드 폭 (SpotCard보다 넓게) */
 }
 
 /* 반응형 - 태블릿 */
@@ -464,7 +463,7 @@ onMounted(fetchRankings);
 .spots-carousel .spots-grid {
   display: flex;
   gap: 16px;
-  overflow-x: hidden;      /* 버튼으로만 이동 */
+  overflow-x: hidden; /* 버튼으로만 이동 */
   scroll-behavior: smooth;
 }
 
@@ -560,5 +559,4 @@ onMounted(fetchRankings);
     right: -8px;
   }
 }
-
 </style>

@@ -168,8 +168,8 @@ public class PlanServiceImpl implements PlanService {
         PlanDto plan = opt.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 플랜입니다."));
 
         // 그룹 OWNER 권한 확인
-        if (!groupUserMapper.isOwner(plan.getGroupId(), userId)) {
-            throw new SecurityException("삭제 권한이 없습니다 (OWNER만 가능)");
+        if (!groupUserMapper.canEdit(plan.getGroupId(), userId)) {
+            throw new SecurityException("편집 권한이 없습니다");
         }
 
         // soft delete
