@@ -6,43 +6,43 @@
       <div class="page-header">
         <h1 class="page-title">회원정보</h1>
         <div class="button-group">
-        <button class="cancel-button" @click="cancel">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M14.1063 4.53832C14.4586 4.18616 14.6565 3.7085 14.6566 3.21042C14.6566 2.71233 14.4588 2.23463 14.1067 1.88238C13.7545 1.53014 13.2769 1.33222 12.7788 1.33215C12.2807 1.33209 11.803 1.52989 11.4507 1.88205L2.55919 10.7756C2.4045 10.9298 2.29011 11.1197 2.22607 11.3286L1.34598 14.228C1.32876 14.2856 1.32746 14.3468 1.34222 14.4051C1.35697 14.4634 1.38723 14.5166 1.42979 14.5591C1.47234 14.6016 1.52561 14.6318 1.58393 14.6465C1.64225 14.6611 1.70345 14.6597 1.76104 14.6424L4.66115 13.763C4.8698 13.6995 5.05967 13.5858 5.21413 13.4319L14.1063 4.53832Z"
-              stroke="white"
-              stroke-width="1.33247"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          취소
-        </button>
-        <button class="save-button" @click="save">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M14.1063 4.53832C14.4586 4.18616 14.6565 3.7085 14.6566 3.21042C14.6566 2.71233 14.4588 2.23463 14.1067 1.88238C13.7545 1.53014 13.2769 1.33222 12.7788 1.33215C12.2807 1.33209 11.803 1.52989 11.4507 1.88205L2.55919 10.7756C2.4045 10.9298 2.29011 11.1197 2.22607 11.3286L1.34598 14.228C1.32876 14.2856 1.32746 14.3468 1.34222 14.4051C1.35697 14.4634 1.38723 14.5166 1.42979 14.5591C1.47234 14.6016 1.52561 14.6318 1.58393 14.6465C1.64225 14.6611 1.70345 14.6597 1.76104 14.6424L4.66115 13.763C4.8698 13.6995 5.05967 13.5858 5.21413 13.4319L14.1063 4.53832Z"
-                      stroke="white"
-                      stroke-width="1.33247"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                  저장
-                </button>
-      </div>
+          <button class="cancel-button" @click="cancel">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M14.1063 4.53832C14.4586 4.18616 14.6565 3.7085 14.6566 3.21042C14.6566 2.71233 14.4588 2.23463 14.1067 1.88238C13.7545 1.53014 13.2769 1.33222 12.7788 1.33215C12.2807 1.33209 11.803 1.52989 11.4507 1.88205L2.55919 10.7756C2.4045 10.9298 2.29011 11.1197 2.22607 11.3286L1.34598 14.228C1.32876 14.2856 1.32746 14.3468 1.34222 14.4051C1.35697 14.4634 1.38723 14.5166 1.42979 14.5591C1.47234 14.6016 1.52561 14.6318 1.58393 14.6465C1.64225 14.6611 1.70345 14.6597 1.76104 14.6424L4.66115 13.763C4.8698 13.6995 5.05967 13.5858 5.21413 13.4319L14.1063 4.53832Z"
+                stroke="white"
+                stroke-width="1.33247"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            취소
+          </button>
+          <button class="save-button" @click="save">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M14.1063 4.53832C14.4586 4.18616 14.6565 3.7085 14.6566 3.21042C14.6566 2.71233 14.4588 2.23463 14.1067 1.88238C13.7545 1.53014 13.2769 1.33222 12.7788 1.33215C12.2807 1.33209 11.803 1.52989 11.4507 1.88205L2.55919 10.7756C2.4045 10.9298 2.29011 11.1197 2.22607 11.3286L1.34598 14.228C1.32876 14.2856 1.32746 14.3468 1.34222 14.4051C1.35697 14.4634 1.38723 14.5166 1.42979 14.5591C1.47234 14.6016 1.52561 14.6318 1.58393 14.6465C1.64225 14.6611 1.70345 14.6597 1.76104 14.6424L4.66115 13.763C4.8698 13.6995 5.05967 13.5858 5.21413 13.4319L14.1063 4.53832Z"
+                stroke="white"
+                stroke-width="1.33247"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            저장
+          </button>
+        </div>
       </div>
       <!-- 프로필 카드 -->
       <div class="profile-card">
@@ -75,7 +75,9 @@
           <div class="profile-info">
             <h2 class="profile-name" v-if="userInfo">{{ userInfo.name }}</h2>
             <p class="profile-nickname" v-if="userInfo">{{ userInfo.nickname }}</p>
-            <span class="user-badge" v-if="userInfo">{{ userInfo.role === 'ADMIN' ? '관리자' : '일반 사용자' }}</span>
+            <span class="user-badge" v-if="userInfo">{{
+              userInfo.role === "ADMIN" ? "관리자" : "일반 사용자"
+            }}</span>
           </div>
         </div>
 
@@ -109,7 +111,7 @@
             </div>
             <div class="info-content">
               <span class="info-label">이름</span>
-              <input class="info-value" v-model="form.name"/>
+              <input class="info-value" v-model="form.name" />
             </div>
           </div>
 
@@ -173,7 +175,7 @@
             </div>
             <div class="info-content">
               <span class="info-label">닉네임</span>
-              <input class="info-value" v-model="form.nickname"/>
+              <input class="info-value" v-model="form.nickname" />
             </div>
           </div>
 
@@ -205,7 +207,12 @@
             </div>
             <div class="info-content">
               <span class="info-label">새 비밀번호</span>
-              <input class="info-value" type="password" placeholder="사용할 비밀번호를 입력해주세요" v-model="form.password"/>
+              <input
+                class="info-value"
+                type="password"
+                placeholder="사용할 비밀번호를 입력해주세요"
+                v-model="form.password"
+              />
             </div>
           </div>
 
@@ -231,7 +238,7 @@
             <div class="info-content">
               <span class="info-label">권한</span>
               <p class="info-value" v-if="userInfo">
-                {{ userInfo.role === 'ADMIN' ? '관리자' : '일반 사용자' }}
+                {{ userInfo.role === "ADMIN" ? "관리자" : "일반 사용자" }}
               </p>
             </div>
           </div>
@@ -249,7 +256,7 @@ import { checkNicknameApi } from "@/api/user/authApi";
 
 const router = useRouter();
 const userInfo = ref(null);
-const isLoading = ref(true);  // 로딩 상태를 추적하는 변수
+const isLoading = ref(true); // 로딩 상태를 추적하는 변수
 
 const form = reactive({
   name: "",
@@ -268,7 +275,7 @@ onMounted(async () => {
   } catch (e) {
     console.error("유저 정보 로드 실패", e);
   } finally {
-    isLoading.value = false;  // API 호출 완료 후 로딩 상태 해제
+    isLoading.value = false; // API 호출 완료 후 로딩 상태 해제
   }
 });
 
@@ -282,7 +289,7 @@ const cancel = () => {
 
 const save = async () => {
   /* 빈 값 체크 */
-  if (!form.name || !form.nickname || !form.password ) {
+  if (!form.name || !form.nickname || !form.password) {
     alert("값을 모두 입력해주세요.");
     return;
   }

@@ -150,12 +150,12 @@
         </div>
 
         <!-- 후기 내용 -->
-        <textarea v-model="newReview.content" placeholder="후기를 작성해 주세요" rows="5" />
+        <div>
+          <textarea v-model="newReview.content" placeholder="후기를 작성해 주세요" rows="5" />
+        </div>
 
         <!-- 이미지 개수 표시 -->
-        <div class="image-count">
-          사진 {{ previewImages.length }} / 10
-        </div>
+        <div class="image-count">사진 {{ previewImages.length }} / 10</div>
 
         <!-- 이미지 업로드 (가로 스크롤) -->
         <div class="image-upload-area">
@@ -171,18 +171,9 @@
           <!-- 가로 스크롤 영역 -->
           <div class="preview-scroll">
             <!-- 이미지 미리보기 -->
-            <div
-              v-for="(img, i) in previewImages"
-              :key="i"
-              class="preview-item"
-            >
+            <div v-for="(img, i) in previewImages" :key="i" class="preview-item">
               <img :src="img" />
-              <button
-                class="remove-image-button"
-                @click.stop="removeImage(i)"
-              >
-                ✕
-              </button>
+              <button class="remove-image-button" @click.stop="removeImage(i)">✕</button>
             </div>
 
             <!-- + 버튼 -->
@@ -223,8 +214,8 @@ const carouselRef = ref(null);
 const isLoading = ref(false);
 
 // 후기 작성용 이미지
-const reviewImages = ref([]);       // File[]
-const previewImages = ref([]);      // string[]
+const reviewImages = ref([]); // File[]
+const previewImages = ref([]); // string[]
 const fileInput = ref(null);
 
 let mapInstance = null;
@@ -527,17 +518,17 @@ const submitReview = async () => {
   const formData = new FormData();
 
   // req는 반드시 JSON Blob으로
-formData.append(
-  "req",
-  new Blob(
-    [JSON.stringify({ rating: newReview.value.rating, content: newReview.value.content })],
-    { type: "application/json" }
-  )
-);
+  formData.append(
+    "req",
+    new Blob(
+      [JSON.stringify({ rating: newReview.value.rating, content: newReview.value.content })],
+      { type: "application/json" }
+    )
+  );
 
-  reviewImages.value.forEach(file => {
-  formData.append("images", file);
-});
+  reviewImages.value.forEach((file) => {
+    formData.append("images", file);
+  });
 
   await reviewApi.createReview(route.params.id, formData);
   await loadReviews();
@@ -555,7 +546,7 @@ const loadReviews = async () => {
   spot.value.reviewCount = reviews.value.length;
 };
 
-  const triggerFileInput = () => {
+const triggerFileInput = () => {
   fileInput.value.click();
 };
 
@@ -579,7 +570,6 @@ const removeImage = (index) => {
   reviewImages.value.splice(index, 1);
   previewImages.value.splice(index, 1);
 };
-
 </script>
 
 <style scoped>
@@ -822,7 +812,7 @@ const removeImage = (index) => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1rem;
-  background: #7c3aed;
+  background: #2563eb;
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -832,41 +822,176 @@ const removeImage = (index) => {
 }
 
 .review-open-btn:hover {
-  background: #6d28d9;
+  background: #2563eb;
 }
 
 /* 모달 배경 */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* 모달 박스 */
 .modal {
   background: white;
   width: 90%;
-  max-width: 420px;
+  max-width: 500px;
+  max-height: 90vh;
+  border-radius: 20px;
+  padding: 0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 모달 헤더 */
+.modal-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #111827;
+  padding: 1.75rem 1.75rem 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  margin: 0;
+}
+
+/* 모달 컨텐츠 영역 */
+.modal > *:not(.modal-title):not(.modal-actions) {
+  padding: 0 1.75rem;
+}
+
+/* 별점 입력 */
+.rating-input {
+  display: flex;
+  gap: 0.375rem;
+  padding: 1.25rem 1.75rem !important;
+  justify-content: center;
+}
+
+.star {
+  font-size: 2rem;
+  cursor: pointer;
+  color: #e5e7eb;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.star:hover,
+.star.active {
+  color: #fbbf24;
+  transform: scale(1.1);
+}
+
+.star.active {
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.3));
+}
+
+/* 텍스트 영역 */
+.modal textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  padding: 2rem;
   border-radius: 12px;
-  padding: 1.5rem;
+  border: 1.5px solid #e5e7eb;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  transition: all 0.2s;
+  margin-bottom: 1rem;
+}
+
+.modal textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.modal textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* 이미지 개수 */
+.image-count {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+  padding: 0 1.75rem !important;
+}
+
+/* 이미지 업로드 영역 */
+.image-upload-area {
+  padding: 0 1.75rem 1.5rem !important;
 }
 
 .preview-scroll {
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
   overflow-x: auto;
+  padding: 0.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb transparent;
+}
+
+.preview-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.preview-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.preview-scroll::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+
+.preview-scroll::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
 }
 
 .preview-item {
   position: relative;
-  flex: 0 0 96px;
-  height: 96px;
+  flex: 0 0 100px;
+  height: 100px;
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.preview-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .preview-item img {
@@ -875,81 +1000,96 @@ const removeImage = (index) => {
   object-fit: cover;
 }
 
+.remove-image-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.remove-image-button:hover {
+  background: rgba(239, 68, 68, 0.9);
+  transform: scale(1.1);
+}
+
 .preview-item.add-more {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed #e5e7eb;
-  font-size: 32px;
+  border: 2px dashed #d1d5db;
+  background: #f9fafb;
+  font-size: 2rem;
   color: #9ca3af;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .preview-item.add-more:hover {
   border-color: #2563eb;
-  color: #2563eb;
   background: #eff6ff;
+  color: #2563eb;
 }
 
-.image-count {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 6px;
-}
-
-/* 제목 */
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-}
-
-/* 별점 */
-.rating-input {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.star {
-  cursor: pointer;
-  color: #d1d5db;
-}
-
-.star.active {
-  color: #facc15;
-}
-
-/* 입력 */
-.modal textarea {
-  width: 100%;
-  resize: none;
-  padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  margin-bottom: 1rem;
-}
-
-/* 버튼 */
+/* 버튼 영역 */
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 10px;
+  gap: 0.75rem;
+  padding: 1.25rem 1.75rem;
+  border-top: 1px solid #f3f4f6;
+  background: #fafbfc;
+  margin: 0;
+}
+
+.cancel-btn,
+.submit-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
 }
 
 .cancel-btn {
-  background: #e5e7eb;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  background: white;
+  color: #6b7280;
+  border: 1.5px solid #e5e7eb;
+}
+
+.cancel-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
 }
 
 .submit-btn {
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
 }
 
 /* 로딩 오버레이 */
@@ -1096,6 +1236,50 @@ const removeImage = (index) => {
 
   .carousel-btn.next {
     right: -0.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .modal-title {
+    font-size: 1.25rem;
+    padding: 1.5rem 1.5rem 1rem;
+  }
+
+  .modal > *:not(.modal-title):not(.modal-actions) {
+    padding: 0 1.5rem;
+  }
+
+  .image-count,
+  .image-upload-area {
+    padding: 0 1.5rem !important;
+  }
+
+  .rating-input {
+    padding: 1rem 1.5rem !important;
+  }
+
+  .modal-actions {
+    padding: 1rem 1.5rem;
+  }
+
+  .star {
+    font-size: 1.75rem;
+  }
+
+  .preview-item {
+    flex: 0 0 90px;
+    height: 90px;
+  }
+
+  .cancel-btn,
+  .submit-btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
   }
 }
 </style>
