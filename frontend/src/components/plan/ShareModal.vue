@@ -65,7 +65,7 @@
         <!-- 바디 -->
         <div class="modal-body">
           <!-- 링크 공유 섹션 -->
-          <div class="share-section link-section">
+          <!-- <div class="share-section link-section">
             <div class="section-icon-header">
               <div class="icon-wrapper">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -170,7 +170,7 @@
               </svg>
               공유 링크 생성
             </button>
-          </div>
+          </div> -->
 
           <!-- 참여자 목록 섹션 -->
           <div class="share-section">
