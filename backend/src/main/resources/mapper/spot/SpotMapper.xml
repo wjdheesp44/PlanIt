@@ -283,6 +283,8 @@
         FALSE AS favorite
         FROM spots s
         WHERE s.sido_id = #{sidoId}
+        AND s.image1 IS NOT NULL
+        AND s.image1 != ''
         AND s.id != #{excludeSpotId}
         AND s.is_deleted = 'F'
         ORDER BY RAND()
